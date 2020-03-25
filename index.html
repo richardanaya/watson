@@ -1,0 +1,44 @@
+<script>
+async function loadBytes(url) {
+  var response = await fetch(url);
+  var data = await response.arrayBuffer();
+  return data;
+}
+
+async function loadWebAssembly(url) {
+  let bytes = await loadBytes(url);
+  let program = await WebAssembly.instantiate(bytes, {"env":{
+    _log:function(msgPtr){
+      const utf8dec = new TextDecoder("utf-8");
+      let memory = new Uint8Array(program.instance.exports.memory.buffer);
+      const str = [];
+      let i = msgPtr;
+      while (memory[i] !== 0) {
+        str.push(memory[i]);
+        i++;
+      }
+      console.log(utf8dec.decode(new Uint8Array(str)));
+    }
+  }})
+  return program.instance.exports;
+}
+
+async function loadAndRun() {
+  // lets get things loaded
+  let interpreter = await loadWebAssembly("interpreter.wasm");
+  let simpleProgramBytes = await loadBytes("simple.wasm");
+  // create views of our data as bytes
+  let memory = new Uint8Array(interpreter.memory.buffer);
+  // allocate space in our interpreter for the program
+  let bytesToCopy = new Uint8Array(simpleProgramBytes);
+  let ptr = interpreter.malloc(bytesToCopy.length); 
+  // copy the bytes of our program into interpreter memory
+  memory = new Uint8Array(interpreter.memory.buffer);
+  memory.set(bytesToCopy, ptr);
+  // signal our interpreter to run given the location 
+  // and length of our web assembly program we copied over
+  let result = interpreter.run(ptr,bytesToCopy.length);  
+  window.alert("the result is "+result);
+}
+loadAndRun();
+</script>
