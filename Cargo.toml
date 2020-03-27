@@ -1,24 +1,15 @@
 [package]
 name = "watson"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Richard Anaya"]
 edition = "2018"
-description = "a no_std web assembly runtime"
+description = "a no_std web assembly loader"
 license = "MIT OR Apache-2.0"
 repository = "https://www.github.com/richardanaya/watson"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
-crate-type = ["cdylib"]
-
-[profile.release]
-lto = true
-
 [dependencies]
-malloc = "0.0.1"
-executor = "0"
-webassembly = "0"
+webassembly = "0.3"
 
 [dependencies.nom]
 version = "5"
