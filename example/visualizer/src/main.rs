@@ -5,7 +5,13 @@ use watson::*;
 
 fn print_type_section(s: &TypeSection) {
     println!("- Types");
-    println!("  {:?}", s.data);
+    for i in 0..s.types.len() {
+        match &s.types[i] {
+            WasmType::Function(f) => {
+                println!("  - Type 0: function({:?}) -> {:?}", f.inputs, f.outputs);
+            }
+        }
+    }
 }
 
 fn print_function_section(s: &FunctionSection) {
