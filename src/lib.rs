@@ -1,27 +1,69 @@
 #![no_std]
-#[macro_use]
 extern crate nom;
-#[macro_use]
 extern crate alloc;
-use crate::alloc::string::ToString;
 use alloc::vec::Vec;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::{tag,take};
+use nom::multi::many0;
 use webassembly::*;
 
 use nom::IResult;
 
+pub struct TypeSection {
+    pub id:u8,
+    pub data:Vec<u8>,
+}
+
+pub struct FunctionSection {
+    pub id:u8,
+    pub data:Vec<u8>,
+}
+
+pub struct CodeSection {
+    pub id:u8,
+    pub data:Vec<u8>,
+}
+
+pub struct ExportSection {
+    pub id:u8,
+    pub data:Vec<u8>,
+}
+
+pub struct UnknownSection {
+    pub id:u8,
+    pub data:Vec<u8>,
+}
+
 pub enum Section {
-    UnknownSection,
+    Type(TypeSection),
+    Function(FunctionSection),
+    Code(CodeSection),
+    Export(ExportSection),
+    Unknown(UnknownSection),
 }
 
 pub struct Program {
     pub sections: Vec<Section>,
 }
 
+fn section(input: &[u8]) -> IResult<&[u8], Section> {
+    let (input, id) = take(1u8)(input)?;
+    let (section_length,section_length_count) = input.try_extract_u32(0).unwrap();
+    let (input, _) = take(section_length_count)(input)?;
+    let (input, data) = take(section_length)(input)?;
+    match id[0] {
+        SECTION_TYPE => Ok((input, Section::Type(TypeSection { id:id[0], data:data.to_vec() }))),
+        SECTION_FUNCTION => Ok((input, Section::Function(FunctionSection { id:id[0], data:data.to_vec() }))),
+        SECTION_EXPORT => Ok((input, Section::Export(ExportSection { id:id[0], data:data.to_vec() }))),
+        SECTION_CODE => Ok((input, Section::Code(CodeSection { id:id[0], data:data.to_vec() }))),
+        _ => Ok((input, Section::Unknown(UnknownSection { id:id[0], data:data.to_vec() })))
+    }
+}
+
 fn wasm_module(input: &[u8]) -> IResult<&[u8], Program> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
-    Ok((input, Program { sections: vec![] }))
+    let (input, sections) = many0(section)(input)?;
+    Ok((input, Program { sections }))
 }
 
 impl Program {

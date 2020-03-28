@@ -3,8 +3,39 @@ use std::fs::File;
 use std::io::prelude::*;
 use watson::*;
 
-fn section_id_string(_s: &Section) -> String {
-    "unknown".to_string()
+fn print_type_section(s:&TypeSection) {
+    println!("- Types");
+    println!("  {:?}",s.data);
+}
+
+fn print_function_section(s:&FunctionSection) {
+    println!("- Functions");
+    println!("  {:?}",s.data);
+}
+
+fn print_export_section(s:&ExportSection) {
+    println!("- Exports");
+    println!("  {:?}",s.data);
+}
+
+fn print_code_section(s:&CodeSection) {
+    println!("- Code");
+    println!("  {:?}",s.data);
+}
+
+fn print_unknown_section(s:&UnknownSection) {
+    println!("- UnknownSection[{}]",s.id);
+    println!("  {:?}",s.data);
+}
+
+fn print_section(s: &Section) {
+    match s {
+        Section::Type(s) => print_type_section(&s),
+        Section::Function(s) => print_function_section(&s),
+        Section::Export(s) => print_export_section(&s),
+        Section::Code(s) => print_code_section(&s),
+        Section::Unknown(s) => print_unknown_section(&s),
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let program = Program::load(&buffer)?;
     println!("Program: {}", &args[1]);
     for s in program.sections.iter() {
-        println!("  - Section[{}]", section_id_string(&s));
+        print_section(&s);
     }
     Ok(())
 }
