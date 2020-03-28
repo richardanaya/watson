@@ -1,2 +1,2 @@
 run:
-	cargo run simplest.wasm
+	cargo +nightly run simplest.wasm

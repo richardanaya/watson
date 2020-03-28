@@ -6,8 +6,18 @@ use alloc::vec::Vec;
 use nom::bytes::complete::{tag,take};
 use nom::multi::many0;
 use webassembly::*;
-
+use alloc::string::String;
+use crate::alloc::string::ToString;
 use nom::IResult;
+
+pub struct WasmFunctionType {
+    pub inputs:Vec<u8>,
+    pub outputs:Vec<u8>,
+}
+
+pub enum WasmType {
+    Function(WasmFunctionType)
+}
 
 pub struct TypeSection {
     pub id:u8,
@@ -15,18 +25,30 @@ pub struct TypeSection {
 }
 
 pub struct FunctionSection {
-    pub id:u8,
     pub function_types:Vec<u32>,
 }
 
 pub struct CodeSection {
-    pub id:u8,
     pub function_bodies:Vec<Vec<u8>>,
 }
 
+pub struct FunctionExport {
+    pub name:String,
+    pub index: u32,
+}
+
+pub struct MemoryExport {
+    pub name:String,
+    pub index: u32,
+}
+
+pub enum WasmExport {
+    Function(FunctionExport),
+    Memory(MemoryExport),
+}
+
 pub struct ExportSection {
-    pub id:u8,
-    pub data:Vec<u8>,
+    pub exports:Vec<WasmExport>,
 }
 
 pub struct UnknownSection {
@@ -71,11 +93,26 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
                 ip = input;
                 function_types.push(index);
             }
-            Ok((ip, Section::Function(FunctionSection { id:id[0], function_types })))
+            Ok((ip, Section::Function(FunctionSection {function_types })))
         },
         SECTION_EXPORT => {
-            let (input, data) = take(section_length)(input)?;
-            Ok((input, Section::Export(ExportSection { id:id[0], data:data.to_vec() })))
+            let (input,num_exports) = wasm_u32(input)?;
+            let mut exports = vec![];
+            let mut ip = input;
+            for i in 0..num_exports {
+                let (input,num_chars) = wasm_u32(ip)?;
+                let (input,chars) = take(num_chars)(input)?;
+                let name = alloc::str::from_utf8(chars).unwrap().to_string();
+                let (input,export_type) = take(1u8)(input)?;
+                let (input,export_index) = wasm_u32(input)?;
+                ip = input;
+                exports.push(match export_type[0]{
+                    DESC_FUNCTION => WasmExport::Function(FunctionExport{name,index:export_index}),
+                    DESC_MEMORY => WasmExport::Memory(MemoryExport{name,index:export_index}),
+                    _ => panic!("unknown export")
+                });
+            }
+            Ok((ip, Section::Export(ExportSection {exports:exports })))
         },
         SECTION_CODE => {
             let (mut input,num_funcs) = wasm_u32(input)?;
@@ -87,7 +124,7 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
                 ip = input;
                 function_bodies.push(op_codes.to_vec());
             }
-            Ok((ip, Section::Code(CodeSection { id:id[0], function_bodies })))
+            Ok((ip, Section::Code(CodeSection {function_bodies })))
         },
         _ => {
             let (input, data) = take(section_length)(input)?;

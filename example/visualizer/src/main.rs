@@ -3,33 +3,42 @@ use std::fs::File;
 use std::io::prelude::*;
 use watson::*;
 
-fn print_type_section(s:&TypeSection) {
+fn print_type_section(s: &TypeSection) {
     println!("- Types");
-    println!("  {:?}",s.data);
+    println!("  {:?}", s.data);
 }
 
-fn print_function_section(s:&FunctionSection) {
+fn print_function_section(s: &FunctionSection) {
     println!("- Functions");
     for i in 0..s.function_types.len() {
-        println!("  - function {} type: {:?}",i,s.function_types[i]);
+        println!("  - function {} type: {:?}", i, s.function_types[i]);
     }
 }
 
-fn print_export_section(s:&ExportSection) {
+fn print_export_section(s: &ExportSection) {
     println!("- Exports");
-    println!("  {:?}",s.data);
+    for i in 0..s.exports.len() {
+        match &s.exports[i] {
+            WasmExport::Function(f) => {
+                println!("  - Function {:?} {}", f.name, f.index);
+            }
+            WasmExport::Memory(f) => {
+                println!("  - Memory {:?} {}", f.name, f.index);
+            }
+        }
+    }
 }
 
-fn print_code_section(s:&CodeSection) {
+fn print_code_section(s: &CodeSection) {
     println!("- Code");
     for i in 0..s.function_bodies.len() {
-        println!("  - function {} body: {:?}",i,s.function_bodies[i]);
+        println!("  - function {} body: {:?}", i, s.function_bodies[i]);
     }
 }
 
-fn print_unknown_section(s:&UnknownSection) {
-    println!("- UnknownSection[{}]",s.id);
-    println!("  {:?}",s.data);
+fn print_unknown_section(s: &UnknownSection) {
+    println!("- UnknownSection[{}]", s.id);
+    println!("  {:?}", s.data);
 }
 
 fn print_section(s: &Section) {
