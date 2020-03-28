@@ -1,5 +1,6 @@
 #![no_std]
 extern crate nom;
+#[macro_use]
 extern crate alloc;
 use alloc::vec::Vec;
 use nom::bytes::complete::{tag,take};
@@ -15,7 +16,7 @@ pub struct TypeSection {
 
 pub struct FunctionSection {
     pub id:u8,
-    pub data:Vec<u8>,
+    pub function_types:Vec<u32>,
 }
 
 pub struct CodeSection {
@@ -45,17 +46,43 @@ pub struct Program {
     pub sections: Vec<Section>,
 }
 
+
+fn wasm_u32(input: &[u8]) -> IResult<&[u8], u32> {
+    let (i,byte_count) = input.try_extract_u32(0).unwrap();
+    let (input, _) = take(byte_count)(input)?;
+    Ok((input,i))
+}
+
 fn section(input: &[u8]) -> IResult<&[u8], Section> {
     let (input, id) = take(1u8)(input)?;
-    let (section_length,section_length_count) = input.try_extract_u32(0).unwrap();
-    let (input, _) = take(section_length_count)(input)?;
-    let (input, data) = take(section_length)(input)?;
+    let (input,section_length) = wasm_u32(input)?;
+    
     match id[0] {
-        SECTION_TYPE => Ok((input, Section::Type(TypeSection { id:id[0], data:data.to_vec() }))),
-        SECTION_FUNCTION => Ok((input, Section::Function(FunctionSection { id:id[0], data:data.to_vec() }))),
-        SECTION_EXPORT => Ok((input, Section::Export(ExportSection { id:id[0], data:data.to_vec() }))),
-        SECTION_CODE => Ok((input, Section::Code(CodeSection { id:id[0], data:data.to_vec() }))),
-        _ => Ok((input, Section::Unknown(UnknownSection { id:id[0], data:data.to_vec() })))
+        SECTION_TYPE => {
+            let (input, data) = take(section_length)(input)?;
+            Ok((input, Section::Type(TypeSection { id:id[0], data:data.to_vec() })))
+        },
+        SECTION_FUNCTION => {
+            let (input,count) = wasm_u32(input)?;
+            let mut function_types = vec![];
+            for i in 0..count {
+                let (input,index) = wasm_u32(input)?;
+                function_types.push(index);
+            }
+            Ok((input, Section::Function(FunctionSection { id:id[0], function_types })))
+        },
+        SECTION_EXPORT => {
+            let (input, data) = take(section_length)(input)?;
+            Ok((input, Section::Export(ExportSection { id:id[0], data:data.to_vec() })))
+        },
+        SECTION_CODE => {
+            let (input, data) = take(section_length)(input)?;
+            Ok((input, Section::Code(CodeSection { id:id[0], data:data.to_vec() })))
+        },
+        _ => {
+            let (input, data) = take(section_length)(input)?;
+            Ok((input, Section::Unknown(UnknownSection { id:id[0], data:data.to_vec() })))
+        }
     }
 }
 

@@ -10,7 +10,9 @@ fn print_type_section(s:&TypeSection) {
 
 fn print_function_section(s:&FunctionSection) {
     println!("- Functions");
-    println!("  {:?}",s.data);
+    for i in 0..s.function_types.len() {
+        println!("  - function {} type: {:?}",i,s.function_types[i]);
+    }
 }
 
 fn print_export_section(s:&ExportSection) {
