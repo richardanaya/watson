@@ -55,11 +55,21 @@ pub struct UnknownSection {
     pub data: Vec<u8>,
 }
 
+pub struct WasmMemory {
+    pub min_pages:u32,
+    pub max_pages:u32,
+}
+
+pub struct MemorySection {
+    pub memories: Vec<WasmMemory>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
     Code(CodeSection),
     Export(ExportSection),
+    Memory(MemorySection),
     Unknown(UnknownSection),
 }
 
@@ -142,12 +152,28 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let mut function_bodies = vec![];
             let mut ip = input;
             for _ in 0..num_funcs {
-                let (input, num_op_codes) = wasm_u32(ip)?;
+                let (input, num_op_codes) = wasm_u32(input)?;
                 let (input, op_codes) = take(num_op_codes)(input)?;
                 ip = input;
                 function_bodies.push(op_codes.to_vec());
             }
             Ok((ip, Section::Code(CodeSection { function_bodies })))
+        }
+        SECTION_MEMORY => {
+            let (input, num_mems) = wasm_u32(input)?;
+            let mut memories = vec![];
+            let mut ip = input;
+            for _ in 0..num_mems {
+                let (input, mem_type) = take(1u8)(input)?;
+                if mem_type[0] != LIMIT_MIN_MAX {
+                    panic!("unhandled memory type");
+                }
+                let (input, min_pages) = wasm_u32(input)?;
+                let (input, max_pages) = wasm_u32(input)?;
+                ip = input;
+                memories.push(WasmMemory{min_pages,max_pages});
+            }
+            Ok((ip, Section::Memory(MemorySection { memories })))
         }
         _ => {
             let (input, data) = take(section_length)(input)?;
