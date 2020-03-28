@@ -21,7 +21,7 @@ pub struct FunctionSection {
 
 pub struct CodeSection {
     pub id:u8,
-    pub data:Vec<u8>,
+    pub function_bodies:Vec<Vec<u8>>,
 }
 
 pub struct ExportSection {
@@ -63,21 +63,31 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             Ok((input, Section::Type(TypeSection { id:id[0], data:data.to_vec() })))
         },
         SECTION_FUNCTION => {
-            let (input,count) = wasm_u32(input)?;
+            let (mut input,num_funcs) = wasm_u32(input)?;
             let mut function_types = vec![];
-            for i in 0..count {
-                let (input,index) = wasm_u32(input)?;
+            let mut ip = input;
+            for i in 0..num_funcs {
+                let (input,index) = wasm_u32(ip)?;
+                ip = input;
                 function_types.push(index);
             }
-            Ok((input, Section::Function(FunctionSection { id:id[0], function_types })))
+            Ok((ip, Section::Function(FunctionSection { id:id[0], function_types })))
         },
         SECTION_EXPORT => {
             let (input, data) = take(section_length)(input)?;
             Ok((input, Section::Export(ExportSection { id:id[0], data:data.to_vec() })))
         },
         SECTION_CODE => {
-            let (input, data) = take(section_length)(input)?;
-            Ok((input, Section::Code(CodeSection { id:id[0], data:data.to_vec() })))
+            let (mut input,num_funcs) = wasm_u32(input)?;
+            let mut function_bodies = vec![];
+            let mut ip = input;
+            for i in 0..num_funcs {
+                let (input,num_op_codes) = wasm_u32(ip)?;
+                let (input,op_codes) = take(num_op_codes)(input)?;
+                ip = input;
+                function_bodies.push(op_codes.to_vec());
+            }
+            Ok((ip, Section::Code(CodeSection { id:id[0], function_bodies })))
         },
         _ => {
             let (input, data) = take(section_length)(input)?;

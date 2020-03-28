@@ -22,7 +22,9 @@ fn print_export_section(s:&ExportSection) {
 
 fn print_code_section(s:&CodeSection) {
     println!("- Code");
-    println!("  {:?}",s.data);
+    for i in 0..s.function_bodies.len() {
+        println!("  - function {} body: {:?}",i,s.function_bodies[i]);
+    }
 }
 
 fn print_unknown_section(s:&UnknownSection) {
