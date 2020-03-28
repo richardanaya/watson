@@ -27,8 +27,13 @@ pub struct FunctionSection {
     pub function_types: Vec<u32>,
 }
 
+pub struct CodeBlock {
+    pub locals: Vec<u8>,
+    pub code: Vec<u8>,
+}
+
 pub struct CodeSection {
-    pub function_bodies: Vec<Vec<u8>>,
+    pub code_blocks: Vec<CodeBlock>,
 }
 
 pub struct FunctionExport {
@@ -149,15 +154,19 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
         }
         SECTION_CODE => {
             let (input, num_funcs) = wasm_u32(input)?;
-            let mut function_bodies = vec![];
+            let mut code_blocks = vec![];
             let mut ip = input;
             for _ in 0..num_funcs {
                 let (input, num_op_codes) = wasm_u32(input)?;
-                let (input, op_codes) = take(num_op_codes)(input)?;
+                let (num_locals, byte_count) = input.try_extract_u32(0).unwrap();
+                let (input, _) = take(byte_count)(input)?;
+                let (input, locals) = take(num_locals)(input)?;
+                let (input, op_codes) = take(num_op_codes-1-byte_count as u32)(input)?;
+                let (input, _) = tag([END])(input)?;
                 ip = input;
-                function_bodies.push(op_codes.to_vec());
+                code_blocks.push(CodeBlock{locals:locals.to_vec(),code:op_codes.to_vec()});
             }
-            Ok((ip, Section::Code(CodeSection { function_bodies })))
+            Ok((ip, Section::Code(CodeSection { code_blocks })))
         }
         SECTION_MEMORY => {
             let (input, num_mems) = wasm_u32(input)?;
