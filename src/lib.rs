@@ -82,7 +82,7 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let (input, num_types) = wasm_u32(input)?;
             let mut types = vec![];
             let mut ip = input;
-            for i in 0..num_types {
+            for _ in 0..num_types {
                 let (input, wasm_type) = take(1u8)(input)?;
                 types.push(match wasm_type[0] {
                     FUNC => {
@@ -102,10 +102,10 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             Ok((ip, Section::Type(TypeSection { types })))
         }
         SECTION_FUNCTION => {
-            let (mut input, num_funcs) = wasm_u32(input)?;
+            let (input, num_funcs) = wasm_u32(input)?;
             let mut function_types = vec![];
             let mut ip = input;
-            for i in 0..num_funcs {
+            for _ in 0..num_funcs {
                 let (input, index) = wasm_u32(ip)?;
                 ip = input;
                 function_types.push(index);
@@ -116,7 +116,7 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let (input, num_exports) = wasm_u32(input)?;
             let mut exports = vec![];
             let mut ip = input;
-            for i in 0..num_exports {
+            for _ in 0..num_exports {
                 let (input, num_chars) = wasm_u32(ip)?;
                 let (input, chars) = take(num_chars)(input)?;
                 let name = alloc::str::from_utf8(chars).unwrap().to_string();
@@ -138,10 +138,10 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             Ok((ip, Section::Export(ExportSection { exports: exports })))
         }
         SECTION_CODE => {
-            let (mut input, num_funcs) = wasm_u32(input)?;
+            let (input, num_funcs) = wasm_u32(input)?;
             let mut function_bodies = vec![];
             let mut ip = input;
-            for i in 0..num_funcs {
+            for _ in 0..num_funcs {
                 let (input, num_op_codes) = wasm_u32(ip)?;
                 let (input, op_codes) = take(num_op_codes)(input)?;
                 ip = input;
