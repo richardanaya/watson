@@ -286,7 +286,7 @@ fn wasm_module(input: &[u8]) -> Result<Program, String> {
 }
 
 impl Program {
-    pub fn load(input: &[u8]) -> Result<Program, String> {
+    pub fn parse(input: &[u8]) -> Result<Program, String> {
         wasm_module(input)
     }
 

@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer)?;
 
-    let program = Program::load(&buffer)?;
+    let program = Program::parse(&buffer)?;
     println!("{} {{", &args[1].green());
     for s in program.sections.iter() {
         print_section(&s);
