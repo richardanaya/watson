@@ -1,14 +1,54 @@
 #![no_std]
-extern crate nom;
 #[macro_use]
 extern crate alloc;
 use crate::alloc::string::ToString;
 use alloc::string::String;
 use alloc::vec::Vec;
-use nom::bytes::complete::{tag, take};
-use nom::multi::many0;
-use nom::IResult;
 use webassembly::*;
+
+fn tag(tag: &[u8]) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> + '_ {
+    move |input: &[u8]| {
+        if tag.len() > input.len() {
+            return Err("trying to tag too many bytes".to_string());
+        }
+        for i in 0..tag.len() {
+            if tag[i] != input[i] {
+                return Err("did not match tag".to_string());
+            }
+        }
+        Ok((&input[tag.len()..], &input[..tag.len()]))
+    }
+}
+
+fn take(num: usize) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> {
+    move |input: &[u8]| {
+        if num > input.len() {
+            return Err("trying to take too many bytes".to_string());
+        }
+        Ok((&input[num..], &input[..num]))
+    }
+}
+
+fn many0<'a,T>(
+    f: impl Fn(&'a [u8]) -> Result<(&'a[u8], T), String>,
+) -> impl Fn(&'a[u8]) -> Result<(&'a[u8], Vec<T>), String> {
+    move |input: &[u8]| {
+        let mut v = vec![];
+        let mut ip = input;
+        loop {
+            match f(ip) {
+                Ok((input, item)) => {
+                    v.push(item);
+                    ip = input;
+                }
+                Err(_) => {
+                    break;
+                }
+            }
+        }
+        Ok((ip, v))
+    }
+}
 
 pub struct FunctionType {
     pub inputs: Vec<u8>,
@@ -61,8 +101,8 @@ pub struct UnknownSection {
 }
 
 pub struct WasmMemory {
-    pub min_pages:u32,
-    pub max_pages:u32,
+    pub min_pages: u32,
+    pub max_pages: u32,
 }
 
 pub struct MemorySection {
@@ -82,14 +122,17 @@ pub struct Program {
     pub sections: Vec<Section>,
 }
 
-fn wasm_u32(input: &[u8]) -> IResult<&[u8], u32> {
-    let (i, byte_count) = input.try_extract_u32(0).unwrap();
-    let (input, _) = take(byte_count)(input)?;
+fn wasm_u32(input: &[u8]) -> Result<(&[u8],u32), String> {
+    let (i, byte_count) = match input.try_extract_u32(0) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+    let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i))
 }
 
-fn section(input: &[u8]) -> IResult<&[u8], Section> {
-    let (input, id) = take(1u8)(input)?;
+fn section(input: &[u8]) -> Result<(&[u8], Section),String> {
+    let (input, id) = take(1)(input)?;
     let (input, section_length) = wasm_u32(input)?;
 
     match id[0] {
@@ -98,13 +141,13 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let mut types = vec![];
             let mut ip = input;
             for _ in 0..num_types {
-                let (input, wasm_type) = take(1u8)(input)?;
+                let (input, wasm_type) = take(1)(input)?;
                 types.push(match wasm_type[0] {
                     FUNC => {
                         let (input, num_inputs) = wasm_u32(input)?;
-                        let (input, inputs) = take(num_inputs)(input)?;
+                        let (input, inputs) = take(num_inputs as usize)(input)?;
                         let (input, num_outputs) = wasm_u32(input)?;
-                        let (input, outputs) = take(num_outputs)(input)?;
+                        let (input, outputs) = take(num_outputs as usize)(input)?;
                         ip = input;
                         WasmType::Function(FunctionType {
                             inputs: inputs.to_vec(),
@@ -133,9 +176,9 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let mut ip = input;
             for _ in 0..num_exports {
                 let (input, num_chars) = wasm_u32(ip)?;
-                let (input, chars) = take(num_chars)(input)?;
+                let (input, chars) = take(num_chars as usize)(input)?;
                 let name = alloc::str::from_utf8(chars).unwrap().to_string();
-                let (input, export_type) = take(1u8)(input)?;
+                let (input, export_type) = take(1)(input)?;
                 let (input, export_index) = wasm_u32(input)?;
                 ip = input;
                 exports.push(match export_type[0] {
@@ -159,12 +202,15 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             for _ in 0..num_funcs {
                 let (input, num_op_codes) = wasm_u32(input)?;
                 let (num_locals, byte_count) = input.try_extract_u32(0).unwrap();
-                let (input, _) = take(byte_count)(input)?;
-                let (input, locals) = take(num_locals)(input)?;
-                let (input, op_codes) = take(num_op_codes-1-byte_count as u32)(input)?;
-                let (input, _) = tag([END])(input)?;
+                let (input, _) = take(byte_count as usize)(input)?;
+                let (input, locals) = take(num_locals as usize)(input)?;
+                let (input, op_codes) = take(num_op_codes as usize - 1 - byte_count as usize)(input)?;
+                let (input, _) = tag(&[END])(input)?;
                 ip = input;
-                code_blocks.push(CodeBlock{locals:locals.to_vec(),code:op_codes.to_vec()});
+                code_blocks.push(CodeBlock {
+                    locals: locals.to_vec(),
+                    code: op_codes.to_vec(),
+                });
             }
             Ok((ip, Section::Code(CodeSection { code_blocks })))
         }
@@ -173,19 +219,22 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
             let mut memories = vec![];
             let mut ip = input;
             for _ in 0..num_mems {
-                let (input, mem_type) = take(1u8)(input)?;
+                let (input, mem_type) = take(1)(input)?;
                 if mem_type[0] != LIMIT_MIN_MAX {
                     panic!("unhandled memory type");
                 }
                 let (input, min_pages) = wasm_u32(input)?;
                 let (input, max_pages) = wasm_u32(input)?;
                 ip = input;
-                memories.push(WasmMemory{min_pages,max_pages});
+                memories.push(WasmMemory {
+                    min_pages,
+                    max_pages,
+                });
             }
             Ok((ip, Section::Memory(MemorySection { memories })))
         }
         _ => {
-            let (input, data) = take(section_length)(input)?;
+            let (input, data) = take(section_length as usize)(input)?;
             Ok((
                 input,
                 Section::Unknown(UnknownSection {
@@ -197,7 +246,7 @@ fn section(input: &[u8]) -> IResult<&[u8], Section> {
     }
 }
 
-fn wasm_module(input: &[u8]) -> IResult<&[u8], Program> {
+fn wasm_module(input: &[u8]) -> Result<(&[u8], Program),String> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
     let (input, sections) = many0(section)(input)?;
@@ -205,11 +254,11 @@ fn wasm_module(input: &[u8]) -> IResult<&[u8], Program> {
 }
 
 impl Program {
-    pub fn load(input: &[u8]) -> Result<Program, &'static str> {
+    pub fn load(input: &[u8]) -> Result<Program, String> {
         let result = wasm_module(input);
         match result {
             Ok((_, program)) => Ok(program),
-            Err(_) => Err("failed to parse"),
+            Err(_) => Err("failed to parse".to_string()),
         }
     }
 }

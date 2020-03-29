@@ -10,8 +10,3 @@ repository = "https://www.github.com/richardanaya/watson"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 webassembly = "0.3.1"
-
-[dependencies.nom]
-version = "5.1.1"
-default-features = false
-features = ["alloc","lexical"]
