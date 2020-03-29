@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 watson = {path="../../"}
+colored = "1.9"
