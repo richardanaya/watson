@@ -1,8 +1,7 @@
 #![no_std]
 #[macro_use]
 extern crate alloc;
-use crate::alloc::string::ToString;
-use alloc::string::String;
+use alloc::string::{String,ToString};
 use alloc::vec::Vec;
 use webassembly::*;
 
