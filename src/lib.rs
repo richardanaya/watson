@@ -289,4 +289,33 @@ impl Program {
     pub fn load(input: &[u8]) -> Result<Program, String> {
         wasm_module(input)
     }
+
+    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a FunctionExport, String> {
+        let result = self.sections.iter().find(|x| matches!(Section::Export, x));
+        if let Some(Section::Export(export_section)) = result {
+            let result = self.sections.iter().find(|x| matches!(Section::Code, x));
+            if let Some(Section::Code(_)) = result {
+                let result = export_section.exports.iter().find(|x| {
+                    if let WasmExport::Function(f) = x {
+                        f.name == name
+                    } else {
+                        false
+                    }
+                });
+                let main_export = match result {
+                    Some(WasmExport::Function(f)) => f,
+                    _ => {
+                        let mut e = "could not find ".to_string();
+                        e.push_str(name);
+                        return Err(e);
+                    }
+                };
+                Ok(main_export)
+            } else {
+                Err("could find code section".to_string())
+            }
+        } else {
+            Err("could find export section".to_string())
+        }
+    }
 }
