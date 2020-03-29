@@ -8,7 +8,10 @@ fn print_type_section(s: &TypeSection) {
     for i in 0..s.types.len() {
         match &s.types[i] {
             WasmType::Function(f) => {
-                println!("  - Type 0: function(inputs{:?}) -> outputs{:?}", f.inputs, f.outputs);
+                println!(
+                    "  - Type 0: function(inputs{:?}) -> outputs{:?}",
+                    f.inputs, f.outputs
+                );
             }
         }
     }
@@ -38,14 +41,20 @@ fn print_export_section(s: &ExportSection) {
 fn print_memory_section(s: &MemorySection) {
     println!("- Memories");
     for i in 0..s.memories.len() {
-        println!("  - Memory {}: min {} max {}",i, s.memories[i].min_pages, s.memories[i].max_pages);
+        println!(
+            "  - Memory {}: min {} max {}",
+            i, s.memories[i].min_pages, s.memories[i].max_pages
+        );
     }
 }
 
 fn print_code_section(s: &CodeSection) {
     println!("- Code");
     for i in 0..s.code_blocks.len() {
-        println!("  - Function {}: locals{:?} code{:?}", i, s.code_blocks[i].locals, s.code_blocks[i].code);
+        println!(
+            "  - Function {}: locals{:?} code{:?}",
+            i, s.code_blocks[i].locals, s.code_blocks[i].code
+        );
     }
 }
 

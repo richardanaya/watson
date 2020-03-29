@@ -29,9 +29,9 @@ fn take(num: usize) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> {
     }
 }
 
-fn many0<'a,T>(
-    f: impl Fn(&'a [u8]) -> Result<(&'a[u8], T), String>,
-) -> impl Fn(&'a[u8]) -> Result<(&'a[u8], Vec<T>), String> {
+fn many0<'a, T>(
+    f: impl Fn(&'a [u8]) -> Result<(&'a [u8], T), String>,
+) -> impl Fn(&'a [u8]) -> Result<(&'a [u8], Vec<T>), String> {
     move |input: &[u8]| {
         let mut v = vec![];
         let mut ip = input;
@@ -122,7 +122,7 @@ pub struct Program {
     pub sections: Vec<Section>,
 }
 
-fn wasm_u32(input: &[u8]) -> Result<(&[u8],u32), String> {
+fn wasm_u32(input: &[u8]) -> Result<(&[u8], u32), String> {
     let (i, byte_count) = match input.try_extract_u32(0) {
         Ok(r) => r,
         Err(e) => return Err(e.to_string()),
@@ -131,7 +131,7 @@ fn wasm_u32(input: &[u8]) -> Result<(&[u8],u32), String> {
     Ok((input, i))
 }
 
-fn section(input: &[u8]) -> Result<(&[u8], Section),String> {
+fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
     let (input, id) = take(1)(input)?;
     let (input, section_length) = wasm_u32(input)?;
 
@@ -204,7 +204,8 @@ fn section(input: &[u8]) -> Result<(&[u8], Section),String> {
                 let (num_locals, byte_count) = input.try_extract_u32(0).unwrap();
                 let (input, _) = take(byte_count as usize)(input)?;
                 let (input, locals) = take(num_locals as usize)(input)?;
-                let (input, op_codes) = take(num_op_codes as usize - 1 - byte_count as usize)(input)?;
+                let (input, op_codes) =
+                    take(num_op_codes as usize - 1 - byte_count as usize)(input)?;
                 let (input, _) = tag(&[END])(input)?;
                 ip = input;
                 code_blocks.push(CodeBlock {
@@ -246,7 +247,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section),String> {
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<(&[u8], Program),String> {
+fn wasm_module(input: &[u8]) -> Result<(&[u8], Program), String> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
     let (input, sections) = many0(section)(input)?;
