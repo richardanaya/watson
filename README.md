@@ -9,6 +9,19 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
 watson = "0"
 ```
 
+# Usage
+
+```rust
+let program = watson::Program.load(&bytes_of_wasm)
+for s in program.sections {
+   match s {
+      CodeSection(code)=> ...,
+      ...
+   }
+}
+...
+```
+
 # License
 
 This project is licensed under either of
