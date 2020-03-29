@@ -291,9 +291,21 @@ impl Program {
     }
 
     pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a FunctionExport, String> {
-        let result = self.sections.iter().find(|x| matches!(Section::Export, x));
+        let result = self.sections.iter().find(|x| {
+            if let Section::Export(_) = x {
+                true
+            } else {
+                false
+            }
+        });
         if let Some(Section::Export(export_section)) = result {
-            let result = self.sections.iter().find(|x| matches!(Section::Code, x));
+            let result = self.sections.iter().find(|x| {
+                if let Section::Code(_) = x {
+                    true
+                } else {
+                    false
+                }
+            });
             if let Some(Section::Code(_)) = result {
                 let result = export_section.exports.iter().find(|x| {
                     if let WasmExport::Function(f) = x {
@@ -320,8 +332,13 @@ impl Program {
     }
 
     pub fn find_code_block<'a>(&'a self, index: usize) -> Result<&'a CodeBlock, String> {
-        let result = self.sections.iter().find(|x| matches!(Section::Export, x));
-        let result = self.sections.iter().find(|x| matches!(Section::Code, x));
+        let result = self.sections.iter().find(|x| {
+            if let Section::Code(_) = x {
+                true
+            } else {
+                false
+            }
+        });
         if let Some(Section::Code(code_section)) = result {
             if index >= code_section.code_blocks.len() {
                 Err("invalid code block index".to_string())
