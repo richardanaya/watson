@@ -81,17 +81,17 @@ pub struct CodeSection {
 
 pub struct FunctionExport {
     pub name: String,
-    pub index: u32,
+    pub index: usize,
 }
 
 pub struct MemoryExport {
     pub name: String,
-    pub index: u32,
+    pub index: usize,
 }
 
 pub struct GlobalExport {
     pub name: String,
-    pub index: u32,
+    pub index: usize,
 }
 
 pub enum WasmExport {
@@ -196,15 +196,15 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                 exports.push(match export_type[0] {
                     DESC_FUNCTION => WasmExport::Function(FunctionExport {
                         name,
-                        index: export_index,
+                        index: export_index as usize,
                     }),
                     DESC_MEMORY => WasmExport::Memory(MemoryExport {
                         name,
-                        index: export_index,
+                        index: export_index as usize,
                     }),
                     DESC_GLOBAL => WasmExport::Global(GlobalExport {
                         name,
-                        index: export_index,
+                        index: export_index as usize,
                     }),
                     _ => return Err("unknown export".to_string()),
                 });

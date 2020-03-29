@@ -1,6 +1,6 @@
 [package]
 name = "watson"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Richard Anaya"]
 edition = "2018"
 description = "a no_std web assembly loader"
@@ -10,3 +10,4 @@ repository = "https://www.github.com/richardanaya/watson"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 webassembly = "0.3.1"
+panic-abort = "0.3"
