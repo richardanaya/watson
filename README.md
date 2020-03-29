@@ -4,21 +4,21 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
 
-**coverage is currently small***
+**coverage is currently small**
 
 
-- [x] SECTION_CUSTOM
-- [ ] SECTION_TYPE
-- [ ] SECTION_IMPORT
-- [X] SECTION_FUNCTION
-- [ ] SECTION_TABLE
-- [X] SECTION_MEMORY
-- [ ] SECTION_GLOBAL
-- [X] SECTION_EXPORT
-- [ ] SECTION_START
-- [ ] SECTION_ELEMENT
-- [X] SECTION_CODE
-- [ ] SECTION_DATA
+- [x] custom section
+- [ ] type section
+- [ ] import section
+- [X] function section
+- [ ] table section
+- [X] memory section
+- [ ] global section
+- [X] export section
+- [ ] start section
+- [ ] element section
+- [X] code section
+- [ ] data section
 
 ```rust
 [dependencies]
