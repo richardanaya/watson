@@ -318,4 +318,18 @@ impl Program {
             Err("could find export section".to_string())
         }
     }
+
+    pub fn find_code_block<'a>(&'a self, index: usize) -> Result<&'a CodeBlock, String> {
+        let result = self.sections.iter().find(|x| matches!(Section::Export, x));
+        let result = self.sections.iter().find(|x| matches!(Section::Code, x));
+        if let Some(Section::Code(code_section)) = result {
+            if index >= code_section.code_blocks.len() {
+                Err("invalid code block index".to_string())
+            } else {
+                Ok(&code_section.code_blocks[index])
+            }
+        } else {
+            Err("could find code section".to_string())
+        }
+    }
 }
