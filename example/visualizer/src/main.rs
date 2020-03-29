@@ -1,32 +1,29 @@
+use colored::*;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use watson::*;
-use colored::*;
 
 fn print_type_section(s: &TypeSection) {
-    println!("  [{}]","Type".purple());
+    println!("  [{}]", "Type".purple());
     for i in 0..s.types.len() {
         match &s.types[i] {
             WasmType::Function(f) => {
-                println!(
-                    "  0: fn(inputs{:?}) -> outputs{:?}",
-                    f.inputs, f.outputs
-                );
+                println!("  0: fn(inputs{:?}) -> outputs{:?}", f.inputs, f.outputs);
             }
         }
     }
 }
 
 fn print_function_section(s: &FunctionSection) {
-    println!("  [{}]","Function".purple());
+    println!("  [{}]", "Function".purple());
     for i in 0..s.function_types.len() {
         println!("  {}: type[{:?}]", i, s.function_types[i]);
     }
 }
 
 fn print_export_section(s: &ExportSection) {
-    println!("  [{}]","Export".purple());
+    println!("  [{}]", "Export".purple());
     for i in 0..s.exports.len() {
         match &s.exports[i] {
             WasmExport::Function(f) => {
@@ -35,22 +32,30 @@ fn print_export_section(s: &ExportSection) {
             WasmExport::Memory(f) => {
                 println!("  {:?} memory[{}]", f.name, f.index);
             }
+            WasmExport::Global(f) => {
+                println!("  {:?} global[{}]", f.name, f.index);
+            }
         }
     }
 }
 
 fn print_memory_section(s: &MemorySection) {
-    println!("  [{}]","Memory".purple());
+    println!("  [{}]", "Memory".purple());
     for i in 0..s.memories.len() {
         println!(
             "  {}: min {} max {}",
-            i, s.memories[i].min_pages, s.memories[i].max_pages
+            i,
+            s.memories[i].min_pages,
+            &match s.memories[i].max_pages {
+                Some(m) => m.to_string(),
+                None => "".to_string(),
+            }
         );
     }
 }
 
 fn print_code_section(s: &CodeSection) {
-    println!("  [{}]","Code".purple());
+    println!("  [{}]", "Code".purple());
     for i in 0..s.code_blocks.len() {
         println!(
             "  {}: locals{:?} code{:?}",

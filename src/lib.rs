@@ -1,7 +1,7 @@
 #![no_std]
 #[macro_use]
 extern crate alloc;
-use alloc::string::{String,ToString};
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use webassembly::*;
 
@@ -40,8 +40,12 @@ fn many0<'a, T>(
                     v.push(item);
                     ip = input;
                 }
-                Err(_) => {
-                    break;
+                Err(e) => {
+                    if ip.len() == 0 {
+                        break;
+                    } else {
+                        return Err(e);
+                    }
                 }
             }
         }
@@ -85,9 +89,15 @@ pub struct MemoryExport {
     pub index: u32,
 }
 
+pub struct GlobalExport {
+    pub name: String,
+    pub index: u32,
+}
+
 pub enum WasmExport {
     Function(FunctionExport),
     Memory(MemoryExport),
+    Global(GlobalExport),
 }
 
 pub struct ExportSection {
@@ -101,7 +111,7 @@ pub struct UnknownSection {
 
 pub struct WasmMemory {
     pub min_pages: u32,
-    pub max_pages: u32,
+    pub max_pages: Option<u32>,
 }
 
 pub struct MemorySection {
@@ -153,7 +163,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                             outputs: outputs.to_vec(),
                         })
                     }
-                    _ => panic!("unknown type"),
+                    _ => return Err("unknown type".to_string()),
                 });
             }
             Ok((ip, Section::Type(TypeSection { types })))
@@ -192,7 +202,11 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         name,
                         index: export_index,
                     }),
-                    _ => panic!("unknown export"),
+                    DESC_GLOBAL => WasmExport::Global(GlobalExport {
+                        name,
+                        index: export_index,
+                    }),
+                    _ => return Err("unknown export".to_string()),
                 });
             }
             Ok((ip, Section::Export(ExportSection { exports: exports })))
@@ -226,16 +240,28 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let mut ip = input;
             for _ in 0..num_mems {
                 let (input, mem_type) = take(1)(input)?;
-                if mem_type[0] != LIMIT_MIN_MAX {
-                    panic!("unhandled memory type");
+                match mem_type[0] {
+                    LIMIT_MIN_MAX => {
+                        let (input, min_pages) = wasm_u32(input)?;
+                        let (input, max_pages) = wasm_u32(input)?;
+                        ip = input;
+                        memories.push(WasmMemory {
+                            min_pages,
+                            max_pages: Some(max_pages),
+                        });
+                    }
+                    LIMIT_MIN => {
+                        let (input, min_pages) = wasm_u32(input)?;
+                        ip = input;
+                        memories.push(WasmMemory {
+                            min_pages,
+                            max_pages: None,
+                        });
+                    }
+                    _ => {
+                        return Err("unhandled memory type".to_string());
+                    }
                 }
-                let (input, min_pages) = wasm_u32(input)?;
-                let (input, max_pages) = wasm_u32(input)?;
-                ip = input;
-                memories.push(WasmMemory {
-                    min_pages,
-                    max_pages,
-                });
             }
             Ok((ip, Section::Memory(MemorySection { memories })))
         }
