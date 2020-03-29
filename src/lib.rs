@@ -177,7 +177,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             for _ in 0..num_exports {
                 let (input, num_chars) = wasm_u32(ip)?;
                 let (input, chars) = take(num_chars as usize)(input)?;
-                let name = alloc::str::from_utf8(chars).unwrap().to_string();
+                let name = match alloc::str::from_utf8(chars) {
+                    Ok(b) => b.to_string(),
+                    Err(_) => return Err("could not parse export name as utf8".to_string()),
+                };
                 let (input, export_type) = take(1)(input)?;
                 let (input, export_index) = wasm_u32(input)?;
                 ip = input;
@@ -201,7 +204,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let mut ip = input;
             for _ in 0..num_funcs {
                 let (input, num_op_codes) = wasm_u32(input)?;
-                let (num_locals, byte_count) = input.try_extract_u32(0).unwrap();
+                let (num_locals, byte_count) = match input.try_extract_u32(0) {
+                    Ok(r) => r,
+                    Err(e) => return Err(e.to_string()),
+                };
                 let (input, _) = take(byte_count as usize)(input)?;
                 let (input, locals) = take(num_locals as usize)(input)?;
                 let (input, op_codes) =
@@ -247,19 +253,15 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<(&[u8], Program), String> {
+fn wasm_module(input: &[u8]) -> Result<Program, String> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
-    let (input, sections) = many0(section)(input)?;
-    Ok((input, Program { sections }))
+    let (_, sections) = many0(section)(input)?;
+    Ok(Program { sections })
 }
 
 impl Program {
     pub fn load(input: &[u8]) -> Result<Program, String> {
-        let result = wasm_module(input);
-        match result {
-            Ok((_, program)) => Ok(program),
-            Err(_) => Err("failed to parse".to_string()),
-        }
+        wasm_module(input)
     }
 }
