@@ -12,7 +12,7 @@ watson = "0"
 # Usage
 
 ```rust
-let program = watson::Program.load(&bytes_of_wasm)
+let program = watson::Program.load(&bytes_of_wasm)?;
 for s in program.sections {
    match s {
       CodeSection(code)=> ...,
