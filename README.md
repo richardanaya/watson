@@ -4,9 +4,40 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
 
+**coverage is currently small**
+
+
+- [x] custom section
+- [ ] type section
+- [ ] import section
+- [X] function section
+- [ ] table section
+- [X] memory section
+- [ ] global section
+- [X] export section
+- [ ] start section
+- [ ] element section
+- [X] code section
+- [ ] data section
+
 ```rust
 [dependencies]
 watson = "0"
+```
+
+# Usage
+
+```rust
+use  watson::*;
+
+let program = Program.load(&bytes_of_wasm)?;
+for s in program.sections {
+   match s {
+      CodeSection(code)=> ...,
+      ...
+   }
+}
+...
 ```
 
 # License
