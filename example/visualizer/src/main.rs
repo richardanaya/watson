@@ -77,6 +77,7 @@ fn print_section(s: &Section) {
         Section::Code(s) => print_code_section(&s),
         Section::Memory(s) => print_memory_section(&s),
         Section::Unknown(s) => print_unknown_section(&s),
+        _ => (),
     }
 }
 

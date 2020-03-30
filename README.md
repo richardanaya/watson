@@ -7,15 +7,15 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
 **coverage is currently small**
 
 
-- [x] custom section
-- [ ] type section
+- [ ] custom section
+- [x] type section
 - [ ] import section
 - [X] function section
 - [ ] table section
 - [X] memory section
 - [ ] global section
 - [X] export section
-- [ ] start section
+- [x] start section
 - [ ] element section
 - [X] code section
 - [ ] data section

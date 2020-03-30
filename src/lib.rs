@@ -118,12 +118,17 @@ pub struct MemorySection {
     pub memories: Vec<WasmMemory>,
 }
 
+pub struct StartSection {
+    pub start_function: usize,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
     Code(CodeSection),
     Export(ExportSection),
     Memory(MemorySection),
+    Start(StartSection),
     Unknown(UnknownSection),
 }
 
@@ -178,6 +183,15 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                 function_types.push(index);
             }
             Ok((ip, Section::Function(FunctionSection { function_types })))
+        }
+        SECTION_START => {
+            let (input, start_function) = wasm_u32(input)?;
+            Ok((
+                input,
+                Section::Start(StartSection {
+                    start_function: start_function as usize,
+                }),
+            ))
         }
         SECTION_EXPORT => {
             let (input, num_exports) = wasm_u32(input)?;
