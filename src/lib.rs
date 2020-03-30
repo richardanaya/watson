@@ -94,8 +94,14 @@ pub struct GlobalExport {
     pub index: usize,
 }
 
+pub struct TableExport {
+    pub name: String,
+    pub index: usize,
+}
+
 pub enum WasmExport {
     Function(FunctionExport),
+    Table(TableExport),
     Memory(MemoryExport),
     Global(GlobalExport),
 }
@@ -217,6 +223,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         index: export_index as usize,
                     }),
                     DESC_GLOBAL => WasmExport::Global(GlobalExport {
+                        name,
+                        index: export_index as usize,
+                    }),
+                    DESC_TABLE => WasmExport::Table(TableExport {
                         name,
                         index: export_index as usize,
                     }),
