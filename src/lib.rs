@@ -5,6 +5,55 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use webassembly::*;
 
+pub trait WasmDataTypes {
+    fn try_to_wasm_types(self) -> Result<Vec<DataType>, String>;
+}
+
+pub trait WasmDataType {
+    fn try_to_wasm_type(self) -> Result<DataType, String>;
+}
+
+#[derive(Clone)]
+pub enum DataType {
+    I32,
+    I64,
+    F32,
+    F64,
+}
+
+impl alloc::string::ToString for DataType {
+    fn to_string(&self) -> String {
+        match self {
+            DataType::I32 => "I32".to_string(),
+            DataType::I64 => "I64".to_string(),
+            DataType::F32 => "F32".to_string(),
+            DataType::F64 => "F64".to_string(),
+        }
+    }
+}
+
+impl WasmDataTypes for Vec<u8> {
+    fn try_to_wasm_types(self) -> Result<Vec<DataType>, String> {
+        let mut r = vec![];
+        for v in self {
+            r.push(v.try_to_wasm_type()?);
+        }
+        Ok(r)
+    }
+}
+
+impl WasmDataType for u8 {
+    fn try_to_wasm_type(self) -> Result<DataType, String> {
+        match self {
+            I32 => Ok(DataType::I32),
+            I64 => Ok(DataType::I64),
+            F32 => Ok(DataType::F32),
+            F64 => Ok(DataType::F64),
+            _ => Err("could not convert data type".to_string()),
+        }
+    }
+}
+
 fn tag(tag: &[u8]) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> + '_ {
     move |input: &[u8]| {
         if tag.len() > input.len() {
@@ -54,8 +103,8 @@ fn many0<'a, T>(
 }
 
 pub struct FunctionType {
-    pub inputs: Vec<u8>,
-    pub outputs: Vec<u8>,
+    pub inputs: Vec<DataType>,
+    pub outputs: Vec<DataType>,
 }
 
 pub enum WasmType {
@@ -71,7 +120,7 @@ pub struct FunctionSection {
 }
 
 pub struct CodeBlock {
-    pub locals: Vec<(u32, u8)>,
+    pub locals: Vec<(u32, DataType)>,
     pub code: Vec<u8>,
 }
 
@@ -155,8 +204,8 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         let (input, outputs) = take(num_outputs as usize)(input)?;
                         ip = input;
                         WasmType::Function(FunctionType {
-                            inputs: inputs.to_vec(),
-                            outputs: outputs.to_vec(),
+                            inputs: inputs.to_vec().try_to_wasm_types()?,
+                            outputs: outputs.to_vec().try_to_wasm_types()?,
                         })
                     }
                     _ => return Err("unknown type".to_string()),
@@ -246,7 +295,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
 
                     let (input, local_type) = take(1 as usize)(input)?;
                     total_bytes += 1;
-                    local_vectors.push((num_locals, local_type[0]));
+                    local_vectors.push((num_locals, local_type[0].try_to_wasm_type()?));
                     ip2 = input;
                 }
                 let input = ip2;

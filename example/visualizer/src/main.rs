@@ -9,7 +9,17 @@ fn print_type_section(s: &TypeSection) {
     for i in 0..s.types.len() {
         match &s.types[i] {
             WasmType::Function(f) => {
-                println!("  0: fn(inputs{:?}) -> outputs{:?}", f.inputs, f.outputs);
+                println!(
+                    "  0: fn(inputs{:?}) -> outputs{:?}",
+                    f.inputs
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>(),
+                    f.outputs
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                );
             }
         }
     }
@@ -63,7 +73,13 @@ fn print_code_section(s: &CodeSection) {
     for i in 0..s.code_blocks.len() {
         println!(
             "  {}: locals{:?} code{:?}",
-            i, s.code_blocks[i].locals, s.code_blocks[i].code
+            i,
+            s.code_blocks[i]
+                .locals
+                .iter()
+                .map(|x| (x.0, x.1.to_string()))
+                .collect::<Vec<(u32, String)>>(),
+            s.code_blocks[i].code
         );
     }
 }
@@ -71,6 +87,11 @@ fn print_code_section(s: &CodeSection) {
 fn print_unknown_section(s: &UnknownSection) {
     println!("  [{}:{}]", "Unknown".purple(), s.id);
     println!("  {:?}", s.data);
+}
+
+fn print_start_section(s: &StartSection) {
+    println!("  [{}]", "Start".purple());
+    println!("  {:?}", s.start_function);
 }
 
 fn print_section(s: &Section) {
@@ -81,7 +102,7 @@ fn print_section(s: &Section) {
         Section::Code(s) => print_code_section(&s),
         Section::Memory(s) => print_memory_section(&s),
         Section::Unknown(s) => print_unknown_section(&s),
-        _ => (),
+        Section::Start(s) => print_start_section(&s),
     }
 }
 
