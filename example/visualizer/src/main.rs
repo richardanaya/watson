@@ -35,6 +35,10 @@ fn print_export_section(s: &ExportSection) {
             WasmExport::Global(f) => {
                 println!("  {:?} global[{}]", f.name, f.index);
             }
+
+            WasmExport::Table(f) => {
+                println!("  {:?} table[{}]", f.name, f.index);
+            }
         }
     }
 }

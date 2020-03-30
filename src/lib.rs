@@ -71,7 +71,7 @@ pub struct FunctionSection {
 }
 
 pub struct CodeBlock {
-    pub locals: Vec<u8>,
+    pub locals: Vec<(u32, u8)>,
     pub code: Vec<u8>,
 }
 
@@ -79,31 +79,16 @@ pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
-pub struct FunctionExport {
-    pub name: String,
-    pub index: usize,
-}
-
-pub struct MemoryExport {
-    pub name: String,
-    pub index: usize,
-}
-
-pub struct GlobalExport {
-    pub name: String,
-    pub index: usize,
-}
-
-pub struct TableExport {
+pub struct Export {
     pub name: String,
     pub index: usize,
 }
 
 pub enum WasmExport {
-    Function(FunctionExport),
-    Table(TableExport),
-    Memory(MemoryExport),
-    Global(GlobalExport),
+    Function(Export),
+    Table(Export),
+    Memory(Export),
+    Global(Export),
 }
 
 pub struct ExportSection {
@@ -214,19 +199,19 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                 let (input, export_index) = wasm_u32(input)?;
                 ip = input;
                 exports.push(match export_type[0] {
-                    DESC_FUNCTION => WasmExport::Function(FunctionExport {
+                    DESC_FUNCTION => WasmExport::Function(Export {
                         name,
                         index: export_index as usize,
                     }),
-                    DESC_MEMORY => WasmExport::Memory(MemoryExport {
+                    DESC_MEMORY => WasmExport::Memory(Export {
                         name,
                         index: export_index as usize,
                     }),
-                    DESC_GLOBAL => WasmExport::Global(GlobalExport {
+                    DESC_GLOBAL => WasmExport::Global(Export {
                         name,
                         index: export_index as usize,
                     }),
-                    DESC_TABLE => WasmExport::Table(TableExport {
+                    DESC_TABLE => WasmExport::Table(Export {
                         name,
                         index: export_index as usize,
                     }),
@@ -241,18 +226,36 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let mut ip = input;
             for _ in 0..num_funcs {
                 let (input, num_op_codes) = wasm_u32(input)?;
-                let (num_locals, byte_count) = match input.try_extract_u32(0) {
+
+                let mut total_bytes = 0;
+                let (num_local_vecs, byte_count) = match input.try_extract_u32(0) {
                     Ok(r) => r,
                     Err(e) => return Err(e.to_string()),
                 };
+                total_bytes += byte_count;
                 let (input, _) = take(byte_count as usize)(input)?;
-                let (input, locals) = take(num_locals as usize)(input)?;
+                let mut ip2 = input;
+                let mut local_vectors = vec![];
+                for _ in 0..num_local_vecs {
+                    let (num_locals, byte_count) = match input.try_extract_u32(0) {
+                        Ok(r) => r,
+                        Err(e) => return Err(e.to_string()),
+                    };
+                    let (input, _) = take(byte_count as usize)(input)?;
+                    total_bytes += byte_count;
+
+                    let (input, local_type) = take(1 as usize)(input)?;
+                    total_bytes += 1;
+                    local_vectors.push((num_locals, local_type[0]));
+                    ip2 = input;
+                }
+                let input = ip2;
                 let (input, op_codes) =
-                    take(num_op_codes as usize - 1 - byte_count as usize)(input)?;
+                    take(num_op_codes as usize - 1 - total_bytes as usize)(input)?;
                 let (input, _) = tag(&[END])(input)?;
                 ip = input;
                 code_blocks.push(CodeBlock {
-                    locals: locals.to_vec(),
+                    locals: local_vectors.to_vec(),
                     code: op_codes.to_vec(),
                 });
             }
@@ -314,7 +317,7 @@ impl Program {
         wasm_module(input)
     }
 
-    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a FunctionExport, String> {
+    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, String> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
                 true
