@@ -4,7 +4,7 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
 
-**coverage is currently small**
+**coverage is currently in progress**
 
 
 - [ ] custom section
