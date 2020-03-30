@@ -30,7 +30,7 @@ watson = "0"
 ```rust
 use  watson::*;
 
-let program = Program.load(&bytes_of_wasm)?;
+let program = Program.parse(&bytes_of_wasm)?;
 for s in program.sections {
    match s {
       CodeSection(code)=> ...,
