@@ -2,7 +2,7 @@
 
 <a href="https://docs.rs/watson"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 
-a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust.
+a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
 **coverage is currently in progress**
 
