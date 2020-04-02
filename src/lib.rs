@@ -282,10 +282,9 @@ pub struct Program {
 pub enum Instruction {
     Unreachable,
     Nop,
-    Block(Vec<Instruction>),
-    Loop(Vec<Instruction>),
-    If(Vec<Instruction>),
-    IfElse(Vec<Instruction>, Vec<Instruction>),
+    Block(u8, Vec<Instruction>),
+    Loop(u8, Vec<Instruction>),
+    If(u8, Vec<Instruction>, Option<Vec<Instruction>>),
     Br(u32),
     BrIf(u32),
     BrTable(Vec<u32>, u32),
@@ -298,6 +297,7 @@ pub enum Instruction {
     LocalSet(u32),
     LocalTee(u32),
     GlobalGet(u32),
+    GlobalSet(u32),
     I32Load(u32, u32),
     I64Load(u32, u32),
     F32Load(u32, u32),
@@ -537,168 +537,487 @@ fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
     }
 }
 
+fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), String> {
+    let mut ip = input;
+    let instruction;
+
+    match op {
+        UNREACHABLE => instruction = Instruction::Unreachable,
+        NOP => instruction = Instruction::Nop,
+        RETURN => instruction = Instruction::Return,
+
+        BLOCK => {
+            let (input, block_type) = take(1)(input)?;
+            let (input, block_instructions) = wasm_expression(input)?;
+            instruction = Instruction::Block(block_type[0], block_instructions);
+            ip = input;
+        }
+
+        LOOP => {
+            let (input, block_type) = take(1)(input)?;
+            let (input, loop_instructions) = wasm_expression(input)?;
+            instruction = Instruction::Loop(block_type[0], loop_instructions);
+            ip = input;
+        }
+
+        IF => {
+            let (input, block_type) = take(1)(input)?;
+            let (input, if_instructions, else_instructions) = wasm_if_else(input)?;
+            instruction = Instruction::If(block_type[0], if_instructions, else_instructions);
+            ip = input;
+        }
+
+        BR => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::Br(idx);
+            ip = input;
+        }
+
+        BR_IF => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::BrIf(idx);
+            ip = input;
+        }
+
+        BR_TABLE => {
+            let (input, num_labels) = wasm_u32(input)?;
+            let parse_label = many_n(num_labels as usize, |input| wasm_u32(input));
+            let (input, labels) = parse_label(input)?;
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::BrTable(labels, idx);
+            ip = input;
+        }
+
+        CALL => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::Call(idx);
+            ip = input;
+        }
+
+        CALL_INDIRECT => {
+            let (input, idx) = wasm_u32(input)?;
+            let (input, _) = wasm_u32(input)?;
+            instruction = Instruction::Call(idx);
+            ip = input;
+        }
+
+        DROP => instruction = Instruction::Drop,
+        SELECT => instruction = Instruction::Select,
+        I32_CONST => {
+            let (input, c, _) = wasm_i32(input)?;
+            instruction = Instruction::I32Const(c);
+            ip = input;
+        }
+        I64_CONST => {
+            let (input, c, _) = wasm_i64(input)?;
+            instruction = Instruction::I64Const(c);
+            ip = input;
+        }
+
+        F32_CONST => {
+            let (input, c, _) = wasm_f32(input)?;
+            instruction = Instruction::F32Const(c);
+            ip = input;
+        }
+
+        F64_CONST => {
+            let (input, c, _) = wasm_f64(input)?;
+            instruction = Instruction::F64Const(c);
+            ip = input;
+        }
+        LOCAL_GET => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::LocalGet(idx);
+            ip = input;
+        }
+        LOCAL_SET => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::LocalSet(idx);
+            ip = input;
+        }
+        LOCAL_TEE => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::LocalTee(idx);
+            ip = input;
+        }
+        GLOBAL_GET => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::GlobalGet(idx);
+            ip = input;
+        }
+        GLOBAL_SET => {
+            let (input, idx) = wasm_u32(input)?;
+            instruction = Instruction::GlobalSet(idx);
+            ip = input;
+        }
+        I32_LOAD => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Load(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load(align, offset);
+            ip = input;
+        }
+
+        F32_LOAD => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::F32Load(align, offset);
+            ip = input;
+        }
+
+        F64_LOAD => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::F64Load(align, offset);
+            ip = input;
+        }
+
+        I32_LOAD8_S => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Load8S(align, offset);
+            ip = input;
+        }
+
+        I32_LOAD8_U => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Load8U(align, offset);
+            ip = input;
+        }
+
+        I32_LOAD16_S => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Load16S(align, offset);
+            ip = input;
+        }
+
+        I32_LOAD16_U => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Load16U(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD8_S => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load8S(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD8_U => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load8U(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD16_S => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load16S(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD16_U => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load16U(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD32_S => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load32S(align, offset);
+            ip = input;
+        }
+
+        I64_LOAD32_U => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Load32U(align, offset);
+            ip = input;
+        }
+
+        I32_STORE => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Store(align, offset);
+            ip = input;
+        }
+
+        I64_STORE => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Store(align, offset);
+            ip = input;
+        }
+
+        F32_STORE => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::F32Store(align, offset);
+            ip = input;
+        }
+        F64_STORE => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::F64Store(align, offset);
+            ip = input;
+        }
+
+        I32_STORE8 => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Store8(align, offset);
+            ip = input;
+        }
+
+        I32_STORE16 => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I32Store16(align, offset);
+            ip = input;
+        }
+
+        I64_STORE8 => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Store8(align, offset);
+            ip = input;
+        }
+
+        I64_STORE16 => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Store16(align, offset);
+            ip = input;
+        }
+
+        I64_STORE32 => {
+            let (input, align) = wasm_u32(input)?;
+            let (input, offset) = wasm_u32(input)?;
+            instruction = Instruction::I64Store32(align, offset);
+            ip = input;
+        }
+
+        MEMORY_GROW => {
+            let (input, _) = wasm_u32(input)?;
+            instruction = Instruction::MemoryGrow;
+            ip = input;
+        }
+
+        MEMORY_SIZE => {
+            let (input, _) = wasm_u32(input)?;
+            instruction = Instruction::MemorySize;
+            ip = input;
+        }
+
+        I32_EQZ => instruction = Instruction::I32Eqz,
+        I32_EQ => instruction = Instruction::I32Eq,
+        I32_NE => instruction = Instruction::I32Ne,
+        I32_LT_S => instruction = Instruction::I32LtS,
+        I32_LT_U => instruction = Instruction::I32LtU,
+        I32_GT_S => instruction = Instruction::I32GtS,
+        I32_GT_U => instruction = Instruction::I32GtU,
+        I32_LE_S => instruction = Instruction::I32LeS,
+        I32_LE_U => instruction = Instruction::I32LeU,
+        I32_GE_S => instruction = Instruction::I32GeS,
+        I32_GE_U => instruction = Instruction::I32GeU,
+        I64_EQZ => instruction = Instruction::I64Eqz,
+        I64_EQ => instruction = Instruction::I64Eq,
+        I64_NE => instruction = Instruction::I64Ne,
+        I64_LT_S => instruction = Instruction::I64LtS,
+        I64_LT_U => instruction = Instruction::I64LtU,
+        I64_GT_S => instruction = Instruction::I64GtS,
+        I64_GT_U => instruction = Instruction::I64GtU,
+        I64_LE_S => instruction = Instruction::I64LeS,
+        I64_LE_U => instruction = Instruction::I64LeU,
+        I64_GE_S => instruction = Instruction::I64GeS,
+        I64_GE_U => instruction = Instruction::I64GeU,
+        F32_EQ => instruction = Instruction::F32Eq,
+        F32_NE => instruction = Instruction::F32Ne,
+        F32_LT => instruction = Instruction::F32Lt,
+        F32_GT => instruction = Instruction::F32Gt,
+        F32_LE => instruction = Instruction::F32Le,
+        F32_GE => instruction = Instruction::F32Ge,
+        F64_EQ => instruction = Instruction::F64Eq,
+        F64_NE => instruction = Instruction::F64Ne,
+        F64_LT => instruction = Instruction::F64Lt,
+        F64_GT => instruction = Instruction::F64Gt,
+        F64_LE => instruction = Instruction::F64Le,
+        F64_GE => instruction = Instruction::F64Ge,
+        I32_CLZ => instruction = Instruction::I32Clz,
+        I32_CTZ => instruction = Instruction::I32Ctz,
+        I32_POPCNT => instruction = Instruction::I32Popcnt,
+        I32_ADD => instruction = Instruction::I32Add,
+        I32_SUB => instruction = Instruction::I32Sub,
+        I32_MUL => instruction = Instruction::I32Mul,
+        I32_DIV_S => instruction = Instruction::I32DivS,
+        I32_DIV_U => instruction = Instruction::I32DivU,
+        I32_REM_S => instruction = Instruction::I32RemS,
+        I32_REM_U => instruction = Instruction::I32RemU,
+        I32_AND => instruction = Instruction::I32And,
+        I32_OR => instruction = Instruction::I32Or,
+        I32_XOR => instruction = Instruction::I32Xor,
+        I32_SHL => instruction = Instruction::I32Shl,
+        I32_SHR_S => instruction = Instruction::I32ShrS,
+        I32_SHR_U => instruction = Instruction::I32ShrU,
+        I32_ROTL => instruction = Instruction::I32Rotl,
+        I32_ROTR => instruction = Instruction::I32Rotr,
+        I64_CLZ => instruction = Instruction::I64Clz,
+        I64_CTZ => instruction = Instruction::I64Ctz,
+        I64_POPCNT => instruction = Instruction::I64Popcnt,
+        I64_ADD => instruction = Instruction::I64Add,
+        I64_SUB => instruction = Instruction::I64Sub,
+        I64_MUL => instruction = Instruction::I64Mul,
+        I64_DIV_S => instruction = Instruction::I64DivS,
+        I64_DIV_U => instruction = Instruction::I64DivU,
+        I64_REM_S => instruction = Instruction::I64RemS,
+        I64_REM_U => instruction = Instruction::I64RemU,
+        I64_AND => instruction = Instruction::I64And,
+        I64_OR => instruction = Instruction::I64Or,
+        I64_XOR => instruction = Instruction::I64Xor,
+        I64_SHL => instruction = Instruction::I64Shl,
+        I64_SHR_S => instruction = Instruction::I64ShrS,
+        I64_SHR_U => instruction = Instruction::I64ShrU,
+        I64_ROTL => instruction = Instruction::I64Rotl,
+        I64_ROTR => instruction = Instruction::I64Rotr,
+        F32_ABS => instruction = Instruction::F32AbS,
+        F32_NEG => instruction = Instruction::F32Neg,
+        F32_CEIL => instruction = Instruction::F32Ceil,
+        F32_FLOOR => instruction = Instruction::F32Floor,
+        F32_TRUNC => instruction = Instruction::F32Trunc,
+        F32_NEAREST => instruction = Instruction::F32Nearest,
+        F32_SQRT => instruction = Instruction::F32Sqrt,
+        F32_ADD => instruction = Instruction::F32Add,
+        F32_SUB => instruction = Instruction::F32Sub,
+        F32_MUL => instruction = Instruction::F32Mul,
+        F32_DIV => instruction = Instruction::F32Div,
+        F32_MIN => instruction = Instruction::F32Min,
+        F32_MAX => instruction = Instruction::F32Max,
+        F32_COPYSIGN => instruction = Instruction::F32Copysign,
+        F64_ABS => instruction = Instruction::F64AbS,
+        F64_NEG => instruction = Instruction::F64Neg,
+        F64_CEIL => instruction = Instruction::F64Ceil,
+        F64_FLOOR => instruction = Instruction::F64Floor,
+        F64_TRUNC => instruction = Instruction::F64Trunc,
+        F64_NEAREST => instruction = Instruction::F64Nearest,
+        F64_SQRT => instruction = Instruction::F64Sqrt,
+        F64_ADD => instruction = Instruction::F64Add,
+        F64_SUB => instruction = Instruction::F64Sub,
+        F64_MUL => instruction = Instruction::F64Mul,
+        F64_DIV => instruction = Instruction::F64Div,
+        F64_MIN => instruction = Instruction::F64Min,
+        F64_MAX => instruction = Instruction::F64Max,
+        F64_COPYSIGN => instruction = Instruction::F64Copysign,
+        I32_WRAP_F64 => instruction = Instruction::I32wrapF64,
+        I32_TRUNC_S_F32 => instruction = Instruction::I32TruncSF32,
+        I32_TRUNC_U_F32 => instruction = Instruction::I32TruncUF32,
+        I32_TRUNC_S_F64 => instruction = Instruction::I32TruncSF64,
+        I32_TRUNC_U_F64 => instruction = Instruction::I32TruncUF64,
+        I64_EXTEND_S_I32 => instruction = Instruction::I64ExtendSI32,
+        I64_EXTEND_U_I32 => instruction = Instruction::I64ExtendUI32,
+        I64_TRUNC_S_F32 => instruction = Instruction::I64TruncSF32,
+        I64_TRUNC_U_F32 => instruction = Instruction::I64TruncUF32,
+        I64_TRUNC_S_F64 => instruction = Instruction::I64TruncSF64,
+        I64_TRUNC_U_F64 => instruction = Instruction::I64TruncUF64,
+        F32_CONVERT_S_I32 => instruction = Instruction::F32ConvertSI32,
+        F32_CONVERT_U_I32 => instruction = Instruction::F32ConvertUI32,
+        F32_CONVERT_S_I64 => instruction = Instruction::F32ConvertSI64,
+        F32_CONVERT_U_I64 => instruction = Instruction::F32ConvertUI64,
+        F32_DEMOTE_F64 => instruction = Instruction::F32DemoteF64,
+        F64_CONVERT_S_I32 => instruction = Instruction::F64ConvertSI32,
+        F64_CONVERT_U_I32 => instruction = Instruction::F64ConvertUI32,
+        F64_CONVERT_S_I64 => instruction = Instruction::F64ConvertSI64,
+        F64_CONVERT_U_I64 => instruction = Instruction::F64ConvertUI64,
+        F64_PROMOTE_F32 => instruction = Instruction::F64PromoteF32,
+        I32_REINTERPRET_F32 => instruction = Instruction::I32ReinterpretF32,
+        I64_REINTERPRET_F64 => instruction = Instruction::I64ReinterpretF64,
+        F32_REINTERPRET_I32 => instruction = Instruction::F32ReinterpretI32,
+        F64_REINTERPRET_I64 => instruction = Instruction::F64ReinterpretI64,
+        _ => return Err("unknown expression".to_string()),
+    };
+    Ok((ip, instruction))
+}
+
 fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), String> {
     let mut instructions = vec![];
     let mut ip = input;
     loop {
         let (input, op) = take(1)(ip)?;
+        ip = input;
         match op[0] {
             END => {
                 ip = input;
                 break;
             }
-            DROP => instructions.push(Instruction::Drop),
-            SELECT => instructions.push(Instruction::Select),
-            I32_CONST => {
-                let (input, c, _) = wasm_i32(input)?;
-                instructions.push(Instruction::I32Const(c));
-                ip = input;
-            }
-            I64_CONST => {
-                let (input, c, _) = wasm_i64(input)?;
-                instructions.push(Instruction::I64Const(c));
-                ip = input;
-            }
 
-            F32_CONST => {
-                let (input, c, _) = wasm_f32(input)?;
-                instructions.push(Instruction::F32Const(c));
+            _ => {
+                let (input, instruction) = wasm_instruction(op[0], ip)?;
+                instructions.push(instruction);
                 ip = input;
             }
-
-            F64_CONST => {
-                let (input, c, _) = wasm_f64(input)?;
-                instructions.push(Instruction::F64Const(c));
-                ip = input;
-            }
-
-            I32_EQZ => instructions.push(Instruction::I32Eqz),
-            I32_EQ => instructions.push(Instruction::I32Eq),
-            I32_NE => instructions.push(Instruction::I32Ne),
-            I32_LT_S => instructions.push(Instruction::I32LtS),
-            I32_LT_U => instructions.push(Instruction::I32LtU),
-            I32_GT_S => instructions.push(Instruction::I32GtS),
-            I32_GT_U => instructions.push(Instruction::I32GtU),
-            I32_LE_S => instructions.push(Instruction::I32LeS),
-            I32_LE_U => instructions.push(Instruction::I32LeU),
-            I32_GE_S => instructions.push(Instruction::I32GeS),
-            I32_GE_U => instructions.push(Instruction::I32GeU),
-            I64_EQZ => instructions.push(Instruction::I64Eqz),
-            I64_EQ => instructions.push(Instruction::I64Eq),
-            I64_NE => instructions.push(Instruction::I64Ne),
-            I64_LT_S => instructions.push(Instruction::I64LtS),
-            I64_LT_U => instructions.push(Instruction::I64LtU),
-            I64_GT_S => instructions.push(Instruction::I64GtS),
-            I64_GT_U => instructions.push(Instruction::I64GtU),
-            I64_LE_S => instructions.push(Instruction::I64LeS),
-            I64_LE_U => instructions.push(Instruction::I64LeU),
-            I64_GE_S => instructions.push(Instruction::I64GeS),
-            I64_GE_U => instructions.push(Instruction::I64GeU),
-            F32_EQ => instructions.push(Instruction::F32Eq),
-            F32_NE => instructions.push(Instruction::F32Ne),
-            F32_LT => instructions.push(Instruction::F32Lt),
-            F32_GT => instructions.push(Instruction::F32Gt),
-            F32_LE => instructions.push(Instruction::F32Le),
-            F32_GE => instructions.push(Instruction::F32Ge),
-            F64_EQ => instructions.push(Instruction::F64Eq),
-            F64_NE => instructions.push(Instruction::F64Ne),
-            F64_LT => instructions.push(Instruction::F64Lt),
-            F64_GT => instructions.push(Instruction::F64Gt),
-            F64_LE => instructions.push(Instruction::F64Le),
-            F64_GE => instructions.push(Instruction::F64Ge),
-            I32_CLZ => instructions.push(Instruction::I32Clz),
-            I32_CTZ => instructions.push(Instruction::I32Ctz),
-            I32_POPCNT => instructions.push(Instruction::I32Popcnt),
-            I32_ADD => instructions.push(Instruction::I32Add),
-            I32_SUB => instructions.push(Instruction::I32Sub),
-            I32_MUL => instructions.push(Instruction::I32Mul),
-            I32_DIV_S => instructions.push(Instruction::I32DivS),
-            I32_DIV_U => instructions.push(Instruction::I32DivU),
-            I32_REM_S => instructions.push(Instruction::I32RemS),
-            I32_REM_U => instructions.push(Instruction::I32RemU),
-            I32_AND => instructions.push(Instruction::I32And),
-            I32_OR => instructions.push(Instruction::I32Or),
-            I32_XOR => instructions.push(Instruction::I32Xor),
-            I32_SHL => instructions.push(Instruction::I32Shl),
-            I32_SHR_S => instructions.push(Instruction::I32ShrS),
-            I32_SHR_U => instructions.push(Instruction::I32ShrU),
-            I32_ROTL => instructions.push(Instruction::I32Rotl),
-            I32_ROTR => instructions.push(Instruction::I32Rotr),
-            I64_CLZ => instructions.push(Instruction::I64Clz),
-            I64_CTZ => instructions.push(Instruction::I64Ctz),
-            I64_POPCNT => instructions.push(Instruction::I64Popcnt),
-            I64_ADD => instructions.push(Instruction::I64Add),
-            I64_SUB => instructions.push(Instruction::I64Sub),
-            I64_MUL => instructions.push(Instruction::I64Mul),
-            I64_DIV_S => instructions.push(Instruction::I64DivS),
-            I64_DIV_U => instructions.push(Instruction::I64DivU),
-            I64_REM_S => instructions.push(Instruction::I64RemS),
-            I64_REM_U => instructions.push(Instruction::I64RemU),
-            I64_AND => instructions.push(Instruction::I64And),
-            I64_OR => instructions.push(Instruction::I64Or),
-            I64_XOR => instructions.push(Instruction::I64Xor),
-            I64_SHL => instructions.push(Instruction::I64Shl),
-            I64_SHR_S => instructions.push(Instruction::I64ShrS),
-            I64_SHR_U => instructions.push(Instruction::I64ShrU),
-            I64_ROTL => instructions.push(Instruction::I64Rotl),
-            I64_ROTR => instructions.push(Instruction::I64Rotr),
-            F32_ABS => instructions.push(Instruction::F32AbS),
-            F32_NEG => instructions.push(Instruction::F32Neg),
-            F32_CEIL => instructions.push(Instruction::F32Ceil),
-            F32_FLOOR => instructions.push(Instruction::F32Floor),
-            F32_TRUNC => instructions.push(Instruction::F32Trunc),
-            F32_NEAREST => instructions.push(Instruction::F32Nearest),
-            F32_SQRT => instructions.push(Instruction::F32Sqrt),
-            F32_ADD => instructions.push(Instruction::F32Add),
-            F32_SUB => instructions.push(Instruction::F32Sub),
-            F32_MUL => instructions.push(Instruction::F32Mul),
-            F32_DIV => instructions.push(Instruction::F32Div),
-            F32_MIN => instructions.push(Instruction::F32Min),
-            F32_MAX => instructions.push(Instruction::F32Max),
-            F32_COPYSIGN => instructions.push(Instruction::F32Copysign),
-            F64_ABS => instructions.push(Instruction::F64AbS),
-            F64_NEG => instructions.push(Instruction::F64Neg),
-            F64_CEIL => instructions.push(Instruction::F64Ceil),
-            F64_FLOOR => instructions.push(Instruction::F64Floor),
-            F64_TRUNC => instructions.push(Instruction::F64Trunc),
-            F64_NEAREST => instructions.push(Instruction::F64Nearest),
-            F64_SQRT => instructions.push(Instruction::F64Sqrt),
-            F64_ADD => instructions.push(Instruction::F64Add),
-            F64_SUB => instructions.push(Instruction::F64Sub),
-            F64_MUL => instructions.push(Instruction::F64Mul),
-            F64_DIV => instructions.push(Instruction::F64Div),
-            F64_MIN => instructions.push(Instruction::F64Min),
-            F64_MAX => instructions.push(Instruction::F64Max),
-            F64_COPYSIGN => instructions.push(Instruction::F64Copysign),
-            I32_WRAP_F64 => instructions.push(Instruction::I32wrapF64),
-            I32_TRUNC_S_F32 => instructions.push(Instruction::I32TruncSF32),
-            I32_TRUNC_U_F32 => instructions.push(Instruction::I32TruncUF32),
-            I32_TRUNC_S_F64 => instructions.push(Instruction::I32TruncSF64),
-            I32_TRUNC_U_F64 => instructions.push(Instruction::I32TruncUF64),
-            I64_EXTEND_S_I32 => instructions.push(Instruction::I64ExtendSI32),
-            I64_EXTEND_U_I32 => instructions.push(Instruction::I64ExtendUI32),
-            I64_TRUNC_S_F32 => instructions.push(Instruction::I64TruncSF32),
-            I64_TRUNC_U_F32 => instructions.push(Instruction::I64TruncUF32),
-            I64_TRUNC_S_F64 => instructions.push(Instruction::I64TruncSF64),
-            I64_TRUNC_U_F64 => instructions.push(Instruction::I64TruncUF64),
-            F32_CONVERT_S_I32 => instructions.push(Instruction::F32ConvertSI32),
-            F32_CONVERT_U_I32 => instructions.push(Instruction::F32ConvertUI32),
-            F32_CONVERT_S_I64 => instructions.push(Instruction::F32ConvertSI64),
-            F32_CONVERT_U_I64 => instructions.push(Instruction::F32ConvertUI64),
-            F32_DEMOTE_F64 => instructions.push(Instruction::F32DemoteF64),
-            F64_CONVERT_S_I32 => instructions.push(Instruction::F64ConvertSI32),
-            F64_CONVERT_U_I32 => instructions.push(Instruction::F64ConvertUI32),
-            F64_CONVERT_S_I64 => instructions.push(Instruction::F64ConvertSI64),
-            F64_CONVERT_U_I64 => instructions.push(Instruction::F64ConvertUI64),
-            F64_PROMOTE_F32 => instructions.push(Instruction::F64PromoteF32),
-            I32_REINTERPRET_F32 => instructions.push(Instruction::I32ReinterpretF32),
-            I64_REINTERPRET_F64 => instructions.push(Instruction::I64ReinterpretF64),
-            F32_REINTERPRET_I32 => instructions.push(Instruction::F32ReinterpretI32),
-            F64_REINTERPRET_I64 => instructions.push(Instruction::F64ReinterpretI64),
-            _ => return Err("unknown expression".to_string()),
         }
     }
     Ok((ip, instructions))
+}
+
+fn wasm_if_else(
+    input: &[u8],
+) -> Result<(&[u8], Vec<Instruction>, Option<Vec<Instruction>>), String> {
+    let mut if_instructions = vec![];
+    let mut else_instructions = vec![];
+    let mut ip = input;
+    let mut more = false;
+    loop {
+        let (input, op) = take(1)(ip)?;
+        ip = input;
+        match op[0] {
+            END => {
+                break;
+            }
+            ELSE => {
+                more = true;
+                break;
+            }
+
+            _ => {
+                let (input, instruction) = wasm_instruction(op[0], ip)?;
+                if_instructions.push(instruction);
+                ip = input;
+            }
+        }
+    }
+    if more {
+        loop {
+            let (input, op) = take(1)(ip)?;
+            ip = input;
+            match op[0] {
+                END => {
+                    break;
+                }
+
+                _ => {
+                    let (input, instruction) = wasm_instruction(op[0], ip)?;
+                    else_instructions.push(instruction);
+                    ip = input;
+                }
+            }
+        }
+        Ok((ip, if_instructions, Some(else_instructions)))
+    } else {
+        Ok((ip, if_instructions, None))
+    }
 }
 
 fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
@@ -802,6 +1121,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                     Ok((input, (num_locals, local_type[0].try_to_value_type()?)))
                 });
                 let (input, local_vectors) = parse_local_vecs(input)?;
+
                 let (input, code_expression) = wasm_expression(input)?;
                 Ok((
                     input,
