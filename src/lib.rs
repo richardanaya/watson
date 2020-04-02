@@ -189,8 +189,8 @@ pub struct UnknownSection {
 }
 
 pub struct WasmMemory {
-    pub min_pages: u32,
-    pub max_pages: Option<u32>,
+    pub min_pages: usize,
+    pub max_pages: Option<usize>,
 }
 
 pub struct MemorySection {
@@ -211,6 +211,16 @@ pub struct GlobalSection {
     pub globals: Vec<Global>,
 }
 
+pub struct Table {
+    pub element_type: u8,
+    pub min: usize,
+    pub max: Option<usize>,
+}
+
+pub struct TableSection {
+    pub tables: Vec<Table>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -221,6 +231,7 @@ pub enum Section {
     Start(StartSection),
     Unknown(UnknownSection),
     Global(GlobalSection),
+    Table(TableSection),
 }
 
 pub struct Program {
@@ -284,6 +295,22 @@ fn wasm_string(input: &[u8]) -> Result<(&[u8], String), String> {
         Err(_) => return Err("could not parse utf8 string".to_string()),
     };
     Ok((input, s))
+}
+
+fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
+    let (input, mem_type) = take(1)(input)?;
+    match mem_type[0] {
+        LIMIT_MIN_MAX => {
+            let (input, min) = wasm_u32(input)?;
+            let (input, max) = wasm_u32(input)?;
+            Ok((input, min as usize, Some(max as usize)))
+        }
+        LIMIT_MIN => {
+            let (input, min) = wasm_u32(input)?;
+            Ok((input, min as usize, None))
+        }
+        _ => Err("unhandled memory type".to_string()),
+    }
 }
 
 fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<u8>), String> {
@@ -461,8 +488,8 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             Ok((input, Section::Code(CodeSection { code_blocks: items })))
         }
         SECTION_IMPORT => {
-            let (input, num_imports) = wasm_u32(input)?;
-            let parse_imports = many_n(num_imports as usize, |input| {
+            let (input, num_items) = wasm_u32(input)?;
+            let parse_items = many_n(num_items as usize, |input| {
                 let (input, module_name) = wasm_string(input)?;
                 let (input, name) = wasm_string(input)?;
                 let (input, import_type) = take(1)(input)?;
@@ -481,12 +508,12 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                     _ => Err("unknown export".to_string()),
                 }
             });
-            let (input, imports) = parse_imports(input)?;
-            Ok((input, Section::Import(ImportSection { imports })))
+            let (input, items) = parse_items(input)?;
+            Ok((input, Section::Import(ImportSection { imports: items })))
         }
         SECTION_GLOBAL => {
-            let (input, num_imports) = wasm_u32(input)?;
-            let parse_imports = many_n(num_imports as usize, |input| {
+            let (input, num_items) = wasm_u32(input)?;
+            let parse_items = many_n(num_items as usize, |input| {
                 let (input, global_value_type) = take(1)(input)?;
                 let (input, global_type) = take(1)(input)?;
                 let (input, expression) = wasm_expression(input)?;
@@ -499,37 +526,41 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                     },
                 ))
             });
-            let (input, globals) = parse_imports(input)?;
-            Ok((input, Section::Global(GlobalSection { globals: globals })))
+            let (input, items) = parse_items(input)?;
+            Ok((input, Section::Global(GlobalSection { globals: items })))
+        }
+        SECTION_TABLE => {
+            let (input, num_items) = wasm_u32(input)?;
+            let parse_items = many_n(num_items as usize, |input| {
+                let (input, element_type) = take(1)(input)?;
+                if element_type[0] == ANYFUNC {
+                    let (input, min, max) = wasm_limit(input)?;
+                    Ok((
+                        input,
+                        Table {
+                            element_type: element_type[0],
+                            min,
+                            max,
+                        },
+                    ))
+                } else {
+                    Err("unknown table type".to_string())
+                }
+            });
+            let (input, items) = parse_items(input)?;
+            Ok((input, Section::Table(TableSection { tables: items })))
         }
         SECTION_MEMORY => {
             let (input, num_items) = wasm_u32(input)?;
             let parse_items = many_n(num_items as usize, |input| {
-                let (input, mem_type) = take(1)(input)?;
-                match mem_type[0] {
-                    LIMIT_MIN_MAX => {
-                        let (input, min_pages) = wasm_u32(input)?;
-                        let (input, max_pages) = wasm_u32(input)?;
-                        Ok((
-                            input,
-                            WasmMemory {
-                                min_pages,
-                                max_pages: Some(max_pages),
-                            },
-                        ))
-                    }
-                    LIMIT_MIN => {
-                        let (input, min_pages) = wasm_u32(input)?;
-                        Ok((
-                            input,
-                            WasmMemory {
-                                min_pages,
-                                max_pages: None,
-                            },
-                        ))
-                    }
-                    _ => Err("unhandled memory type".to_string()),
-                }
+                let (input, min, max) = wasm_limit(input)?;
+                Ok((
+                    input,
+                    WasmMemory {
+                        min_pages: min,
+                        max_pages: max,
+                    },
+                ))
             });
             let (input, items) = parse_items(input)?;
             Ok((input, Section::Memory(MemorySection { memories: items })))

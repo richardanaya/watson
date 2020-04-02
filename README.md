@@ -11,7 +11,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 - [x] type section
 - [ ] import section
 - [X] function section
-- [ ] table section
+- [x] table section
 - [X] memory section
 - [x] global section
 - [X] export section

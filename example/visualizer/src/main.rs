@@ -64,6 +64,22 @@ fn print_import_section(s: &ImportSection) {
     }
 }
 
+fn print_table_section(s: &TableSection) {
+    println!("  [{}]", "Table".purple());
+    for (i, t) in s.tables.iter().enumerate() {
+        if t.max.is_some() {
+            println!(
+                "  {:?}: \"ANYREF\" min {:?} max {:?}",
+                i,
+                t.min,
+                t.max.unwrap()
+            );
+        } else {
+            println!("  {:?}: \"ANYREF\" min {:?}", i, t.min);
+        }
+    }
+}
+
 fn print_global_section(s: &GlobalSection) {
     println!("  [{}]", "Global".purple());
     for i in 0..s.globals.len() {
@@ -137,6 +153,7 @@ fn print_section(s: &Section) {
         Section::Unknown(s) => print_unknown_section(&s),
         Section::Start(s) => print_start_section(&s),
         Section::Import(s) => print_import_section(&s),
+        Section::Table(s) => print_table_section(&s),
         Section::Global(s) => print_global_section(&s),
     }
 }
