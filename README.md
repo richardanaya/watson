@@ -10,7 +10,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 
 ```rust
 [dependencies]
-watson = "0"
+watson = "0.2"
 ```
 
 # Usage
