@@ -4,9 +4,6 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
-**coverage is currently in progress**
-
-
 - [X] custom section
 - [X] type section
 - [X] import section
