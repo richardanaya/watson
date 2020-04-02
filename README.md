@@ -4,7 +4,7 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
-- [X] single file ~1000 lines of code
+- [X] single file ~1500 lines of code (mostly enums)
 - [X] supports all section types
 - [X] helper functions for finding things
 
