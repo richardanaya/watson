@@ -13,7 +13,7 @@ pub trait WasmValueType {
     fn try_to_value_type(self) -> Result<ValueType, String>;
 }
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub enum ValueType {
     I32,
     I64,
@@ -91,37 +91,46 @@ fn many_n<'a, T>(
     }
 }
 
+
+#[derive(Debug)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
     pub outputs: Vec<ValueType>,
 }
 
+#[derive(Debug)]
 pub enum WasmType {
     Function(FunctionType),
 }
 
+#[derive(Debug)]
 pub struct TypeSection {
     pub types: Vec<WasmType>,
 }
 
+#[derive(Debug)]
 pub struct FunctionSection {
     pub function_types: Vec<u32>,
 }
 
+#[derive(Debug)]
 pub struct CodeBlock {
     pub locals: Vec<(u32, ValueType)>,
     pub code: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
+#[derive(Debug)]
 pub struct Export {
     pub name: String,
     pub index: usize,
 }
 
+#[derive(Debug)]
 pub enum WasmExport {
     Function(Export),
     Table(Export),
@@ -129,16 +138,19 @@ pub enum WasmExport {
     Global(Export),
 }
 
+#[derive(Debug)]
 pub struct ExportSection {
     pub exports: Vec<WasmExport>,
 }
 
+#[derive(Debug)]
 pub struct FunctionImport {
     pub module_name: String,
     pub name: String,
     pub type_index: usize,
 }
 
+#[derive(Debug)]
 pub struct GlobalImport {
     pub module_name: String,
     pub name: String,
@@ -146,6 +158,7 @@ pub struct GlobalImport {
     pub is_mutable: bool,
 }
 
+#[derive(Debug)]
 pub struct MemoryImport {
     pub module_name: String,
     pub name: String,
@@ -153,6 +166,7 @@ pub struct MemoryImport {
     pub max_pages: Option<usize>,
 }
 
+#[derive(Debug)]
 pub struct TableImport {
     pub module_name: String,
     pub name: String,
@@ -161,6 +175,7 @@ pub struct TableImport {
     pub max: Option<usize>,
 }
 
+#[derive(Debug)]
 pub enum WasmImport {
     Function(FunctionImport),
     Global(GlobalImport),
@@ -168,73 +183,82 @@ pub enum WasmImport {
     Table(TableImport),
 }
 
+#[derive(Debug)]
 pub struct ImportSection {
     pub imports: Vec<WasmImport>,
 }
 
-pub struct UnknownSection {
-    pub id: u8,
-    pub data: Vec<u8>,
-}
-
+#[derive(Debug)]
 pub struct WasmMemory {
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
+#[derive(Debug)]
 pub struct MemorySection {
     pub memories: Vec<WasmMemory>,
 }
 
+#[derive(Debug)]
 pub struct StartSection {
     pub start_function: usize,
 }
 
+#[derive(Debug)]
 pub struct Global {
     pub value_type: ValueType,
     pub is_mutable: bool,
     pub expression: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct GlobalSection {
     pub globals: Vec<Global>,
 }
 
+#[derive(Debug)]
 pub struct Table {
     pub element_type: u8,
     pub min: usize,
     pub max: Option<usize>,
 }
 
+#[derive(Debug)]
 pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
+#[derive(Debug)]
 pub struct DataBlock {
     pub memory: usize,
     pub offset_expression: Vec<u8>,
     pub data: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct DataSection {
     pub data_blocks: Vec<DataBlock>,
 }
 
+#[derive(Debug)]
 pub struct CustomSection {
     pub name: String,
     pub data: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct WasmElement {
     pub table: usize,
     pub expression: Vec<u8>,
     pub functions: Vec<usize>,
 }
 
+#[derive(Debug)]
 pub struct ElementSection {
     pub elements: Vec<WasmElement>,
 }
 
+#[derive(Debug)]
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -243,7 +267,6 @@ pub enum Section {
     Import(ImportSection),
     Memory(MemorySection),
     Start(StartSection),
-    Unknown(UnknownSection),
     Global(GlobalSection),
     Table(TableSection),
     Data(DataSection),
@@ -251,10 +274,12 @@ pub enum Section {
     Element(ElementSection),
 }
 
+#[derive(Debug)]
 pub struct Program {
     pub sections: Vec<Section>,
 }
 
+#[derive(Debug)]
 pub enum Instruction {
     Unreachable,
     Nop,
