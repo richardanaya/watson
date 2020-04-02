@@ -175,8 +175,33 @@ pub struct FunctionImport {
     pub type_index: usize,
 }
 
+pub struct GlobalImport {
+    pub module_name: String,
+    pub name: String,
+    pub value_type: ValueType,
+    pub is_mutable: bool,
+}
+
+pub struct MemoryImport {
+    pub module_name: String,
+    pub name: String,
+    pub min_pages: usize,
+    pub max_pages: Option<usize>,
+}
+
+pub struct TableImport {
+    pub module_name: String,
+    pub name: String,
+    pub element_type: u8,
+    pub min: usize,
+    pub max: Option<usize>,
+}
+
 pub enum WasmImport {
     Function(FunctionImport),
+    Global(GlobalImport),
+    Memory(MemoryImport),
+    Table(TableImport),
 }
 
 pub struct ImportSection {
@@ -221,6 +246,16 @@ pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
+pub struct DataBlock {
+    pub memory: usize,
+    pub offset_expression: Vec<u8>,
+    pub data: Vec<u8>,
+}
+
+pub struct DataSection {
+    pub data_blocks: Vec<DataBlock>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -232,6 +267,7 @@ pub enum Section {
     Unknown(UnknownSection),
     Global(GlobalSection),
     Table(TableSection),
+    Data(DataSection),
 }
 
 pub struct Program {
@@ -295,6 +331,16 @@ fn wasm_string(input: &[u8]) -> Result<(&[u8], String), String> {
         Err(_) => return Err("could not parse utf8 string".to_string()),
     };
     Ok((input, s))
+}
+
+fn wasm_global_type(input: &[u8]) -> Result<(&[u8], ValueType, bool), String> {
+    let (input, global_value_type) = take(1)(input)?;
+    let (input, global_type) = take(1)(input)?;
+    Ok((
+        input,
+        global_value_type[0].try_to_value_type()?,
+        global_type[0] == MUTABLE,
+    ))
 }
 
 fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
@@ -505,6 +551,44 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                             }),
                         ))
                     }
+                    DESC_GLOBAL => {
+                        let (input, min_pages, max_pages) = wasm_limit(input)?;
+                        Ok((
+                            input,
+                            WasmImport::Memory(MemoryImport {
+                                module_name,
+                                name,
+                                min_pages,
+                                max_pages,
+                            }),
+                        ))
+                    }
+                    DESC_TABLE => {
+                        let (input, element_type) = take(1)(input)?;
+                        let (input, min, max) = wasm_limit(input)?;
+                        Ok((
+                            input,
+                            WasmImport::Table(TableImport {
+                                module_name,
+                                name,
+                                element_type: element_type[0],
+                                min,
+                                max,
+                            }),
+                        ))
+                    }
+                    DESC_MEMORY => {
+                        let (input, value_type, is_mutable) = wasm_global_type(input)?;
+                        Ok((
+                            input,
+                            WasmImport::Global(GlobalImport {
+                                module_name,
+                                name,
+                                value_type,
+                                is_mutable,
+                            }),
+                        ))
+                    }
                     _ => Err("unknown export".to_string()),
                 }
             });
@@ -514,14 +598,13 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
         SECTION_GLOBAL => {
             let (input, num_items) = wasm_u32(input)?;
             let parse_items = many_n(num_items as usize, |input| {
-                let (input, global_value_type) = take(1)(input)?;
-                let (input, global_type) = take(1)(input)?;
+                let (input, value_type, is_mutable) = wasm_global_type(input)?;
                 let (input, expression) = wasm_expression(input)?;
                 Ok((
                     input,
                     Global {
-                        value_type: global_value_type[0].try_to_value_type()?,
-                        is_mutable: global_type[0] == MUTABLE,
+                        value_type,
+                        is_mutable,
                         expression,
                     },
                 ))
@@ -549,6 +632,25 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             });
             let (input, items) = parse_items(input)?;
             Ok((input, Section::Table(TableSection { tables: items })))
+        }
+        SECTION_DATA => {
+            let (input, num_items) = wasm_u32(input)?;
+            let parse_items = many_n(num_items as usize, |input| {
+                let (input, mem_index) = wasm_u32(input)?;
+                let (input, offset_expression) = wasm_expression(input)?;
+                let (input, data_len) = wasm_u32(input)?;
+                let (input, data) = take(data_len as usize)(input)?;
+                Ok((
+                    input,
+                    DataBlock {
+                        memory: mem_index as usize,
+                        offset_expression,
+                        data: data.to_vec(),
+                    },
+                ))
+            });
+            let (input, items) = parse_items(input)?;
+            Ok((input, Section::Data(DataSection { data_blocks: items })))
         }
         SECTION_MEMORY => {
             let (input, num_items) = wasm_u32(input)?;

@@ -58,7 +58,59 @@ fn print_import_section(s: &ImportSection) {
     for i in 0..s.imports.len() {
         match &s.imports[i] {
             WasmImport::Function(f) => {
-                println!("  {:?}.{:?} type[{}]", f.module_name, f.name, f.type_index);
+                println!(
+                    "  {:?}.{:?} fn type[{}]",
+                    f.module_name, f.name, f.type_index
+                );
+            }
+            WasmImport::Memory(f) => {
+                if f.max_pages.is_some() {
+                    println!(
+                        "  {:?}.{:?} memory min {} max {}",
+                        f.module_name,
+                        f.name,
+                        f.min_pages,
+                        f.max_pages.unwrap()
+                    );
+                } else {
+                    println!(
+                        "  {:?}.{:?} memory min {}",
+                        f.module_name, f.name, f.min_pages
+                    );
+                }
+            }
+            WasmImport::Table(f) => {
+                if f.max.is_some() {
+                    println!(
+                        "  {:?}.{:?} table \"ANYFUNC\" min {} max {}",
+                        f.module_name,
+                        f.name,
+                        f.min,
+                        f.max.unwrap()
+                    );
+                } else {
+                    println!(
+                        "  {:?}.{:?} table \"ANYFUNC\" min {}",
+                        f.module_name, f.name, f.min
+                    );
+                }
+            }
+            WasmImport::Global(f) => {
+                if f.is_mutable {
+                    println!(
+                        "  {:?}.{:?} global mut {}",
+                        f.module_name,
+                        f.name,
+                        f.value_type.to_string()
+                    );
+                } else {
+                    println!(
+                        "  {:?}.{:?} iglobal mm {}",
+                        f.module_name,
+                        f.name,
+                        f.value_type.to_string()
+                    );
+                }
             }
         }
     }
@@ -133,6 +185,16 @@ fn print_code_section(s: &CodeSection) {
     }
 }
 
+fn print_data_section(s: &DataSection) {
+    println!("  [{}]", "Data".purple());
+    for (i, d) in s.data_blocks.iter().enumerate() {
+        println!(
+            "  {}: memory[{:?}] offset_expression{:?} data{:?}",
+            i, d.memory, d.offset_expression, d.data,
+        );
+    }
+}
+
 fn print_unknown_section(s: &UnknownSection) {
     println!("  [{}:{}]", "Unknown".purple(), s.id);
     println!("  {:?}", s.data);
@@ -155,6 +217,7 @@ fn print_section(s: &Section) {
         Section::Import(s) => print_import_section(&s),
         Section::Table(s) => print_table_section(&s),
         Section::Global(s) => print_global_section(&s),
+        Section::Data(s) => print_data_section(&s),
     }
 }
 
