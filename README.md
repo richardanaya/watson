@@ -20,7 +20,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 - [X] code section
 - [X] data section
 - [ ] expression parsing
-- [ ] global expressions
+- [ ] complex global expressions
 
 ```rust
 [dependencies]
