@@ -21,17 +21,6 @@ pub enum ValueType {
     F64,
 }
 
-impl alloc::string::ToString for ValueType {
-    fn to_string(&self) -> String {
-        match self {
-            ValueType::I32 => "I32".to_string(),
-            ValueType::I64 => "I64".to_string(),
-            ValueType::F32 => "F32".to_string(),
-            ValueType::F64 => "F64".to_string(),
-        }
-    }
-}
-
 impl WasmValueTypes for Vec<u8> {
     fn try_to_value_types(self) -> Result<Vec<ValueType>, String> {
         let mut r = vec![];

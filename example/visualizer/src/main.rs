@@ -4,6 +4,15 @@ use std::fs::File;
 use std::io::prelude::*;
 use watson::*;
 
+fn value_type_to_string(v: &ValueType) -> String {
+    match v {
+        ValueType::I32 => "I32".to_string(),
+        ValueType::I64 => "I64".to_string(),
+        ValueType::F32 => "F32".to_string(),
+        ValueType::F64 => "F64".to_string(),
+    }
+}
+
 fn print_type_section(s: &TypeSection) {
     println!("  [{}]", "Type".purple());
     for i in 0..s.types.len() {
@@ -14,11 +23,11 @@ fn print_type_section(s: &TypeSection) {
                     i,
                     f.inputs
                         .iter()
-                        .map(|x| x.to_string())
+                        .map(|x| value_type_to_string(x))
                         .collect::<Vec<String>>(),
                     f.outputs
                         .iter()
-                        .map(|x| x.to_string())
+                        .map(|x| value_type_to_string(x))
                         .collect::<Vec<String>>()
                 );
             }
@@ -102,14 +111,14 @@ fn print_import_section(s: &ImportSection) {
                         "  {:?}.{:?} global mut {}",
                         f.module_name,
                         f.name,
-                        f.value_type.to_string()
+                        value_type_to_string(&f.value_type)
                     );
                 } else {
                     println!(
                         "  {:?}.{:?} iglobal mm {}",
                         f.module_name,
                         f.name,
-                        f.value_type.to_string()
+                        value_type_to_string(&f.value_type)
                     );
                 }
             }
@@ -141,14 +150,14 @@ fn print_global_section(s: &GlobalSection) {
             println!(
                 "  {}: mut {:?} expr: {:?}",
                 i,
-                g.value_type.to_string(),
+                value_type_to_string(&g.value_type),
                 g.expression
             );
         } else {
             println!(
                 "  {}: imm {:?} expr: {:?}",
                 i,
-                g.value_type.to_string(),
+                value_type_to_string(&g.value_type),
                 g.expression
             );
         }
@@ -179,7 +188,7 @@ fn print_code_section(s: &CodeSection) {
             s.code_blocks[i]
                 .locals
                 .iter()
-                .map(|x| (x.0, x.1.to_string()))
+                .map(|x| (x.0, value_type_to_string(&x.1)))
                 .collect::<Vec<(u32, String)>>(),
             s.code_blocks[i].code
         );
