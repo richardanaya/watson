@@ -13,7 +13,7 @@ pub trait WasmValueType {
     fn try_to_value_type(self) -> Result<ValueType, String>;
 }
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum ValueType {
     I32,
     I64,
@@ -91,7 +91,6 @@ fn many_n<'a, T>(
     }
 }
 
-
 #[derive(Debug)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
@@ -116,7 +115,7 @@ pub struct FunctionSection {
 #[derive(Debug)]
 pub struct CodeBlock {
     pub locals: Vec<(u32, ValueType)>,
-    pub code: Vec<u8>,
+    pub code_expression: Vec<Instruction>,
 }
 
 #[derive(Debug)]
@@ -208,7 +207,7 @@ pub struct StartSection {
 pub struct Global {
     pub value_type: ValueType,
     pub is_mutable: bool,
-    pub expression: Vec<u8>,
+    pub value_expression: Vec<Instruction>,
 }
 
 #[derive(Debug)]
@@ -231,7 +230,7 @@ pub struct TableSection {
 #[derive(Debug)]
 pub struct DataBlock {
     pub memory: usize,
-    pub offset_expression: Vec<u8>,
+    pub offset_expression: Vec<Instruction>,
     pub data: Vec<u8>,
 }
 
@@ -249,7 +248,7 @@ pub struct CustomSection {
 #[derive(Debug)]
 pub struct WasmElement {
     pub table: usize,
-    pub expression: Vec<u8>,
+    pub value_expression: Vec<Instruction>,
     pub functions: Vec<usize>,
 }
 
@@ -538,8 +537,8 @@ fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
     }
 }
 
-fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<u8>), String> {
-    let mut bytes = vec![];
+fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), String> {
+    let mut instructions = vec![];
     let mut ip = input;
     loop {
         let (input, op) = take(1)(ip)?;
@@ -548,36 +547,158 @@ fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<u8>), String> {
                 ip = input;
                 break;
             }
+            DROP => instructions.push(Instruction::Drop),
+            SELECT => instructions.push(Instruction::Select),
             I32_CONST => {
-                bytes.push(op[0]);
-                let (input, _, data) = wasm_i32(input)?;
-                bytes.extend(data);
+                let (input, c, _) = wasm_i32(input)?;
+                instructions.push(Instruction::I32Const(c));
                 ip = input;
             }
             I64_CONST => {
-                bytes.push(op[0]);
-                let (input, _, data) = wasm_i64(input)?;
-                bytes.extend(data);
+                let (input, c, _) = wasm_i64(input)?;
+                instructions.push(Instruction::I64Const(c));
                 ip = input;
             }
 
             F32_CONST => {
-                bytes.push(op[0]);
-                let (input, _, data) = wasm_f32(input)?;
-                bytes.extend(data);
+                let (input, c, _) = wasm_f32(input)?;
+                instructions.push(Instruction::F32Const(c));
                 ip = input;
             }
 
             F64_CONST => {
-                bytes.push(op[0]);
-                let (input, _, data) = wasm_f64(input)?;
-                bytes.extend(data);
+                let (input, c, _) = wasm_f64(input)?;
+                instructions.push(Instruction::F64Const(c));
                 ip = input;
             }
+
+            I32_EQZ => instructions.push(Instruction::I32Eqz),
+            I32_EQ => instructions.push(Instruction::I32Eq),
+            I32_NE => instructions.push(Instruction::I32Ne),
+            I32_LT_S => instructions.push(Instruction::I32LtS),
+            I32_LT_U => instructions.push(Instruction::I32LtU),
+            I32_GT_S => instructions.push(Instruction::I32GtS),
+            I32_GT_U => instructions.push(Instruction::I32GtU),
+            I32_LE_S => instructions.push(Instruction::I32LeS),
+            I32_LE_U => instructions.push(Instruction::I32LeU),
+            I32_GE_S => instructions.push(Instruction::I32GeS),
+            I32_GE_U => instructions.push(Instruction::I32GeU),
+            I64_EQZ => instructions.push(Instruction::I64Eqz),
+            I64_EQ => instructions.push(Instruction::I64Eq),
+            I64_NE => instructions.push(Instruction::I64Ne),
+            I64_LT_S => instructions.push(Instruction::I64LtS),
+            I64_LT_U => instructions.push(Instruction::I64LtU),
+            I64_GT_S => instructions.push(Instruction::I64GtS),
+            I64_GT_U => instructions.push(Instruction::I64GtU),
+            I64_LE_S => instructions.push(Instruction::I64LeS),
+            I64_LE_U => instructions.push(Instruction::I64LeU),
+            I64_GE_S => instructions.push(Instruction::I64GeS),
+            I64_GE_U => instructions.push(Instruction::I64GeU),
+            F32_EQ => instructions.push(Instruction::F32Eq),
+            F32_NE => instructions.push(Instruction::F32Ne),
+            F32_LT => instructions.push(Instruction::F32Lt),
+            F32_GT => instructions.push(Instruction::F32Gt),
+            F32_LE => instructions.push(Instruction::F32Le),
+            F32_GE => instructions.push(Instruction::F32Ge),
+            F64_EQ => instructions.push(Instruction::F64Eq),
+            F64_NE => instructions.push(Instruction::F64Ne),
+            F64_LT => instructions.push(Instruction::F64Lt),
+            F64_GT => instructions.push(Instruction::F64Gt),
+            F64_LE => instructions.push(Instruction::F64Le),
+            F64_GE => instructions.push(Instruction::F64Ge),
+            I32_CLZ => instructions.push(Instruction::I32Clz),
+            I32_CTZ => instructions.push(Instruction::I32Ctz),
+            I32_POPCNT => instructions.push(Instruction::I32Popcnt),
+            I32_ADD => instructions.push(Instruction::I32Add),
+            I32_SUB => instructions.push(Instruction::I32Sub),
+            I32_MUL => instructions.push(Instruction::I32Mul),
+            I32_DIV_S => instructions.push(Instruction::I32DivS),
+            I32_DIV_U => instructions.push(Instruction::I32DivU),
+            I32_REM_S => instructions.push(Instruction::I32RemS),
+            I32_REM_U => instructions.push(Instruction::I32RemU),
+            I32_AND => instructions.push(Instruction::I32And),
+            I32_OR => instructions.push(Instruction::I32Or),
+            I32_XOR => instructions.push(Instruction::I32Xor),
+            I32_SHL => instructions.push(Instruction::I32Shl),
+            I32_SHR_S => instructions.push(Instruction::I32ShrS),
+            I32_SHR_U => instructions.push(Instruction::I32ShrU),
+            I32_ROTL => instructions.push(Instruction::I32Rotl),
+            I32_ROTR => instructions.push(Instruction::I32Rotr),
+            I64_CLZ => instructions.push(Instruction::I64Clz),
+            I64_CTZ => instructions.push(Instruction::I64Ctz),
+            I64_POPCNT => instructions.push(Instruction::I64Popcnt),
+            I64_ADD => instructions.push(Instruction::I64Add),
+            I64_SUB => instructions.push(Instruction::I64Sub),
+            I64_MUL => instructions.push(Instruction::I64Mul),
+            I64_DIV_S => instructions.push(Instruction::I64DivS),
+            I64_DIV_U => instructions.push(Instruction::I64DivU),
+            I64_REM_S => instructions.push(Instruction::I64RemS),
+            I64_REM_U => instructions.push(Instruction::I64RemU),
+            I64_AND => instructions.push(Instruction::I64And),
+            I64_OR => instructions.push(Instruction::I64Or),
+            I64_XOR => instructions.push(Instruction::I64Xor),
+            I64_SHL => instructions.push(Instruction::I64Shl),
+            I64_SHR_S => instructions.push(Instruction::I64ShrS),
+            I64_SHR_U => instructions.push(Instruction::I64ShrU),
+            I64_ROTL => instructions.push(Instruction::I64Rotl),
+            I64_ROTR => instructions.push(Instruction::I64Rotr),
+            F32_ABS => instructions.push(Instruction::F32AbS),
+            F32_NEG => instructions.push(Instruction::F32Neg),
+            F32_CEIL => instructions.push(Instruction::F32Ceil),
+            F32_FLOOR => instructions.push(Instruction::F32Floor),
+            F32_TRUNC => instructions.push(Instruction::F32Trunc),
+            F32_NEAREST => instructions.push(Instruction::F32Nearest),
+            F32_SQRT => instructions.push(Instruction::F32Sqrt),
+            F32_ADD => instructions.push(Instruction::F32Add),
+            F32_SUB => instructions.push(Instruction::F32Sub),
+            F32_MUL => instructions.push(Instruction::F32Mul),
+            F32_DIV => instructions.push(Instruction::F32Div),
+            F32_MIN => instructions.push(Instruction::F32Min),
+            F32_MAX => instructions.push(Instruction::F32Max),
+            F32_COPYSIGN => instructions.push(Instruction::F32Copysign),
+            F64_ABS => instructions.push(Instruction::F64AbS),
+            F64_NEG => instructions.push(Instruction::F64Neg),
+            F64_CEIL => instructions.push(Instruction::F64Ceil),
+            F64_FLOOR => instructions.push(Instruction::F64Floor),
+            F64_TRUNC => instructions.push(Instruction::F64Trunc),
+            F64_NEAREST => instructions.push(Instruction::F64Nearest),
+            F64_SQRT => instructions.push(Instruction::F64Sqrt),
+            F64_ADD => instructions.push(Instruction::F64Add),
+            F64_SUB => instructions.push(Instruction::F64Sub),
+            F64_MUL => instructions.push(Instruction::F64Mul),
+            F64_DIV => instructions.push(Instruction::F64Div),
+            F64_MIN => instructions.push(Instruction::F64Min),
+            F64_MAX => instructions.push(Instruction::F64Max),
+            F64_COPYSIGN => instructions.push(Instruction::F64Copysign),
+            I32_WRAP_F64 => instructions.push(Instruction::I32wrapF64),
+            I32_TRUNC_S_F32 => instructions.push(Instruction::I32TruncSF32),
+            I32_TRUNC_U_F32 => instructions.push(Instruction::I32TruncUF32),
+            I32_TRUNC_S_F64 => instructions.push(Instruction::I32TruncSF64),
+            I32_TRUNC_U_F64 => instructions.push(Instruction::I32TruncUF64),
+            I64_EXTEND_S_I32 => instructions.push(Instruction::I64ExtendSI32),
+            I64_EXTEND_U_I32 => instructions.push(Instruction::I64ExtendUI32),
+            I64_TRUNC_S_F32 => instructions.push(Instruction::I64TruncSF32),
+            I64_TRUNC_U_F32 => instructions.push(Instruction::I64TruncUF32),
+            I64_TRUNC_S_F64 => instructions.push(Instruction::I64TruncSF64),
+            I64_TRUNC_U_F64 => instructions.push(Instruction::I64TruncUF64),
+            F32_CONVERT_S_I32 => instructions.push(Instruction::F32ConvertSI32),
+            F32_CONVERT_U_I32 => instructions.push(Instruction::F32ConvertUI32),
+            F32_CONVERT_S_I64 => instructions.push(Instruction::F32ConvertSI64),
+            F32_CONVERT_U_I64 => instructions.push(Instruction::F32ConvertUI64),
+            F32_DEMOTE_F64 => instructions.push(Instruction::F32DemoteF64),
+            F64_CONVERT_S_I32 => instructions.push(Instruction::F64ConvertSI32),
+            F64_CONVERT_U_I32 => instructions.push(Instruction::F64ConvertUI32),
+            F64_CONVERT_S_I64 => instructions.push(Instruction::F64ConvertSI64),
+            F64_CONVERT_U_I64 => instructions.push(Instruction::F64ConvertUI64),
+            F64_PROMOTE_F32 => instructions.push(Instruction::F64PromoteF32),
+            I32_REINTERPRET_F32 => instructions.push(Instruction::I32ReinterpretF32),
+            I64_REINTERPRET_F64 => instructions.push(Instruction::I64ReinterpretF64),
+            F32_REINTERPRET_I32 => instructions.push(Instruction::F32ReinterpretI32),
+            F64_REINTERPRET_I64 => instructions.push(Instruction::F64ReinterpretI64),
             _ => return Err("unknown expression".to_string()),
         }
     }
-    Ok((ip, bytes))
+    Ok((ip, instructions))
 }
 
 fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
@@ -673,39 +794,20 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
         SECTION_CODE => {
             let (input, num_items) = wasm_u32(input)?;
             let parse_items = many_n(num_items as usize, |input| {
-                let (input, num_op_codes) = wasm_u32(input)?;
-
-                let mut total_bytes = 0;
-                let (num_local_vecs, byte_count) = match input.try_extract_u32(0) {
-                    Ok(r) => r,
-                    Err(e) => return Err(e.to_string()),
-                };
-                total_bytes += byte_count;
-                let (input, _) = take(byte_count as usize)(input)?;
-                let mut ip2 = input;
-                let mut local_vectors = vec![];
-                for _ in 0..num_local_vecs {
-                    let (num_locals, byte_count) = match input.try_extract_u32(0) {
-                        Ok(r) => r,
-                        Err(e) => return Err(e.to_string()),
-                    };
-                    let (input, _) = take(byte_count as usize)(ip2)?;
-                    total_bytes += byte_count;
-
+                let (input, _) = wasm_u32(input)?;
+                let (input, num_local_vecs) = wasm_u32(input)?;
+                let parse_local_vecs = many_n(num_local_vecs as usize, |input| {
+                    let (input, num_locals) = wasm_u32(input)?;
                     let (input, local_type) = take(1 as usize)(input)?;
-                    total_bytes += 1;
-                    local_vectors.push((num_locals, local_type[0].try_to_value_type()?));
-                    ip2 = input;
-                }
-                let input = ip2;
-                let (input, op_codes) =
-                    take(num_op_codes as usize - 1 - total_bytes as usize)(input)?;
-                let (input, _) = tag(&[END])(input)?;
+                    Ok((input, (num_locals, local_type[0].try_to_value_type()?)))
+                });
+                let (input, local_vectors) = parse_local_vecs(input)?;
+                let (input, code_expression) = wasm_expression(input)?;
                 Ok((
                     input,
                     CodeBlock {
                         locals: local_vectors.to_vec(),
-                        code: op_codes.to_vec(),
+                        code_expression,
                     },
                 ))
             });
@@ -784,7 +886,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                     Global {
                         value_type,
                         is_mutable,
-                        expression,
+                        value_expression: expression,
                     },
                 ))
             });
@@ -884,7 +986,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                     input,
                     WasmElement {
                         table: table as usize,
-                        expression,
+                        value_expression: expression,
                         functions,
                     },
                 ))

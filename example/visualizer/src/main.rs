@@ -4,15 +4,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use watson::*;
 
-fn value_type_to_string(v: &ValueType) -> String {
-    match v {
-        ValueType::I32 => "I32".to_string(),
-        ValueType::I64 => "I64".to_string(),
-        ValueType::F32 => "F32".to_string(),
-        ValueType::F64 => "F64".to_string(),
-    }
-}
-
 fn print_type_section(s: &TypeSection) {
     println!("  [{}]", "Type".purple());
     for i in 0..s.types.len() {
@@ -20,15 +11,7 @@ fn print_type_section(s: &TypeSection) {
             WasmType::Function(f) => {
                 println!(
                     "  {}: fn(inputs{:?}) -> outputs{:?}",
-                    i,
-                    f.inputs
-                        .iter()
-                        .map(|x| value_type_to_string(x))
-                        .collect::<Vec<String>>(),
-                    f.outputs
-                        .iter()
-                        .map(|x| value_type_to_string(x))
-                        .collect::<Vec<String>>()
+                    i, f.inputs, f.outputs
                 );
             }
         }
@@ -108,17 +91,13 @@ fn print_import_section(s: &ImportSection) {
             WasmImport::Global(f) => {
                 if f.is_mutable {
                     println!(
-                        "  {:?}.{:?} global mut {}",
-                        f.module_name,
-                        f.name,
-                        value_type_to_string(&f.value_type)
+                        "  {:?}.{:?} global mut {:?}",
+                        f.module_name, f.name, f.value_type
                     );
                 } else {
                     println!(
-                        "  {:?}.{:?} iglobal mm {}",
-                        f.module_name,
-                        f.name,
-                        value_type_to_string(&f.value_type)
+                        "  {:?}.{:?} iglobal mm {:?}",
+                        f.module_name, f.name, f.value_type
                     );
                 }
             }
@@ -130,14 +109,9 @@ fn print_table_section(s: &TableSection) {
     println!("  [{}]", "Table".purple());
     for (i, t) in s.tables.iter().enumerate() {
         if t.max.is_some() {
-            println!(
-                "  {:?}: \"ANYREF\" min {:?} max {:?}",
-                i,
-                t.min,
-                t.max.unwrap()
-            );
+            println!("  {:?}: ANYREF min {:?} max {:?}", i, t.min, t.max.unwrap());
         } else {
-            println!("  {:?}: \"ANYREF\" min {:?}", i, t.min);
+            println!("  {:?}: ANYREF min {:?}", i, t.min);
         }
     }
 }
@@ -149,16 +123,12 @@ fn print_global_section(s: &GlobalSection) {
         if g.is_mutable {
             println!(
                 "  {}: mut {:?} expr: {:?}",
-                i,
-                value_type_to_string(&g.value_type),
-                g.expression
+                i, g.value_type, g.value_expression
             );
         } else {
             println!(
                 "  {}: imm {:?} expr: {:?}",
-                i,
-                value_type_to_string(&g.value_type),
-                g.expression
+                i, g.value_type, g.value_expression
             );
         }
     }
@@ -188,9 +158,9 @@ fn print_code_section(s: &CodeSection) {
             s.code_blocks[i]
                 .locals
                 .iter()
-                .map(|x| (x.0, value_type_to_string(&x.1)))
-                .collect::<Vec<(u32, String)>>(),
-            s.code_blocks[i].code
+                .map(|x| (x.0, x.1))
+                .collect::<Vec<(u32, ValueType)>>(),
+            s.code_blocks[i].code_expression
         );
     }
 }
@@ -210,7 +180,7 @@ fn print_element_section(s: &ElementSection) {
     for (i, d) in s.elements.iter().enumerate() {
         println!(
             "  {}: table[{:?}] expression{:?} functions{:?}",
-            i, d.table, d.expression, d.functions,
+            i, d.table, d.value_expression, d.functions,
         );
     }
 }
@@ -218,11 +188,6 @@ fn print_element_section(s: &ElementSection) {
 fn print_custom_section(s: &CustomSection) {
     println!("  [{}]", "Custom".purple());
     println!("  {}  data{:?}", s.name, s.data,);
-}
-
-fn print_unknown_section(s: &UnknownSection) {
-    println!("  [{}:{}]", "Unknown".purple(), s.id);
-    println!("  {:?}", s.data);
 }
 
 fn print_start_section(s: &StartSection) {
@@ -237,7 +202,6 @@ fn print_section(s: &Section) {
         Section::Export(s) => print_export_section(&s),
         Section::Code(s) => print_code_section(&s),
         Section::Memory(s) => print_memory_section(&s),
-        Section::Unknown(s) => print_unknown_section(&s),
         Section::Start(s) => print_start_section(&s),
         Section::Import(s) => print_import_section(&s),
         Section::Table(s) => print_table_section(&s),

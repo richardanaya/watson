@@ -4,20 +4,9 @@
 
 a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
-- [X] custom section
-- [X] type section
-- [X] import section
-- [X] function section
-- [X] table section
-- [X] memory section
-- [X] global section
-- [X] export section
-- [X] start section
-- [X] element section
-- [X] code section
-- [X] data section
-- [ ] expression parsing
-- [ ] complex global expressions
+- [X] single file ~1000 lines of code
+- [X] supports all section types
+- [X] helper functions for finding things
 
 ```rust
 [dependencies]
@@ -30,7 +19,7 @@ watson = "0"
 use  watson::*;
 
 let program = Program.parse(&bytes_of_wasm)?;
-for s in program.sections {
+for s in program.sections.iter() {
    match s {
       CodeSection(code)=> ...,
       ...
