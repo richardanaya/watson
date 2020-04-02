@@ -53,6 +53,39 @@ fn print_export_section(s: &ExportSection) {
     }
 }
 
+fn print_import_section(s: &ImportSection) {
+    println!("  [{}]", "Import".purple());
+    for i in 0..s.imports.len() {
+        match &s.imports[i] {
+            WasmImport::Function(f) => {
+                println!("  {:?}.{:?} type[{}]", f.module_name, f.name, f.type_index);
+            }
+        }
+    }
+}
+
+fn print_global_section(s: &GlobalSection) {
+    println!("  [{}]", "Global".purple());
+    for i in 0..s.globals.len() {
+        let g = &s.globals[i];
+        if g.is_mutable {
+            println!(
+                "  {}: mut {:?} expr: {:?}",
+                i,
+                g.value_type.to_string(),
+                g.expression
+            );
+        } else {
+            println!(
+                "  {}: imm {:?} expr: {:?}",
+                i,
+                g.value_type.to_string(),
+                g.expression
+            );
+        }
+    }
+}
+
 fn print_memory_section(s: &MemorySection) {
     println!("  [{}]", "Memory".purple());
     for i in 0..s.memories.len() {
@@ -103,7 +136,8 @@ fn print_section(s: &Section) {
         Section::Memory(s) => print_memory_section(&s),
         Section::Unknown(s) => print_unknown_section(&s),
         Section::Start(s) => print_start_section(&s),
-        _ => println!("..."),
+        Section::Import(s) => print_import_section(&s),
+        Section::Global(s) => print_global_section(&s),
     }
 }
 

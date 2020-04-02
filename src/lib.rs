@@ -5,50 +5,50 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use webassembly::*;
 
-pub trait WasmDataTypes {
-    fn try_to_wasm_types(self) -> Result<Vec<DataType>, String>;
+pub trait WasmValueTypes {
+    fn try_to_value_types(self) -> Result<Vec<ValueType>, String>;
 }
 
-pub trait WasmDataType {
-    fn try_to_wasm_type(self) -> Result<DataType, String>;
+pub trait WasmValueType {
+    fn try_to_value_type(self) -> Result<ValueType, String>;
 }
 
 #[derive(Clone)]
-pub enum DataType {
+pub enum ValueType {
     I32,
     I64,
     F32,
     F64,
 }
 
-impl alloc::string::ToString for DataType {
+impl alloc::string::ToString for ValueType {
     fn to_string(&self) -> String {
         match self {
-            DataType::I32 => "I32".to_string(),
-            DataType::I64 => "I64".to_string(),
-            DataType::F32 => "F32".to_string(),
-            DataType::F64 => "F64".to_string(),
+            ValueType::I32 => "I32".to_string(),
+            ValueType::I64 => "I64".to_string(),
+            ValueType::F32 => "F32".to_string(),
+            ValueType::F64 => "F64".to_string(),
         }
     }
 }
 
-impl WasmDataTypes for Vec<u8> {
-    fn try_to_wasm_types(self) -> Result<Vec<DataType>, String> {
+impl WasmValueTypes for Vec<u8> {
+    fn try_to_value_types(self) -> Result<Vec<ValueType>, String> {
         let mut r = vec![];
         for v in self {
-            r.push(v.try_to_wasm_type()?);
+            r.push(v.try_to_value_type()?);
         }
         Ok(r)
     }
 }
 
-impl WasmDataType for u8 {
-    fn try_to_wasm_type(self) -> Result<DataType, String> {
+impl WasmValueType for u8 {
+    fn try_to_value_type(self) -> Result<ValueType, String> {
         match self {
-            I32 => Ok(DataType::I32),
-            I64 => Ok(DataType::I64),
-            F32 => Ok(DataType::F32),
-            F64 => Ok(DataType::F64),
+            I32 => Ok(ValueType::I32),
+            I64 => Ok(ValueType::I64),
+            F32 => Ok(ValueType::F32),
+            F64 => Ok(ValueType::F64),
             _ => Err("could not convert data type".to_string()),
         }
     }
@@ -128,8 +128,8 @@ fn many<'a, T>(
 }
 
 pub struct FunctionType {
-    pub inputs: Vec<DataType>,
-    pub outputs: Vec<DataType>,
+    pub inputs: Vec<ValueType>,
+    pub outputs: Vec<ValueType>,
 }
 
 pub enum WasmType {
@@ -145,7 +145,7 @@ pub struct FunctionSection {
 }
 
 pub struct CodeBlock {
-    pub locals: Vec<(u32, DataType)>,
+    pub locals: Vec<(u32, ValueType)>,
     pub code: Vec<u8>,
 }
 
@@ -201,6 +201,16 @@ pub struct StartSection {
     pub start_function: usize,
 }
 
+pub struct Global {
+    pub value_type: ValueType,
+    pub is_mutable: bool,
+    pub expression: Vec<u8>,
+}
+
+pub struct GlobalSection {
+    pub globals: Vec<Global>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -210,6 +220,7 @@ pub enum Section {
     Memory(MemorySection),
     Start(StartSection),
     Unknown(UnknownSection),
+    Global(GlobalSection),
 }
 
 pub struct Program {
@@ -225,6 +236,46 @@ fn wasm_u32(input: &[u8]) -> Result<(&[u8], u32), String> {
     Ok((input, i))
 }
 
+fn wasm_i32(input: &[u8]) -> Result<(&[u8], i32, &[u8]), String> {
+    let original_input = input;
+    let (i, byte_count) = match input.try_extract_i32(0) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+    let (input, _) = take(byte_count as usize)(input)?;
+    Ok((input, i, &original_input[..byte_count]))
+}
+
+fn wasm_i64(input: &[u8]) -> Result<(&[u8], i64, &[u8]), String> {
+    let original_input = input;
+    let (i, byte_count) = match input.try_extract_i64(0) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+    let (input, _) = take(byte_count as usize)(input)?;
+    Ok((input, i, &original_input[..byte_count]))
+}
+
+fn wasm_f32(input: &[u8]) -> Result<(&[u8], f32, &[u8]), String> {
+    let original_input = input;
+    let (i, byte_count) = match input.try_extract_f32(0) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+    let (input, _) = take(byte_count as usize)(input)?;
+    Ok((input, i, &original_input[..byte_count]))
+}
+
+fn wasm_f64(input: &[u8]) -> Result<(&[u8], f64, &[u8]), String> {
+    let original_input = input;
+    let (i, byte_count) = match input.try_extract_f64(0) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+    let (input, _) = take(byte_count as usize)(input)?;
+    Ok((input, i, &original_input[..byte_count]))
+}
+
 fn wasm_string(input: &[u8]) -> Result<(&[u8], String), String> {
     let (input, num_chars) = wasm_u32(input)?;
     let (input, chars) = take(num_chars as usize)(input)?;
@@ -233,6 +284,48 @@ fn wasm_string(input: &[u8]) -> Result<(&[u8], String), String> {
         Err(_) => return Err("could not parse utf8 string".to_string()),
     };
     Ok((input, s))
+}
+
+fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<u8>), String> {
+    let mut bytes = vec![];
+    let mut ip = input;
+    loop {
+        let (input, op) = take(1)(ip)?;
+        match op[0] {
+            END => {
+                ip = input;
+                break;
+            }
+            I32_CONST => {
+                bytes.push(op[0]);
+                let (input, _, data) = wasm_i32(input)?;
+                bytes.extend(data);
+                ip = input;
+            }
+            I64_CONST => {
+                bytes.push(op[0]);
+                let (input, _, data) = wasm_i64(input)?;
+                bytes.extend(data);
+                ip = input;
+            }
+
+            F32_CONST => {
+                bytes.push(op[0]);
+                let (input, _, data) = wasm_f32(input)?;
+                bytes.extend(data);
+                ip = input;
+            }
+
+            F64_CONST => {
+                bytes.push(op[0]);
+                let (input, _, data) = wasm_f64(input)?;
+                bytes.extend(data);
+                ip = input;
+            }
+            _ => return Err("unknown expression".to_string()),
+        }
+    }
+    Ok((ip, bytes))
 }
 
 fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
@@ -253,8 +346,8 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         Ok((
                             input,
                             WasmType::Function(FunctionType {
-                                inputs: inputs.to_vec().try_to_wasm_types()?,
-                                outputs: outputs.to_vec().try_to_wasm_types()?,
+                                inputs: inputs.to_vec().try_to_value_types()?,
+                                outputs: outputs.to_vec().try_to_value_types()?,
                             }),
                         ))
                     }
@@ -349,7 +442,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
 
                     let (input, local_type) = take(1 as usize)(input)?;
                     total_bytes += 1;
-                    local_vectors.push((num_locals, local_type[0].try_to_wasm_type()?));
+                    local_vectors.push((num_locals, local_type[0].try_to_value_type()?));
                     ip2 = input;
                 }
                 let input = ip2;
@@ -390,6 +483,24 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             });
             let (input, imports) = parse_imports(input)?;
             Ok((input, Section::Import(ImportSection { imports })))
+        }
+        SECTION_GLOBAL => {
+            let (input, num_imports) = wasm_u32(input)?;
+            let parse_imports = many_n(num_imports as usize, |input| {
+                let (input, global_value_type) = take(1)(input)?;
+                let (input, global_type) = take(1)(input)?;
+                let (input, expression) = wasm_expression(input)?;
+                Ok((
+                    input,
+                    Global {
+                        value_type: global_value_type[0].try_to_value_type()?,
+                        is_mutable: global_type[0] == MUTABLE,
+                        expression,
+                    },
+                ))
+            });
+            let (input, globals) = parse_imports(input)?;
+            Ok((input, Section::Global(GlobalSection { globals: globals })))
         }
         SECTION_MEMORY => {
             let (input, num_items) = wasm_u32(input)?;
