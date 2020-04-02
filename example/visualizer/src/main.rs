@@ -10,7 +10,8 @@ fn print_type_section(s: &TypeSection) {
         match &s.types[i] {
             WasmType::Function(f) => {
                 println!(
-                    "  0: fn(inputs{:?}) -> outputs{:?}",
+                    "  {}: fn(inputs{:?}) -> outputs{:?}",
+                    i,
                     f.inputs
                         .iter()
                         .map(|x| x.to_string())
@@ -195,6 +196,16 @@ fn print_data_section(s: &DataSection) {
     }
 }
 
+fn print_element_section(s: &ElementSection) {
+    println!("  [{}]", "Element".purple());
+    for (i, d) in s.elements.iter().enumerate() {
+        println!(
+            "  {}: table[{:?}] expression{:?} functions{:?}",
+            i, d.table, d.expression, d.functions,
+        );
+    }
+}
+
 fn print_custom_section(s: &CustomSection) {
     println!("  [{}]", "Custom".purple());
     println!("  {}  data{:?}", s.name, s.data,);
@@ -224,7 +235,16 @@ fn print_section(s: &Section) {
         Section::Global(s) => print_global_section(&s),
         Section::Data(s) => print_data_section(&s),
         Section::Custom(s) => print_custom_section(&s),
+        Section::Element(s) => print_element_section(&s),
     }
+}
+
+fn print_program(name: &str, program: &Program) {
+    println!("{} {{", &name.green());
+    for s in program.sections.iter() {
+        print_section(&s);
+    }
+    println!("}}");
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -237,11 +257,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer)?;
 
-    let program = Program::parse(&buffer)?;
-    println!("{} {{", &args[1].green());
-    for s in program.sections.iter() {
-        print_section(&s);
-    }
-    println!("}}");
+    match Program::parse(&buffer) {
+        Ok(p) => print_program(&args[1], &p),
+        Err(e) => {
+            print_program(&args[1], &e.0);
+            println!("{}", e.1.red());
+        }
+    };
     Ok(())
 }

@@ -1,4 +1,4 @@
-#![no_std]
+//#![no_std]
 #[macro_use]
 extern crate alloc;
 use alloc::string::{String, ToString};
@@ -261,6 +261,16 @@ pub struct CustomSection {
     pub data: Vec<u8>,
 }
 
+pub struct WasmElement {
+    pub table: usize,
+    pub expression: Vec<u8>,
+    pub functions: Vec<usize>,
+}
+
+pub struct ElementSection {
+    pub elements: Vec<WasmElement>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -274,6 +284,7 @@ pub enum Section {
     Table(TableSection),
     Data(DataSection),
     Custom(CustomSection),
+    Element(ElementSection),
 }
 
 pub struct Program {
@@ -410,6 +421,7 @@ fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<u8>), String> {
 fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
     let (input, id) = take(1)(input)?;
     let (input, section_length) = wasm_u32(input)?;
+    println!("section:{}", section_length);
 
     match id[0] {
         SECTION_TYPE => {
@@ -516,7 +528,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         Ok(r) => r,
                         Err(e) => return Err(e.to_string()),
                     };
-                    let (input, _) = take(byte_count as usize)(input)?;
+                    let (input, _) = take(byte_count as usize)(ip2)?;
                     total_bytes += byte_count;
 
                     let (input, local_type) = take(1 as usize)(input)?;
@@ -696,6 +708,29 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let (input, items) = parse_items(input)?;
             Ok((input, Section::Memory(MemorySection { memories: items })))
         }
+        SECTION_ELEMENT => {
+            let (input, num_items) = wasm_u32(input)?;
+            let parse_items = many_n(num_items as usize, |input| {
+                let (input, table) = wasm_u32(input)?;
+                let (input, expression) = wasm_expression(input)?;
+                let (input, num_functions) = wasm_u32(input)?;
+                let parse_functions = many_n(num_functions as usize, |input| {
+                    let (input, i) = wasm_u32(input)?;
+                    Ok((input, i as usize))
+                });
+                let (input, functions) = parse_functions(input)?;
+                Ok((
+                    input,
+                    WasmElement {
+                        table: table as usize,
+                        expression,
+                        functions,
+                    },
+                ))
+            });
+            let (input, items) = parse_items(input)?;
+            Ok((input, Section::Element(ElementSection { elements: items })))
+        }
         _ => {
             let (input, data) = take(section_length as usize)(input)?;
             Ok((
@@ -709,15 +744,40 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<Program, String> {
-    let (input, _) = tag(MAGIC_NUMBER)(input)?;
-    let (input, _) = tag(VERSION_1)(input)?;
-    let (_, sections) = many(section)(input)?;
-    Ok(Program { sections })
+fn wasm_module(input: &[u8]) -> Result<Program, (Program, String)> {
+    let mut p = Program { sections: vec![] };
+    let (input, _) = match tag(MAGIC_NUMBER)(input) {
+        Ok(r) => r,
+        Err(e) => return Err((p, e)),
+    };
+    let (input, _) = match tag(VERSION_1)(input) {
+        Ok(r) => r,
+        Err(e) => return Err((p, e)),
+    };
+    let mut sections = vec![];
+    let mut ip = input;
+    loop {
+        match section(ip) {
+            Ok((input, item)) => {
+                sections.push(item);
+                ip = input;
+            }
+            Err(e) => {
+                if ip.len() == 0 {
+                    break;
+                } else {
+                    p.sections = sections;
+                    return Err((p, e));
+                }
+            }
+        }
+    }
+    p.sections = sections;
+    Ok(p)
 }
 
 impl Program {
-    pub fn parse(input: &[u8]) -> Result<Program, String> {
+    pub fn parse(input: &[u8]) -> Result<Program, (Program, String)> {
         wasm_module(input)
     }
 
