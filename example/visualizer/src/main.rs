@@ -195,6 +195,11 @@ fn print_data_section(s: &DataSection) {
     }
 }
 
+fn print_custom_section(s: &CustomSection) {
+    println!("  [{}]", "Custom".purple());
+    println!("  {}  data{:?}", s.name, s.data,);
+}
+
 fn print_unknown_section(s: &UnknownSection) {
     println!("  [{}:{}]", "Unknown".purple(), s.id);
     println!("  {:?}", s.data);
@@ -218,6 +223,7 @@ fn print_section(s: &Section) {
         Section::Table(s) => print_table_section(&s),
         Section::Global(s) => print_global_section(&s),
         Section::Data(s) => print_data_section(&s),
+        Section::Custom(s) => print_custom_section(&s),
     }
 }
 

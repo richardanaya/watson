@@ -7,7 +7,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 **coverage is currently in progress**
 
 
-- [ ] custom section
+- [X] custom section
 - [X] type section
 - [X] import section
 - [X] function section

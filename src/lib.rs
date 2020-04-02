@@ -256,6 +256,11 @@ pub struct DataSection {
     pub data_blocks: Vec<DataBlock>,
 }
 
+pub struct CustomSection {
+    pub name: String,
+    pub data: Vec<u8>,
+}
+
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -268,6 +273,7 @@ pub enum Section {
     Global(GlobalSection),
     Table(TableSection),
     Data(DataSection),
+    Custom(CustomSection),
 }
 
 pub struct Program {
@@ -611,6 +617,29 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             });
             let (input, items) = parse_items(input)?;
             Ok((input, Section::Global(GlobalSection { globals: items })))
+        }
+        SECTION_CUSTOM => {
+            let mut name_bytes_length = 0;
+            let (num_chars, byte_count) = match input.try_extract_u32(0) {
+                Ok(r) => r,
+                Err(e) => return Err(e.to_string()),
+            };
+            let (input, _) = take(byte_count as usize)(input)?;
+            let (input, chars) = take(num_chars as usize)(input)?;
+            name_bytes_length += byte_count + num_chars as usize;
+            let name = match alloc::str::from_utf8(chars) {
+                Ok(b) => b.to_string(),
+                Err(_) => return Err("could not parse utf8 string".to_string()),
+            };
+            let (input, bytes) =
+                take((section_length as usize - name_bytes_length) as usize)(input)?;
+            Ok((
+                input,
+                Section::Custom(CustomSection {
+                    name,
+                    data: bytes.to_vec(),
+                }),
+            ))
         }
         SECTION_TABLE => {
             let (input, num_items) = wasm_u32(input)?;
