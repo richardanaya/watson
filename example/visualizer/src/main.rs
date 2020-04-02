@@ -103,6 +103,7 @@ fn print_section(s: &Section) {
         Section::Memory(s) => print_memory_section(&s),
         Section::Unknown(s) => print_unknown_section(&s),
         Section::Start(s) => print_start_section(&s),
+        _ => println!("..."),
     }
 }
 
