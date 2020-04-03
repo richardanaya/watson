@@ -100,8 +100,9 @@ pub struct FunctionType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type", content = "content")]
+#[serde(tag = "value_type", content = "content")]
 pub enum WasmType {
+    #[serde(rename(serialize = "function"))]
     Function(FunctionType),
 }
 
@@ -133,11 +134,15 @@ pub struct Export {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type", content = "content")]
+#[serde(tag = "export_type", content = "content")]
 pub enum WasmExport {
+    #[serde(rename(serialize = "function"))]
     Function(Export),
+    #[serde(rename(serialize = "table"))]
     Table(Export),
+    #[serde(rename(serialize = "memory"))]
     Memory(Export),
+    #[serde(rename(serialize = "global"))]
     Global(Export),
 }
 
@@ -179,11 +184,15 @@ pub struct TableImport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type", content = "content")]
+#[serde(tag = "import_type", content = "content")]
 pub enum WasmImport {
+    #[serde(rename(serialize = "function"))]
     Function(FunctionImport),
+    #[serde(rename(serialize = "global"))]
     Global(GlobalImport),
+    #[serde(rename(serialize = "memory"))]
     Memory(MemoryImport),
+    #[serde(rename(serialize = "table"))]
     Table(TableImport),
 }
 
@@ -263,19 +272,31 @@ pub struct ElementSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type", content = "content")]
+#[serde(tag = "section_type", content = "content")]
 pub enum Section {
+    #[serde(rename(serialize = "type"))]
     Type(TypeSection),
+    #[serde(rename(serialize = "function"))]
     Function(FunctionSection),
+    #[serde(rename(serialize = "code"))]
     Code(CodeSection),
+    #[serde(rename(serialize = "export"))]
     Export(ExportSection),
+    #[serde(rename(serialize = "import"))]
     Import(ImportSection),
+    #[serde(rename(serialize = "memory"))]
     Memory(MemorySection),
+    #[serde(rename(serialize = "start"))]
     Start(StartSection),
+    #[serde(rename(serialize = "global"))]
     Global(GlobalSection),
+    #[serde(rename(serialize = "table"))]
     Table(TableSection),
+    #[serde(rename(serialize = "data"))]
     Data(DataSection),
+    #[serde(rename(serialize = "custom"))]
     Custom(CustomSection),
+    #[serde(rename(serialize = "element"))]
     Element(ElementSection),
 }
 
