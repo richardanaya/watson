@@ -100,6 +100,7 @@ pub struct FunctionType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum WasmType {
     Function(FunctionType),
 }
@@ -132,6 +133,7 @@ pub struct Export {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum WasmExport {
     Function(Export),
     Table(Export),
@@ -177,6 +179,7 @@ pub struct TableImport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum WasmImport {
     Function(FunctionImport),
     Global(GlobalImport),
@@ -260,6 +263,7 @@ pub struct ElementSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -281,6 +285,7 @@ pub struct Program {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "op", content = "params")]
 pub enum Instruction {
     Unreachable,
     Nop,
@@ -1350,8 +1355,11 @@ impl Program {
         wasm_module(input)
     }
 
-    pub fn to_json(&self) -> serde_json::Result<String> {
-        serde_json::to_string(self)
+    pub fn to_json(&self) -> Result<String,String> {
+        match serde_json::to_string(self) {
+            Ok(s) => Ok(s),
+            Err(_) => Err("failed to serialize into json".to_string())
+        }
     }
 
     pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, String> {
