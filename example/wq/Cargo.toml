@@ -5,7 +5,9 @@ authors = ["Richard Anaya"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 categories = ["wasm", "cli"]
+description = "a tool for converting web assembly into json"
 repository = "https://www.github.com/richardanaya/watson/examples/wq"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
