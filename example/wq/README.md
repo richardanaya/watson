@@ -15,6 +15,10 @@ wq test.wasm test.json
 # for pipe chaining
 cat simplest.wasm | wq 
 ```
+Getting pretty formated
+```bash
+cat simplest.wasm | wq | jq
+```
 ```json
 {
   "sections": [
