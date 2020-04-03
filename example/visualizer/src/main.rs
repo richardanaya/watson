@@ -5,61 +5,55 @@ use std::io::prelude::*;
 use watson::*;
 
 fn print_type_section(s: &TypeSection) {
-    println!("  [{}]", "Type".purple());
+    println!("[{}]", "Type Section".purple());
     for i in 0..s.types.len() {
         match &s.types[i] {
             WasmType::Function(f) => {
-                println!(
-                    "  {}: fn(inputs{:?}) -> outputs{:?}",
-                    i, f.inputs, f.outputs
-                );
+                println!("{}: fn(inputs{:?}) -> outputs{:?}", i, f.inputs, f.outputs);
             }
         }
     }
 }
 
 fn print_function_section(s: &FunctionSection) {
-    println!("  [{}]", "Function".purple());
+    println!("[{}]", "Function Section".purple());
     for i in 0..s.function_types.len() {
-        println!("  {}: type[{:?}]", i, s.function_types[i]);
+        println!("{}: type[{:?}]", i, s.function_types[i]);
     }
 }
 
 fn print_export_section(s: &ExportSection) {
-    println!("  [{}]", "Export".purple());
+    println!("[{}]", "Export Section".purple());
     for i in 0..s.exports.len() {
         match &s.exports[i] {
             WasmExport::Function(f) => {
-                println!("  {:?} function[{}]", f.name, f.index);
+                println!("{:?} function[{}]", f.name, f.index);
             }
             WasmExport::Memory(f) => {
-                println!("  {:?} memory[{}]", f.name, f.index);
+                println!("{:?} memory[{}]", f.name, f.index);
             }
             WasmExport::Global(f) => {
-                println!("  {:?} global[{}]", f.name, f.index);
+                println!("{:?} global[{}]", f.name, f.index);
             }
 
             WasmExport::Table(f) => {
-                println!("  {:?} table[{}]", f.name, f.index);
+                println!("{:?} table[{}]", f.name, f.index);
             }
         }
     }
 }
 
 fn print_import_section(s: &ImportSection) {
-    println!("  [{}]", "Import".purple());
+    println!("[{}]", "Import Section".purple());
     for i in 0..s.imports.len() {
         match &s.imports[i] {
             WasmImport::Function(f) => {
-                println!(
-                    "  {:?}.{:?} fn type[{}]",
-                    f.module_name, f.name, f.type_index
-                );
+                println!("{:?}.{:?} fn type[{}]", f.module_name, f.name, f.type_index);
             }
             WasmImport::Memory(f) => {
                 if f.max_pages.is_some() {
                     println!(
-                        "  {:?}.{:?} memory min {} max {}",
+                        "{:?}.{:?} memory min {} max {}",
                         f.module_name,
                         f.name,
                         f.min_pages,
@@ -67,7 +61,7 @@ fn print_import_section(s: &ImportSection) {
                     );
                 } else {
                     println!(
-                        "  {:?}.{:?} memory min {}",
+                        "{:?}.{:?} memory min {}",
                         f.module_name, f.name, f.min_pages
                     );
                 }
@@ -75,7 +69,7 @@ fn print_import_section(s: &ImportSection) {
             WasmImport::Table(f) => {
                 if f.max.is_some() {
                     println!(
-                        "  {:?}.{:?} table \"ANYFUNC\" min {} max {}",
+                        "{:?}.{:?} table \"ANYFUNC\" min {} max {}",
                         f.module_name,
                         f.name,
                         f.min,
@@ -83,7 +77,7 @@ fn print_import_section(s: &ImportSection) {
                     );
                 } else {
                     println!(
-                        "  {:?}.{:?} table \"ANYFUNC\" min {}",
+                        "{:?}.{:?} table \"ANYFUNC\" min {}",
                         f.module_name, f.name, f.min
                     );
                 }
@@ -91,12 +85,12 @@ fn print_import_section(s: &ImportSection) {
             WasmImport::Global(f) => {
                 if f.is_mutable {
                     println!(
-                        "  {:?}.{:?} global mut {:?}",
+                        "{:?}.{:?} global mut {:?}",
                         f.module_name, f.name, f.value_type
                     );
                 } else {
                     println!(
-                        "  {:?}.{:?} iglobal mm {:?}",
+                        "{:?}.{:?} iglobal mm {:?}",
                         f.module_name, f.name, f.value_type
                     );
                 }
@@ -106,28 +100,28 @@ fn print_import_section(s: &ImportSection) {
 }
 
 fn print_table_section(s: &TableSection) {
-    println!("  [{}]", "Table".purple());
+    println!("[{}]", "Table Section".purple());
     for (i, t) in s.tables.iter().enumerate() {
         if t.max.is_some() {
-            println!("  {:?}: ANYREF min {:?} max {:?}", i, t.min, t.max.unwrap());
+            println!("{:?}: ANYREF min {:?} max {:?}", i, t.min, t.max.unwrap());
         } else {
-            println!("  {:?}: ANYREF min {:?}", i, t.min);
+            println!("{:?}: ANYREF min {:?}", i, t.min);
         }
     }
 }
 
 fn print_global_section(s: &GlobalSection) {
-    println!("  [{}]", "Global".purple());
+    println!("[{}]", "Global Section".purple());
     for i in 0..s.globals.len() {
         let g = &s.globals[i];
         if g.is_mutable {
             println!(
-                "  {}: mut {:?} expr: {:?}",
+                "{}: mut {:?} expr: {:?}",
                 i, g.value_type, g.value_expression
             );
         } else {
             println!(
-                "  {}: imm {:?} expr: {:?}",
+                "{}: imm {:?} expr: {:?}",
                 i, g.value_type, g.value_expression
             );
         }
@@ -135,10 +129,10 @@ fn print_global_section(s: &GlobalSection) {
 }
 
 fn print_memory_section(s: &MemorySection) {
-    println!("  [{}]", "Memory".purple());
+    println!("[{}]", "Memory Section".purple());
     for i in 0..s.memories.len() {
         println!(
-            "  {}: min {} max {}",
+            "{}: min {} max {}",
             i,
             s.memories[i].min_pages,
             &match s.memories[i].max_pages {
@@ -150,10 +144,10 @@ fn print_memory_section(s: &MemorySection) {
 }
 
 fn print_code_section(s: &CodeSection) {
-    println!("  [{}]", "Code".purple());
+    println!("[{}]", "Code Section".purple());
     for i in 0..s.code_blocks.len() {
         println!(
-            "  {}: locals{:?} code{:?}",
+            "{}: locals{:?} code{:?}",
             i,
             s.code_blocks[i]
                 .locals
@@ -166,33 +160,33 @@ fn print_code_section(s: &CodeSection) {
 }
 
 fn print_data_section(s: &DataSection) {
-    println!("  [{}]", "Data".purple());
+    println!("[{}]", "Data Section".purple());
     for (i, d) in s.data_blocks.iter().enumerate() {
         println!(
-            "  {}: memory[{:?}] offset_expression{:?} data{:?}",
+            "{}: memory[{:?}] offset_expression{:?} data{:?}",
             i, d.memory, d.offset_expression, d.data,
         );
     }
 }
 
 fn print_element_section(s: &ElementSection) {
-    println!("  [{}]", "Element".purple());
+    println!("[{}]", "Element Section".purple());
     for (i, d) in s.elements.iter().enumerate() {
         println!(
-            "  {}: table[{:?}] expression{:?} functions{:?}",
+            "{}: table[{:?}] expression{:?} functions{:?}",
             i, d.table, d.value_expression, d.functions,
         );
     }
 }
 
 fn print_custom_section(s: &CustomSection) {
-    println!("  [{}]", "Custom".purple());
-    println!("  {}  data{:?}", s.name, s.data,);
+    println!("[{}]", "Custom Section".purple());
+    println!("{}  data{:?}", s.name, s.data,);
 }
 
 fn print_start_section(s: &StartSection) {
-    println!("  [{}]", "Start".purple());
-    println!("  {:?}", s.start_function);
+    println!("[{}]", "Start Section".purple());
+    println!("{:?}", s.start_function);
 }
 
 fn print_section(s: &Section) {
@@ -212,12 +206,10 @@ fn print_section(s: &Section) {
     }
 }
 
-fn print_program(name: &str, program: &Program) {
-    println!("{} {{", &name.green());
+fn print_program(program: &Program) {
     for s in program.sections.iter() {
         print_section(&s);
     }
-    println!("}}");
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -231,10 +223,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     f.read_to_end(&mut buffer)?;
 
     match Program::parse(&buffer) {
-        Ok(p) => print_program(&args[1], &p),
+        Ok(p) => print_program(&p),
         Err(e) => {
-            print_program(&args[1], &e.0);
-            println!("{}", e.1.red());
+            println!("{}", e.red());
         }
     };
     Ok(())
