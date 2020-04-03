@@ -1,8 +1,10 @@
 #![no_std]
 #[macro_use]
 extern crate alloc;
+extern crate serde;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use serde::{Deserialize, Serialize};
 use webassembly::*;
 
 pub trait WasmValueTypes {
@@ -13,7 +15,7 @@ pub trait WasmValueType {
     fn try_to_value_type(self) -> Result<ValueType, String>;
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ValueType {
     I32,
     I64,
@@ -91,45 +93,45 @@ fn many_n<'a, T>(
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
     pub outputs: Vec<ValueType>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum WasmType {
     Function(FunctionType),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TypeSection {
     pub types: Vec<WasmType>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FunctionSection {
     pub function_types: Vec<u32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CodeBlock {
     pub locals: Vec<(u32, ValueType)>,
     pub code_expression: Vec<Instruction>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Export {
     pub name: String,
     pub index: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum WasmExport {
     Function(Export),
     Table(Export),
@@ -137,19 +139,19 @@ pub enum WasmExport {
     Global(Export),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ExportSection {
     pub exports: Vec<WasmExport>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FunctionImport {
     pub module_name: String,
     pub name: String,
     pub type_index: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalImport {
     pub module_name: String,
     pub name: String,
@@ -157,7 +159,7 @@ pub struct GlobalImport {
     pub is_mutable: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryImport {
     pub module_name: String,
     pub name: String,
@@ -165,7 +167,7 @@ pub struct MemoryImport {
     pub max_pages: Option<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TableImport {
     pub module_name: String,
     pub name: String,
@@ -174,7 +176,7 @@ pub struct TableImport {
     pub max: Option<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum WasmImport {
     Function(FunctionImport),
     Global(GlobalImport),
@@ -182,82 +184,82 @@ pub enum WasmImport {
     Table(TableImport),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ImportSection {
     pub imports: Vec<WasmImport>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WasmMemory {
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MemorySection {
     pub memories: Vec<WasmMemory>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct StartSection {
     pub start_function: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Global {
     pub value_type: ValueType,
     pub is_mutable: bool,
     pub value_expression: Vec<Instruction>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalSection {
     pub globals: Vec<Global>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Table {
     pub element_type: u8,
     pub min: usize,
     pub max: Option<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataBlock {
     pub memory: usize,
     pub offset_expression: Vec<Instruction>,
     pub data: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataSection {
     pub data_blocks: Vec<DataBlock>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CustomSection {
     pub name: String,
     pub data: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WasmElement {
     pub table: usize,
     pub value_expression: Vec<Instruction>,
     pub functions: Vec<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ElementSection {
     pub elements: Vec<WasmElement>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Section {
     Type(TypeSection),
     Function(FunctionSection),
@@ -273,12 +275,12 @@ pub enum Section {
     Element(ElementSection),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Program {
     pub sections: Vec<Section>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Instruction {
     Unreachable,
     Nop,
@@ -1320,7 +1322,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
 
 fn wasm_module(input: &[u8]) -> Result<Program, String> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
-    let (input, _) =  tag(VERSION_1)(input)?;
+    let (input, _) = tag(VERSION_1)(input)?;
     let mut sections = vec![];
     let mut ip = input;
     let mut p = Program { sections: vec![] };
@@ -1346,6 +1348,10 @@ fn wasm_module(input: &[u8]) -> Result<Program, String> {
 impl Program {
     pub fn parse(input: &[u8]) -> Result<Program, String> {
         wasm_module(input)
+    }
+
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        serde_json::to_string(self)
     }
 
     pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, String> {
