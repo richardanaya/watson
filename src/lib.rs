@@ -4,15 +4,16 @@ extern crate alloc;
 extern crate serde;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use core::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use webassembly::*;
 
 pub trait WasmValueTypes {
-    fn try_to_value_types(self) -> Result<Vec<ValueType>, String>;
+    fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str>;
 }
 
 pub trait WasmValueType {
-    fn try_to_value_type(self) -> Result<ValueType, String>;
+    fn try_to_value_type(self) -> Result<ValueType, &'static str>;
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -24,7 +25,7 @@ pub enum ValueType {
 }
 
 impl WasmValueTypes for Vec<u8> {
-    fn try_to_value_types(self) -> Result<Vec<ValueType>, String> {
+    fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str> {
         let mut r = vec![];
         for v in self {
             r.push(v.try_to_value_type()?);
@@ -34,35 +35,49 @@ impl WasmValueTypes for Vec<u8> {
 }
 
 impl WasmValueType for u8 {
-    fn try_to_value_type(self) -> Result<ValueType, String> {
+    fn try_to_value_type(self) -> Result<ValueType, &'static str> {
         match self {
             I32 => Ok(ValueType::I32),
             I64 => Ok(ValueType::I64),
             F32 => Ok(ValueType::F32),
             F64 => Ok(ValueType::F64),
-            _ => Err("could not convert data type".to_string()),
+            _ => Err("could not convert data type"),
         }
     }
 }
 
-fn tag(tag: &[u8]) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> + '_ {
+impl TryFrom<&u8> for ValueType {
+    type Error = &'static str;
+
+    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+        match *value {
+            I32 => Ok(ValueType::I32),
+            I64 => Ok(ValueType::I64),
+            F32 => Ok(ValueType::F32),
+            F64 => Ok(ValueType::F64),
+            _ => Err("could not convert data type"),
+        }
+    }
+}
+
+fn tag(tag: &[u8]) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), &'static str> + '_ {
     move |input: &[u8]| {
         if tag.len() > input.len() {
-            return Err("trying to tag too many bytes".to_string());
+            return Err("trying to tag too many bytes");
         }
         for i in 0..tag.len() {
             if tag[i] != input[i] {
-                return Err("did not match tag".to_string());
+                return Err("did not match tag");
             }
         }
         Ok((&input[tag.len()..], &input[..tag.len()]))
     }
 }
 
-fn take(num: usize) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> {
+fn take(num: usize) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), &'static str> {
     move |input: &[u8]| {
         if num > input.len() {
-            return Err("trying to take too many bytes".to_string());
+            return Err("trying to take too many bytes");
         }
         Ok((&input[num..], &input[..num]))
     }
@@ -70,8 +85,8 @@ fn take(num: usize) -> impl Fn(&[u8]) -> Result<(&[u8], &[u8]), String> {
 
 fn many_n<'a, T>(
     n: usize,
-    f: impl Fn(&'a [u8]) -> Result<(&'a [u8], T), String>,
-) -> impl Fn(&'a [u8]) -> Result<(&'a [u8], Vec<T>), String> {
+    f: impl Fn(&'a [u8]) -> Result<(&'a [u8], T), &'static str>,
+) -> impl Fn(&'a [u8]) -> Result<(&'a [u8], Vec<T>), &'static str> {
     move |input: &[u8]| {
         let mut v = vec![];
         let mut ip = input;
@@ -480,66 +495,66 @@ pub enum Instruction {
     F64ReinterpretI64,
 }
 
-fn wasm_u32(input: &[u8]) -> Result<(&[u8], u32), String> {
+fn wasm_u32(input: &[u8]) -> Result<(&[u8], u32), &'static str> {
     let (i, byte_count) = match input.try_extract_u32(0) {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
     let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i))
 }
 
-fn wasm_i32(input: &[u8]) -> Result<(&[u8], i32, &[u8]), String> {
+fn wasm_i32(input: &[u8]) -> Result<(&[u8], i32, &[u8]), &'static str> {
     let original_input = input;
     let (i, byte_count) = match input.try_extract_i32(0) {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
     let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i, &original_input[..byte_count]))
 }
 
-fn wasm_i64(input: &[u8]) -> Result<(&[u8], i64, &[u8]), String> {
+fn wasm_i64(input: &[u8]) -> Result<(&[u8], i64, &[u8]), &'static str> {
     let original_input = input;
     let (i, byte_count) = match input.try_extract_i64(0) {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
     let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i, &original_input[..byte_count]))
 }
 
-fn wasm_f32(input: &[u8]) -> Result<(&[u8], f32, &[u8]), String> {
+fn wasm_f32(input: &[u8]) -> Result<(&[u8], f32, &[u8]), &'static str> {
     let original_input = input;
     let (i, byte_count) = match input.try_extract_f32(0) {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
     let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i, &original_input[..byte_count]))
 }
 
-fn wasm_f64(input: &[u8]) -> Result<(&[u8], f64, &[u8]), String> {
+fn wasm_f64(input: &[u8]) -> Result<(&[u8], f64, &[u8]), &'static str> {
     let original_input = input;
     let (i, byte_count) = match input.try_extract_f64(0) {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
     let (input, _) = take(byte_count as usize)(input)?;
     Ok((input, i, &original_input[..byte_count]))
 }
 
-fn wasm_string(input: &[u8]) -> Result<(&[u8], String), String> {
+fn wasm_string(input: &[u8]) -> Result<(&[u8], String), &'static str> {
     let (input, num_chars) = wasm_u32(input)?;
     let (input, chars) = take(num_chars as usize)(input)?;
     let s = match alloc::str::from_utf8(chars) {
         Ok(b) => b.to_string(),
-        Err(_) => return Err("could not parse utf8 string".to_string()),
+        Err(_) => return Err("could not parse utf8 string"),
     };
     Ok((input, s))
 }
 
-fn wasm_global_type(input: &[u8]) -> Result<(&[u8], ValueType, bool), String> {
+fn wasm_global_type(input: &[u8]) -> Result<(&[u8], ValueType, bool), &'static str> {
     let (input, global_value_type) = take(1)(input)?;
     let (input, global_type) = take(1)(input)?;
     Ok((
@@ -549,7 +564,7 @@ fn wasm_global_type(input: &[u8]) -> Result<(&[u8], ValueType, bool), String> {
     ))
 }
 
-fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
+fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), &'static str> {
     let (input, mem_type) = take(1)(input)?;
     match mem_type[0] {
         LIMIT_MIN_MAX => {
@@ -561,11 +576,11 @@ fn wasm_limit(input: &[u8]) -> Result<(&[u8], usize, Option<usize>), String> {
             let (input, min) = wasm_u32(input)?;
             Ok((input, min as usize, None))
         }
-        _ => Err("unhandled memory type".to_string()),
+        _ => Err("unhandled memory type"),
     }
 }
 
-fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), String> {
+fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), &'static str> {
     let mut ip = input;
     let instruction;
 
@@ -973,12 +988,12 @@ fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), String
         I64_REINTERPRET_F64 => instruction = Instruction::I64ReinterpretF64,
         F32_REINTERPRET_I32 => instruction = Instruction::F32ReinterpretI32,
         F64_REINTERPRET_I64 => instruction = Instruction::F64ReinterpretI64,
-        _ => return Err("unknown expression".to_string()),
+        _ => return Err("unknown expression"),
     };
     Ok((ip, instruction))
 }
 
-fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), String> {
+fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), &'static str> {
     let mut instructions = vec![];
     let mut ip = input;
     loop {
@@ -1002,7 +1017,7 @@ fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), String> {
 
 fn wasm_if_else(
     input: &[u8],
-) -> Result<(&[u8], Vec<Instruction>, Option<Vec<Instruction>>), String> {
+) -> Result<(&[u8], Vec<Instruction>, Option<Vec<Instruction>>), &'static str> {
     let mut if_instructions = vec![];
     let mut else_instructions = vec![];
     let mut ip = input;
@@ -1048,7 +1063,7 @@ fn wasm_if_else(
     }
 }
 
-fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
+fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
     let (input, id) = take(1)(input)?;
     let (input, section_length) = wasm_u32(input)?;
 
@@ -1071,7 +1086,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                             }),
                         ))
                     }
-                    _ => Err("unknown type".to_string()),
+                    _ => Err("unknown type"),
                 }
             });
             let (input, items) = parse_items(input)?;
@@ -1132,7 +1147,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                             index: export_index as usize,
                         }),
                     )),
-                    _ => Err("unknown export".to_string()),
+                    _ => Err("unknown export"),
                 }
             });
             let (input, items) = parse_items(input)?;
@@ -1218,7 +1233,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                             }),
                         ))
                     }
-                    _ => Err("unknown export".to_string()),
+                    _ => Err("unknown export"),
                 }
             });
             let (input, items) = parse_items(input)?;
@@ -1245,14 +1260,14 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let mut name_bytes_length = 0;
             let (num_chars, byte_count) = match input.try_extract_u32(0) {
                 Ok(r) => r,
-                Err(e) => return Err(e.to_string()),
+                Err(e) => return Err(e),
             };
             let (input, _) = take(byte_count as usize)(input)?;
             let (input, chars) = take(num_chars as usize)(input)?;
             name_bytes_length += byte_count + num_chars as usize;
             let name = match alloc::str::from_utf8(chars) {
                 Ok(b) => b.to_string(),
-                Err(_) => return Err("could not parse utf8 string".to_string()),
+                Err(_) => return Err("could not parse utf8 string"),
             };
             let (input, bytes) =
                 take((section_length as usize - name_bytes_length) as usize)(input)?;
@@ -1279,7 +1294,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
                         },
                     ))
                 } else {
-                    Err("unknown table type".to_string())
+                    Err("unknown table type")
                 }
             });
             let (input, items) = parse_items(input)?;
@@ -1342,11 +1357,11 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
             let (input, items) = parse_items(input)?;
             Ok((input, Section::Element(ElementSection { elements: items })))
         }
-        _ => Err("unknow section".to_string()),
+        _ => Err("unknow section"),
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<Program, String> {
+fn wasm_module(input: &[u8]) -> Result<Program, &'static str> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
     let mut sections = vec![];
@@ -1372,18 +1387,11 @@ fn wasm_module(input: &[u8]) -> Result<Program, String> {
 }
 
 impl Program {
-    pub fn parse(input: &[u8]) -> Result<Program, String> {
+    pub fn parse(input: &[u8]) -> Result<Program, &'static str> {
         wasm_module(input)
     }
 
-    pub fn to_json(&self) -> Result<String, String> {
-        match serde_json::to_string(self) {
-            Ok(s) => Ok(s),
-            Err(_) => Err("failed to serialize into json".to_string()),
-        }
-    }
-
-    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, String> {
+    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
                 true
@@ -1410,21 +1418,20 @@ impl Program {
                 let main_export = match result {
                     Some(WasmExport::Function(f)) => f,
                     _ => {
-                        let mut e = "could not find ".to_string();
-                        e.push_str(name);
+                        let e = "could not find export";
                         return Err(e);
                     }
                 };
                 Ok(main_export)
             } else {
-                Err("could find code section".to_string())
+                Err("could not find code section")
             }
         } else {
-            Err("could find export section".to_string())
+            Err("could not find export section")
         }
     }
 
-    pub fn find_code_block<'a>(&'a self, index: usize) -> Result<&'a CodeBlock, String> {
+    pub fn find_code_block<'a>(&'a self, index: usize) -> Result<&'a CodeBlock, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Code(_) = x {
                 true
@@ -1434,12 +1441,12 @@ impl Program {
         });
         if let Some(Section::Code(code_section)) = result {
             if index >= code_section.code_blocks.len() {
-                Err("invalid code block index".to_string())
+                Err("invalid code block index")
             } else {
                 Ok(&code_section.code_blocks[index])
             }
         } else {
-            Err("could find code section".to_string())
+            Err("could find code section")
         }
     }
 }

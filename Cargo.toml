@@ -1,6 +1,6 @@
 [package]
 name = "watson"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["Richard Anaya"]
 edition = "2018"
 description = "a no_std web assembly loader"
@@ -13,4 +13,3 @@ readme = "README.md"
 [dependencies]
 webassembly = "0.5.0"
 serde = { version = "1.0", default-features = false, features = ["alloc","derive"] }
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
