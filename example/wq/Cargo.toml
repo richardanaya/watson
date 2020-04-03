@@ -1,10 +1,10 @@
 [package]
 name = "wq"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Richard Anaya"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-categories = ["wasm", "cli"]
+categories = ["wasm", "command-line-utilities"]
 description = "a tool for converting web assembly into json"
 repository = "https://www.github.com/richardanaya/watson/examples/wq"
 readme = "README.md"
