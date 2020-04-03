@@ -1355,10 +1355,10 @@ impl Program {
         wasm_module(input)
     }
 
-    pub fn to_json(&self) -> Result<String,String> {
+    pub fn to_json(&self) -> Result<String, String> {
         match serde_json::to_string(self) {
             Ok(s) => Ok(s),
-            Err(_) => Err("failed to serialize into json".to_string())
+            Err(_) => Err("failed to serialize into json".to_string()),
         }
     }
 

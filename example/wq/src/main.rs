@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     f.read_to_end(&mut buffer)?;
 
     match Program::parse(&buffer) {
-        Ok(p) => println!("{}",p.to_json().unwrap()),
+        Ok(p) => println!("{}", p.to_json().unwrap()),
         Err(e) => {
             eprintln!("Error: {}", e.red());
             process::exit(1);
