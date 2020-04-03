@@ -7,6 +7,11 @@ cargo install wq
 ```
 # Usage
 
-```
-wq test.wasm
+```bash
+# basic print
+wq test.wasm 
+# write to file
+wq test.wasm test.json 
+# for pipe chaining
+cat simplest.wasm | wq 
 ```
