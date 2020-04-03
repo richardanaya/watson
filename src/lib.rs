@@ -1318,18 +1318,12 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), String> {
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<Program, (Program, String)> {
-    let mut p = Program { sections: vec![] };
-    let (input, _) = match tag(MAGIC_NUMBER)(input) {
-        Ok(r) => r,
-        Err(e) => return Err((p, e)),
-    };
-    let (input, _) = match tag(VERSION_1)(input) {
-        Ok(r) => r,
-        Err(e) => return Err((p, e)),
-    };
+fn wasm_module(input: &[u8]) -> Result<Program, String> {
+    let (input, _) = tag(MAGIC_NUMBER)(input)?;
+    let (input, _) =  tag(VERSION_1)(input)?;
     let mut sections = vec![];
     let mut ip = input;
+    let mut p = Program { sections: vec![] };
     loop {
         match section(ip) {
             Ok((input, item)) => {
@@ -1340,8 +1334,7 @@ fn wasm_module(input: &[u8]) -> Result<Program, (Program, String)> {
                 if ip.len() == 0 {
                     break;
                 } else {
-                    p.sections = sections;
-                    return Err((p, e));
+                    return Err(e);
                 }
             }
         }
@@ -1351,7 +1344,7 @@ fn wasm_module(input: &[u8]) -> Result<Program, (Program, String)> {
 }
 
 impl Program {
-    pub fn parse(input: &[u8]) -> Result<Program, (Program, String)> {
+    pub fn parse(input: &[u8]) -> Result<Program, String> {
         wasm_module(input)
     }
 
