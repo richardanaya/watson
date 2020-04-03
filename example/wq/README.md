@@ -19,7 +19,7 @@ Getting pretty formated
 ```bash
 cat simplest.wasm | wq | jq
 ```
-```json
+```js
 {
   "sections": [
     {
