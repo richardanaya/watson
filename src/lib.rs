@@ -1041,9 +1041,9 @@ fn wasm_expression(input: &[u8]) -> Result<(&[u8], Vec<Instruction>), &'static s
     Ok((ip, instructions))
 }
 
-fn wasm_if_else(
-    input: &[u8],
-) -> Result<(&[u8], Vec<Instruction>, Option<Vec<Instruction>>), &'static str> {
+type Instructions = Vec<Instruction>;
+
+fn wasm_if_else(input: &[u8]) -> Result<(&[u8], Instructions, Option<Instructions>), &'static str> {
     let mut if_instructions = vec![];
     let mut else_instructions = vec![];
     let mut ip = input;
@@ -1332,7 +1332,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                     DataBlock {
                         memory: mem_index as usize,
                         offset_expression,
-                        data: data,
+                        data,
                     },
                 ))
             });
@@ -1394,7 +1394,7 @@ fn wasm_module(input: &[u8]) -> Result<Program, &'static str> {
                 ip = input;
             }
             Err(e) => {
-                if ip.len() == 0 {
+                if ip.is_empty() {
                     break;
                 } else {
                     return Err(e);
