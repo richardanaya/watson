@@ -1857,9 +1857,9 @@ impl Program {
                 Section::Memory(s) => {},
                 Section::Start(s) => {
                     let mut sec_data = vec![];
-                    sec_data.extend(s.start_function.to_wasm_bytes());
+                    sec_data.extend(s.start_function.into_wasm_bytes());
                     program_bytes.push(SECTION_START);
-                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data.len().into_wasm_bytes());
                     program_bytes.extend(sec_data);
                 },
                 Section::Global(s) => {},
