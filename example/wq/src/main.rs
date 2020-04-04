@@ -24,7 +24,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match Program::parse(&buffer) {
         Ok(p) => {
-            let json_string = p.to_json()?;
+            let json_string = match serde_json::to_string(&p) {
+                Ok(s) => s,
+                Err(_) => {
+                    eprintln!("Error: failed to serialize");
+                    process::exit(1);
+                }
+            };
             if args.len() == 3 {
                 let mut f = File::create(&args[2])?;
                 f.write_all(&json_string.as_bytes())?;

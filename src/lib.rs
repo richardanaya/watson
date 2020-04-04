@@ -2,7 +2,6 @@
 #[macro_use]
 extern crate alloc;
 extern crate serde;
-use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::convert::TryFrom;
 use serde::{Deserialize, Serialize};
@@ -143,56 +142,70 @@ pub struct CodeSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Export {
-    pub name: String,
+pub struct Export<'a> {
+    #[serde(borrow)]
+    pub name: &'a str,
     pub index: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "export_type", content = "content")]
-pub enum WasmExport {
+pub enum WasmExport<'a> {
     #[serde(rename(serialize = "function"))]
-    Function(Export),
+    #[serde(borrow)]
+    Function(Export<'a>),
     #[serde(rename(serialize = "table"))]
-    Table(Export),
+    #[serde(borrow)]
+    Table(Export<'a>),
     #[serde(rename(serialize = "memory"))]
-    Memory(Export),
+    #[serde(borrow)]
+    Memory(Export<'a>),
     #[serde(rename(serialize = "global"))]
-    Global(Export),
+    #[serde(borrow)]
+    Global(Export<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ExportSection {
-    pub exports: Vec<WasmExport>,
+pub struct ExportSection<'a> {
+    #[serde(borrow)]
+    pub exports: Vec<WasmExport<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct FunctionImport {
-    pub module_name: String,
-    pub name: String,
+pub struct FunctionImport<'a> {
+    #[serde(borrow)]
+    pub module_name: &'a str,
+    #[serde(borrow)]
+    pub name: &'a str,
     pub type_index: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GlobalImport {
-    pub module_name: String,
-    pub name: String,
+pub struct GlobalImport<'a> {
+    #[serde(borrow)]
+    pub module_name: &'a str,
+    #[serde(borrow)]
+    pub name: &'a str,
     pub value_type: ValueType,
     pub is_mutable: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MemoryImport {
-    pub module_name: String,
-    pub name: String,
+pub struct MemoryImport<'a> {
+    #[serde(borrow)]
+    pub module_name: &'a str,
+    #[serde(borrow)]
+    pub name: &'a str,
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TableImport {
-    pub module_name: String,
-    pub name: String,
+pub struct TableImport<'a> {
+    #[serde(borrow)]
+    pub module_name: &'a str,
+    #[serde(borrow)]
+    pub name: &'a str,
     pub element_type: u8,
     pub min: usize,
     pub max: Option<usize>,
@@ -200,20 +213,25 @@ pub struct TableImport {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
-pub enum WasmImport {
+pub enum WasmImport<'a> {
     #[serde(rename(serialize = "function"))]
-    Function(FunctionImport),
+    #[serde(borrow)]
+    Function(FunctionImport<'a>),
     #[serde(rename(serialize = "global"))]
-    Global(GlobalImport),
+    #[serde(borrow)]
+    Global(GlobalImport<'a>),
     #[serde(rename(serialize = "memory"))]
-    Memory(MemoryImport),
+    #[serde(borrow)]
+    Memory(MemoryImport<'a>),
     #[serde(rename(serialize = "table"))]
-    Table(TableImport),
+    #[serde(borrow)]
+    Table(TableImport<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ImportSection {
-    pub imports: Vec<WasmImport>,
+pub struct ImportSection<'a> {
+    #[serde(borrow)]
+    pub imports: Vec<WasmImport<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -269,8 +287,9 @@ pub struct DataSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CustomSection {
-    pub name: String,
+pub struct CustomSection<'a> {
+    #[serde(borrow)]
+    pub name: &'a str,
     pub data: Vec<u8>,
 }
 
@@ -288,7 +307,7 @@ pub struct ElementSection {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
-pub enum Section {
+pub enum Section<'a> {
     #[serde(rename(serialize = "type"))]
     Type(TypeSection),
     #[serde(rename(serialize = "function"))]
@@ -296,9 +315,11 @@ pub enum Section {
     #[serde(rename(serialize = "code"))]
     Code(CodeSection),
     #[serde(rename(serialize = "export"))]
-    Export(ExportSection),
+    #[serde(borrow)]
+    Export(ExportSection<'a>),
     #[serde(rename(serialize = "import"))]
-    Import(ImportSection),
+    #[serde(borrow)]
+    Import(ImportSection<'a>),
     #[serde(rename(serialize = "memory"))]
     Memory(MemorySection),
     #[serde(rename(serialize = "start"))]
@@ -310,14 +331,16 @@ pub enum Section {
     #[serde(rename(serialize = "data"))]
     Data(DataSection),
     #[serde(rename(serialize = "custom"))]
-    Custom(CustomSection),
+    #[serde(borrow)]
+    Custom(CustomSection<'a>),
     #[serde(rename(serialize = "element"))]
     Element(ElementSection),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Program {
-    pub sections: Vec<Section>,
+pub struct Program<'a> {
+    #[serde(borrow)]
+    pub sections: Vec<Section<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -544,11 +567,11 @@ fn wasm_f64(input: &[u8]) -> Result<(&[u8], f64, &[u8]), &'static str> {
     Ok((input, i, &original_input[..byte_count]))
 }
 
-fn wasm_string(input: &[u8]) -> Result<(&[u8], String), &'static str> {
+fn wasm_string(input: &[u8]) -> Result<(&[u8], &str), &'static str> {
     let (input, num_chars) = wasm_u32(input)?;
     let (input, chars) = take(num_chars as usize)(input)?;
     let s = match alloc::str::from_utf8(chars) {
-        Ok(b) => b.to_string(),
+        Ok(b) => b,
         Err(_) => return Err("could not parse utf8 string"),
     };
     Ok((input, s))
@@ -1265,8 +1288,8 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
             let (input, _) = take(byte_count as usize)(input)?;
             let (input, chars) = take(num_chars as usize)(input)?;
             name_bytes_length += byte_count + num_chars as usize;
-            let name = match alloc::str::from_utf8(chars) {
-                Ok(b) => b.to_string(),
+            let name = match core::str::from_utf8(chars) {
+                Ok(b) => b,
                 Err(_) => return Err("could not parse utf8 string"),
             };
             let (input, bytes) =
@@ -1386,8 +1409,8 @@ fn wasm_module(input: &[u8]) -> Result<Program, &'static str> {
     Ok(p)
 }
 
-impl Program {
-    pub fn parse(input: &[u8]) -> Result<Program, &'static str> {
+impl<'p> Program<'p> {
+    pub fn parse(input: &'p [u8]) -> Result<Program<'p>, &'static str> {
         wasm_module(input)
     }
 
