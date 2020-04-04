@@ -1845,6 +1845,6 @@ impl Program {
 }
 
 #[no_mangle]
-pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
+pub fn parse_web_assembly<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
     wasm_module(input)
 }
