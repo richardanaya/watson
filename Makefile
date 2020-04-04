@@ -1,2 +1,2 @@
 build:
-	cargo +nightly build
+	cargo build
