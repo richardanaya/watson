@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate alloc;
 extern crate serde;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::convert::TryFrom;
 use core::convert::TryInto;
@@ -106,42 +107,42 @@ fn many_n<'a, T>(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
     pub outputs: Vec<ValueType>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "value_type", content = "content")]
 pub enum WasmType {
     #[serde(rename(serialize = "function"))]
     Function(FunctionType),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TypeSection {
     pub types: Vec<WasmType>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FunctionSection {
     pub function_types: Vec<u32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CodeBlock {
     pub locals: Vec<(u32, ValueType)>,
     pub code_expression: Vec<Instruction>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Export<'a> {
+pub struct ExportView<'a> {
     #[serde(borrow)]
     pub name: &'a str,
     pub index: usize,
@@ -149,29 +150,82 @@ pub struct Export<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "export_type", content = "content")]
-pub enum WasmExport<'a> {
+pub enum WasmExportView<'a> {
     #[serde(rename(serialize = "function"))]
     #[serde(borrow)]
-    Function(Export<'a>),
+    Function(ExportView<'a>),
     #[serde(rename(serialize = "table"))]
     #[serde(borrow)]
-    Table(Export<'a>),
+    Table(ExportView<'a>),
     #[serde(rename(serialize = "memory"))]
     #[serde(borrow)]
-    Memory(Export<'a>),
+    Memory(ExportView<'a>),
     #[serde(rename(serialize = "global"))]
     #[serde(borrow)]
-    Global(Export<'a>),
+    Global(ExportView<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ExportSection<'a> {
+pub struct ExportSectionView<'a> {
     #[serde(borrow)]
-    pub exports: Vec<WasmExport<'a>>,
+    pub exports: Vec<WasmExportView<'a>>,
+}
+
+impl<'a> ExportSectionView<'a> {
+    fn to_owned(&self) -> ExportSection {
+        ExportSection {
+            exports: self
+                .exports
+                .iter()
+                .map(|x| match x {
+                    WasmExportView::Function(x) => WasmExport::Function(Export {
+                        name: x.name.to_string(),
+                        index: x.index,
+                    }),
+                    WasmExportView::Global(x) => WasmExport::Global(Export {
+                        name: x.name.to_string(),
+                        index: x.index,
+                    }),
+                    WasmExportView::Memory(x) => WasmExport::Memory(Export {
+                        name: x.name.to_string(),
+                        index: x.index,
+                    }),
+                    WasmExportView::Table(x) => WasmExport::Table(Export {
+                        name: x.name.to_string(),
+                        index: x.index,
+                    }),
+                })
+                .collect::<Vec<WasmExport>>(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct FunctionImport<'a> {
+pub struct Export {
+    pub name: String,
+    pub index: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "export_type", content = "content")]
+pub enum WasmExport {
+    #[serde(rename(serialize = "function"))]
+    Function(Export),
+    #[serde(rename(serialize = "table"))]
+    Table(Export),
+    #[serde(rename(serialize = "memory"))]
+    Memory(Export),
+    #[serde(rename(serialize = "global"))]
+    Global(Export),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExportSection {
+    pub exports: Vec<WasmExport>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FunctionImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
     #[serde(borrow)]
@@ -180,7 +234,7 @@ pub struct FunctionImport<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GlobalImport<'a> {
+pub struct GlobalImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
     #[serde(borrow)]
@@ -190,7 +244,7 @@ pub struct GlobalImport<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MemoryImport<'a> {
+pub struct MemoryImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
     #[serde(borrow)]
@@ -200,7 +254,7 @@ pub struct MemoryImport<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TableImport<'a> {
+pub struct TableImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
     #[serde(borrow)]
@@ -212,69 +266,155 @@ pub struct TableImport<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
-pub enum WasmImport<'a> {
+pub enum WasmImportView<'a> {
     #[serde(rename(serialize = "function"))]
     #[serde(borrow)]
-    Function(FunctionImport<'a>),
+    Function(FunctionImportView<'a>),
     #[serde(rename(serialize = "global"))]
     #[serde(borrow)]
-    Global(GlobalImport<'a>),
+    Global(GlobalImportView<'a>),
     #[serde(rename(serialize = "memory"))]
     #[serde(borrow)]
-    Memory(MemoryImport<'a>),
+    Memory(MemoryImportView<'a>),
     #[serde(rename(serialize = "table"))]
     #[serde(borrow)]
-    Table(TableImport<'a>),
+    Table(TableImportView<'a>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ImportSection<'a> {
-    #[serde(borrow)]
-    pub imports: Vec<WasmImport<'a>>,
+pub struct FunctionImport {
+    pub module_name: String,
+    pub name: String,
+    pub type_index: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct WasmMemory {
+pub struct GlobalImport {
+    pub module_name: String,
+    pub name: String,
+    pub value_type: ValueType,
+    pub is_mutable: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MemoryImport {
+    pub module_name: String,
+    pub name: String,
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MemorySection {
-    pub memories: Vec<WasmMemory>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct StartSection {
-    pub start_function: usize,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Global {
-    pub value_type: ValueType,
-    pub is_mutable: bool,
-    pub value_expression: Vec<Instruction>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GlobalSection {
-    pub globals: Vec<Global>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Table {
+pub struct TableImport {
+    pub module_name: String,
+    pub name: String,
     pub element_type: u8,
     pub min: usize,
     pub max: Option<usize>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "import_type", content = "content")]
+pub enum WasmImport {
+    #[serde(rename(serialize = "function"))]
+    Function(FunctionImport),
+    #[serde(rename(serialize = "global"))]
+    Global(GlobalImport),
+    #[serde(rename(serialize = "memory"))]
+    Memory(MemoryImport),
+    #[serde(rename(serialize = "table"))]
+    Table(TableImport),
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImportSection {
+    pub imports: Vec<WasmImport>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImportSectionView<'a> {
+    #[serde(borrow)]
+    pub imports: Vec<WasmImportView<'a>>,
+}
+
+impl<'a> ImportSectionView<'a> {
+    fn to_owned(&self) -> ImportSection {
+        ImportSection {
+            imports: self
+                .imports
+                .iter()
+                .map(|x| match x {
+                    WasmImportView::Function(x) => WasmImport::Function(FunctionImport {
+                        module_name: x.module_name.to_string(),
+                        name: x.name.to_string(),
+                        type_index: x.type_index,
+                    }),
+                    WasmImportView::Global(x) => WasmImport::Global(GlobalImport {
+                        module_name: x.module_name.to_string(),
+                        name: x.name.to_string(),
+                        value_type: x.value_type,
+                        is_mutable: x.is_mutable,
+                    }),
+                    WasmImportView::Memory(x) => WasmImport::Memory(MemoryImport {
+                        module_name: x.module_name.to_string(),
+                        name: x.name.to_string(),
+                        min_pages: x.min_pages,
+                        max_pages: x.max_pages,
+                    }),
+                    WasmImportView::Table(x) => WasmImport::Table(TableImport {
+                        module_name: x.module_name.to_string(),
+                        name: x.name.to_string(),
+                        element_type: x.element_type,
+                        min: x.min,
+                        max: x.max,
+                    }),
+                })
+                .collect::<Vec<WasmImport>>(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WasmMemory {
+    pub min_pages: usize,
+    pub max_pages: Option<usize>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MemorySection {
+    pub memories: Vec<WasmMemory>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StartSection {
+    pub start_function: usize,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Global {
+    pub value_type: ValueType,
+    pub is_mutable: bool,
+    pub value_expression: Vec<Instruction>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GlobalSection {
+    pub globals: Vec<Global>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Table {
+    pub element_type: u8,
+    pub min: usize,
+    pub max: Option<usize>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DataBlock<'a> {
+pub struct DataBlockView<'a> {
     pub memory: usize,
     pub offset_expression: Vec<Instruction>,
     #[serde(borrow)]
@@ -282,34 +422,77 @@ pub struct DataBlock<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DataSection<'a> {
+pub struct DataSectionView<'a> {
     #[serde(borrow)]
-    pub data_blocks: Vec<DataBlock<'a>>,
+    pub data_blocks: Vec<DataBlockView<'a>>,
+}
+
+impl<'a> DataSectionView<'a> {
+    fn to_owned(&self) -> DataSection {
+        DataSection {
+            data_blocks: self
+                .data_blocks
+                .iter()
+                .map(|x| DataBlock {
+                    memory: x.memory,
+                    offset_expression: x.offset_expression.clone(),
+                    data: x.data.to_vec(),
+                })
+                .collect::<Vec<DataBlock>>(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CustomSection<'a> {
+pub struct DataBlock {
+    pub memory: usize,
+    pub offset_expression: Vec<Instruction>,
+    pub data: Vec<u8>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DataSection {
+    pub data_blocks: Vec<DataBlock>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CustomSectionView<'a> {
     #[serde(borrow)]
     pub name: &'a str,
     #[serde(borrow)]
     pub data: &'a [u8],
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl<'a> CustomSectionView<'a> {
+    fn to_owned(&self) -> CustomSection {
+        CustomSection {
+            name: self.name.to_string(),
+            data: self.data.to_vec(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CustomSection {
+    pub name: String,
+    pub data: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WasmElement {
     pub table: usize,
     pub value_expression: Vec<Instruction>,
     pub functions: Vec<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElementSection {
     pub elements: Vec<WasmElement>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
-pub enum Section<'a> {
+pub enum SectionView<'a> {
     #[serde(rename(serialize = "type"))]
     Type(TypeSection),
     #[serde(rename(serialize = "function"))]
@@ -318,10 +501,10 @@ pub enum Section<'a> {
     Code(CodeSection),
     #[serde(rename(serialize = "export"))]
     #[serde(borrow)]
-    Export(ExportSection<'a>),
+    Export(ExportSectionView<'a>),
     #[serde(rename(serialize = "import"))]
     #[serde(borrow)]
-    Import(ImportSection<'a>),
+    Import(ImportSectionView<'a>),
     #[serde(rename(serialize = "memory"))]
     Memory(MemorySection),
     #[serde(rename(serialize = "start"))]
@@ -332,21 +515,74 @@ pub enum Section<'a> {
     Table(TableSection),
     #[serde(rename(serialize = "data"))]
     #[serde(borrow)]
-    Data(DataSection<'a>),
+    Data(DataSectionView<'a>),
     #[serde(rename(serialize = "custom"))]
     #[serde(borrow)]
-    Custom(CustomSection<'a>),
+    Custom(CustomSectionView<'a>),
+    #[serde(rename(serialize = "element"))]
+    Element(ElementSection),
+}
+
+impl<'a> SectionView<'a> {
+    fn to_owned(&self) -> Section {
+        match self {
+            SectionView::Type(s) => Section::Type(s.clone()),
+            SectionView::Function(s) => Section::Function(s.clone()),
+            SectionView::Code(s) => Section::Code(s.clone()),
+            SectionView::Export(s) => Section::Export(s.to_owned()),
+            SectionView::Import(s) => Section::Import(s.to_owned()),
+            SectionView::Memory(s) => Section::Memory(s.clone()),
+            SectionView::Start(s) => Section::Start(s.clone()),
+            SectionView::Global(s) => Section::Global(s.clone()),
+            SectionView::Table(s) => Section::Table(s.clone()),
+            SectionView::Data(s) => Section::Data(s.to_owned()),
+            SectionView::Custom(s) => Section::Custom(s.to_owned()),
+            SectionView::Element(s) => Section::Element(s.clone()),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "section_type", content = "content")]
+pub enum Section {
+    #[serde(rename(serialize = "type"))]
+    Type(TypeSection),
+    #[serde(rename(serialize = "function"))]
+    Function(FunctionSection),
+    #[serde(rename(serialize = "code"))]
+    Code(CodeSection),
+    #[serde(rename(serialize = "export"))]
+    Export(ExportSection),
+    #[serde(rename(serialize = "import"))]
+    Import(ImportSection),
+    #[serde(rename(serialize = "memory"))]
+    Memory(MemorySection),
+    #[serde(rename(serialize = "start"))]
+    Start(StartSection),
+    #[serde(rename(serialize = "global"))]
+    Global(GlobalSection),
+    #[serde(rename(serialize = "table"))]
+    Table(TableSection),
+    #[serde(rename(serialize = "data"))]
+    Data(DataSection),
+    #[serde(rename(serialize = "custom"))]
+    Custom(CustomSection),
     #[serde(rename(serialize = "element"))]
     Element(ElementSection),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Program<'a> {
+pub struct ProgramView<'a> {
     #[serde(borrow)]
-    pub sections: Vec<Section<'a>>,
+    pub sections: Vec<SectionView<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Program {
+    pub sections: Vec<Section>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", content = "params")]
 pub enum Instruction {
     Unreachable,
@@ -1089,7 +1325,7 @@ fn wasm_if_else(input: &[u8]) -> Result<(&[u8], Instructions, Option<Instruction
     }
 }
 
-fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
+fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
     let (input, id) = take(1)(input)?;
     let (input, section_length) = wasm_u32(input)?;
 
@@ -1116,7 +1352,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 }
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Type(TypeSection { types: items })))
+            Ok((input, SectionView::Type(TypeSection { types: items })))
         }
         SECTION_FUNCTION => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1124,7 +1360,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
             let (input, items) = parse_items(input)?;
             Ok((
                 input,
-                Section::Function(FunctionSection {
+                SectionView::Function(FunctionSection {
                     function_types: items,
                 }),
             ))
@@ -1133,7 +1369,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
             let (input, start_function) = wasm_u32(input)?;
             Ok((
                 input,
-                Section::Start(StartSection {
+                SectionView::Start(StartSection {
                     start_function: start_function as usize,
                 }),
             ))
@@ -1147,28 +1383,28 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 match export_type[0] {
                     DESC_FUNCTION => Ok((
                         input,
-                        WasmExport::Function(Export {
+                        WasmExportView::Function(ExportView {
                             name,
                             index: export_index as usize,
                         }),
                     )),
                     DESC_MEMORY => Ok((
                         input,
-                        WasmExport::Memory(Export {
+                        WasmExportView::Memory(ExportView {
                             name,
                             index: export_index as usize,
                         }),
                     )),
                     DESC_GLOBAL => Ok((
                         input,
-                        WasmExport::Global(Export {
+                        WasmExportView::Global(ExportView {
                             name,
                             index: export_index as usize,
                         }),
                     )),
                     DESC_TABLE => Ok((
                         input,
-                        WasmExport::Table(Export {
+                        WasmExportView::Table(ExportView {
                             name,
                             index: export_index as usize,
                         }),
@@ -1177,7 +1413,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 }
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Export(ExportSection { exports: items })))
+            Ok((
+                input,
+                SectionView::Export(ExportSectionView { exports: items }),
+            ))
         }
         SECTION_CODE => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1201,7 +1440,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 ))
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Code(CodeSection { code_blocks: items })))
+            Ok((input, SectionView::Code(CodeSection { code_blocks: items })))
         }
         SECTION_IMPORT => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1214,7 +1453,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                         let (input, type_index) = wasm_u32(input)?;
                         Ok((
                             input,
-                            WasmImport::Function(FunctionImport {
+                            WasmImportView::Function(FunctionImportView {
                                 module_name,
                                 name,
                                 type_index: type_index as usize,
@@ -1225,7 +1464,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                         let (input, min_pages, max_pages) = wasm_limit(input)?;
                         Ok((
                             input,
-                            WasmImport::Memory(MemoryImport {
+                            WasmImportView::Memory(MemoryImportView {
                                 module_name,
                                 name,
                                 min_pages,
@@ -1238,7 +1477,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                         let (input, min, max) = wasm_limit(input)?;
                         Ok((
                             input,
-                            WasmImport::Table(TableImport {
+                            WasmImportView::Table(TableImportView {
                                 module_name,
                                 name,
                                 element_type: element_type[0],
@@ -1251,7 +1490,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                         let (input, value_type, is_mutable) = wasm_global_type(input)?;
                         Ok((
                             input,
-                            WasmImport::Global(GlobalImport {
+                            WasmImportView::Global(GlobalImportView {
                                 module_name,
                                 name,
                                 value_type,
@@ -1263,7 +1502,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 }
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Import(ImportSection { imports: items })))
+            Ok((
+                input,
+                SectionView::Import(ImportSectionView { imports: items }),
+            ))
         }
         SECTION_GLOBAL => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1280,7 +1522,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 ))
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Global(GlobalSection { globals: items })))
+            Ok((input, SectionView::Global(GlobalSection { globals: items })))
         }
         SECTION_CUSTOM => {
             let mut name_bytes_length = 0;
@@ -1297,7 +1539,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
             };
             let (input, bytes) =
                 take((section_length as usize - name_bytes_length) as usize)(input)?;
-            Ok((input, Section::Custom(CustomSection { name, data: bytes })))
+            Ok((
+                input,
+                SectionView::Custom(CustomSectionView { name, data: bytes }),
+            ))
         }
         SECTION_TABLE => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1318,7 +1563,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 }
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Table(TableSection { tables: items })))
+            Ok((input, SectionView::Table(TableSection { tables: items })))
         }
         SECTION_DATA => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1329,7 +1574,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 let (input, data) = take(data_len as usize)(input)?;
                 Ok((
                     input,
-                    DataBlock {
+                    DataBlockView {
                         memory: mem_index as usize,
                         offset_expression,
                         data,
@@ -1337,7 +1582,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 ))
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Data(DataSection { data_blocks: items })))
+            Ok((
+                input,
+                SectionView::Data(DataSectionView { data_blocks: items }),
+            ))
         }
         SECTION_MEMORY => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1352,7 +1600,10 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 ))
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Memory(MemorySection { memories: items })))
+            Ok((
+                input,
+                SectionView::Memory(MemorySection { memories: items }),
+            ))
         }
         SECTION_ELEMENT => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1375,18 +1626,21 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 ))
             });
             let (input, items) = parse_items(input)?;
-            Ok((input, Section::Element(ElementSection { elements: items })))
+            Ok((
+                input,
+                SectionView::Element(ElementSection { elements: items }),
+            ))
         }
         _ => Err("unknow section"),
     }
 }
 
-fn wasm_module(input: &[u8]) -> Result<Program, &'static str> {
+fn wasm_module(input: &[u8]) -> Result<ProgramView, &'static str> {
     let (input, _) = tag(MAGIC_NUMBER)(input)?;
     let (input, _) = tag(VERSION_1)(input)?;
     let mut sections = vec![];
     let mut ip = input;
-    let mut p = Program { sections: vec![] };
+    let mut p = ProgramView { sections: vec![] };
     loop {
         match section(ip) {
             Ok((input, item)) => {
@@ -1406,12 +1660,85 @@ fn wasm_module(input: &[u8]) -> Result<Program, &'static str> {
     Ok(p)
 }
 
-impl<'p> Program<'p> {
-    pub fn parse(input: &'p [u8]) -> Result<Program<'p>, &'static str> {
-        wasm_module(input)
+impl<'p> ProgramView<'p> {
+    pub fn find_exported_function<'a>(
+        &'a self,
+        name: &str,
+    ) -> Result<&'a ExportView, &'static str> {
+        let result = self.sections.iter().find(|x| {
+            if let SectionView::Export(_) = x {
+                true
+            } else {
+                false
+            }
+        });
+        if let Some(SectionView::Export(export_section)) = result {
+            let result = self.sections.iter().find(|x| {
+                if let SectionView::Code(_) = x {
+                    true
+                } else {
+                    false
+                }
+            });
+            if let Some(SectionView::Code(_)) = result {
+                let result = export_section.exports.iter().find(|x| {
+                    if let WasmExportView::Function(f) = x {
+                        f.name == name
+                    } else {
+                        false
+                    }
+                });
+                let main_export = match result {
+                    Some(WasmExportView::Function(f)) => f,
+                    _ => {
+                        let e = "could not find export";
+                        return Err(e);
+                    }
+                };
+                Ok(main_export)
+            } else {
+                Err("could not find code section")
+            }
+        } else {
+            Err("could not find export section")
+        }
     }
 
-    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, &'static str> {
+    pub fn find_code_block<'a>(&'a self, index: usize) -> Result<&'a CodeBlock, &'static str> {
+        let result = self.sections.iter().find(|x| {
+            if let SectionView::Code(_) = x {
+                true
+            } else {
+                false
+            }
+        });
+        if let Some(SectionView::Code(code_section)) = result {
+            if index >= code_section.code_blocks.len() {
+                Err("invalid code block index")
+            } else {
+                Ok(&code_section.code_blocks[index])
+            }
+        } else {
+            Err("could find code section")
+        }
+    }
+
+    pub fn to_owned(self) -> Program {
+        Program {
+            sections: self
+                .sections
+                .iter()
+                .map(|x| x.to_owned())
+                .collect::<Vec<Section>>(),
+        }
+    }
+}
+
+impl Program {
+    pub fn find_exported_function<'a>(
+        &'a self,
+        name: &str,
+    ) -> Result<&'a Export, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
                 true
@@ -1469,4 +1796,8 @@ impl<'p> Program<'p> {
             Err("could find code section")
         }
     }
+}
+
+pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
+    wasm_module(input)
 }

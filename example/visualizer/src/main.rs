@@ -22,35 +22,35 @@ fn print_function_section(s: &FunctionSection) {
     }
 }
 
-fn print_export_section(s: &ExportSection) {
+fn print_export_section(s: &ExportSectionView) {
     println!("[{}]", "Export Section".purple());
     for i in 0..s.exports.len() {
         match &s.exports[i] {
-            WasmExport::Function(f) => {
+            WasmExportView::Function(f) => {
                 println!("{:?} function[{}]", f.name, f.index);
             }
-            WasmExport::Memory(f) => {
+            WasmExportView::Memory(f) => {
                 println!("{:?} memory[{}]", f.name, f.index);
             }
-            WasmExport::Global(f) => {
+            WasmExportView::Global(f) => {
                 println!("{:?} global[{}]", f.name, f.index);
             }
 
-            WasmExport::Table(f) => {
+            WasmExportView::Table(f) => {
                 println!("{:?} table[{}]", f.name, f.index);
             }
         }
     }
 }
 
-fn print_import_section(s: &ImportSection) {
+fn print_import_section(s: &ImportSectionView) {
     println!("[{}]", "Import Section".purple());
     for i in 0..s.imports.len() {
         match &s.imports[i] {
-            WasmImport::Function(f) => {
+            WasmImportView::Function(f) => {
                 println!("{:?}.{:?} fn type[{}]", f.module_name, f.name, f.type_index);
             }
-            WasmImport::Memory(f) => {
+            WasmImportView::Memory(f) => {
                 if f.max_pages.is_some() {
                     println!(
                         "{:?}.{:?} memory min {} max {}",
@@ -66,7 +66,7 @@ fn print_import_section(s: &ImportSection) {
                     );
                 }
             }
-            WasmImport::Table(f) => {
+            WasmImportView::Table(f) => {
                 if f.max.is_some() {
                     println!(
                         "{:?}.{:?} table \"ANYFUNC\" min {} max {}",
@@ -82,7 +82,7 @@ fn print_import_section(s: &ImportSection) {
                     );
                 }
             }
-            WasmImport::Global(f) => {
+            WasmImportView::Global(f) => {
                 if f.is_mutable {
                     println!(
                         "{:?}.{:?} global mut {:?}",
@@ -159,7 +159,7 @@ fn print_code_section(s: &CodeSection) {
     }
 }
 
-fn print_data_section(s: &DataSection) {
+fn print_data_section(s: &DataSectionView) {
     println!("[{}]", "Data Section".purple());
     for (i, d) in s.data_blocks.iter().enumerate() {
         println!(
@@ -179,7 +179,7 @@ fn print_element_section(s: &ElementSection) {
     }
 }
 
-fn print_custom_section(s: &CustomSection) {
+fn print_custom_section(s: &CustomSectionView) {
     println!("[{}]", "Custom Section".purple());
     println!("{}  data{:?}", s.name, s.data,);
 }
@@ -189,24 +189,24 @@ fn print_start_section(s: &StartSection) {
     println!("{:?}", s.start_function);
 }
 
-fn print_section(s: &Section) {
+fn print_section(s: &SectionView) {
     match s {
-        Section::Type(s) => print_type_section(&s),
-        Section::Function(s) => print_function_section(&s),
-        Section::Export(s) => print_export_section(&s),
-        Section::Code(s) => print_code_section(&s),
-        Section::Memory(s) => print_memory_section(&s),
-        Section::Start(s) => print_start_section(&s),
-        Section::Import(s) => print_import_section(&s),
-        Section::Table(s) => print_table_section(&s),
-        Section::Global(s) => print_global_section(&s),
-        Section::Data(s) => print_data_section(&s),
-        Section::Custom(s) => print_custom_section(&s),
-        Section::Element(s) => print_element_section(&s),
+        SectionView::Type(s) => print_type_section(&s),
+        SectionView::Function(s) => print_function_section(&s),
+        SectionView::Export(s) => print_export_section(&s),
+        SectionView::Code(s) => print_code_section(&s),
+        SectionView::Memory(s) => print_memory_section(&s),
+        SectionView::Start(s) => print_start_section(&s),
+        SectionView::Import(s) => print_import_section(&s),
+        SectionView::Table(s) => print_table_section(&s),
+        SectionView::Global(s) => print_global_section(&s),
+        SectionView::Data(s) => print_data_section(&s),
+        SectionView::Custom(s) => print_custom_section(&s),
+        SectionView::Element(s) => print_element_section(&s),
     }
 }
 
-fn print_program(program: &Program) {
+fn print_program(program: &ProgramView) {
     for s in program.sections.iter() {
         print_section(&s);
     }
@@ -222,7 +222,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer)?;
 
-    match Program::parse(&buffer) {
+    match watson::parse(&buffer) {
         Ok(p) => print_program(&p),
         Err(e) => {
             println!("{}", e.red());
