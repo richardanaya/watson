@@ -1769,7 +1769,7 @@ impl<'p> ProgramView<'p> {
         }
     }
 
-    pub fn to_owned(self) -> Program {
+    pub fn to_owned(&self) -> Program {
         Program {
             sections: self
                 .sections
@@ -1844,7 +1844,16 @@ impl Program {
     }
 }
 
-#[no_mangle]
-pub fn parse_web_assembly<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
+pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
     wasm_module(input)
+}
+
+/// # Safety
+///
+/// This is an attempt to make this library compatible with c eventually
+#[no_mangle]
+#[cfg(feature = "c_extern")]
+pub unsafe fn c_parse_web_assembly(ptr_wasm_bytes: *mut u8, len:usize) -> Program {
+    let wasm_bytes = Vec::from_raw_parts(ptr_wasm_bytes,len,len);
+    wasm_module(&wasm_bytes).unwrap().to_owned()
 }

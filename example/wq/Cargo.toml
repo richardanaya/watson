@@ -12,6 +12,6 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-watson = {path="../..",version="0.5.0"}
+watson = {path="../..",version="0.8.0"}
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 colored = "1.9"

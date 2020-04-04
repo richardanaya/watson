@@ -10,7 +10,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 
 ```rust
 [dependencies]
-watson = "0.4"
+watson = "0.8"
 ```
 
 # Usage
@@ -18,7 +18,7 @@ watson = "0.4"
 ```rust
 use  watson::*;
 
-let program = Program.parse(&bytes_of_wasm)?;
+let program = parse_web_assembly(&bytes_of_wasm)?;
 for s in program.sections.iter() {
    match s {
       CodeSection(code)=> ...,

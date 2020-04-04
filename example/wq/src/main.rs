@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::process;
-use watson::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -22,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         f.read_to_end(&mut buffer)?;
     }
 
-    match watson::parse_web_assembly(&buffer) {
+    match watson::parse(&buffer) {
         Ok(p) => {
             let json_string = match serde_json::to_string(&p) {
                 Ok(s) => s,
