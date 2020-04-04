@@ -1842,6 +1842,35 @@ impl Program {
             Err("could find code section")
         }
     }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut program_bytes = vec![];
+        program_bytes.extend(MAGIC_NUMBER);
+        program_bytes.extend(VERSION_1);
+        for s in self.sections.iter() {
+            match s {
+                Section::Type(s) => {},
+                Section::Function(s) => {},
+                Section::Code(s) => {},
+                Section::Export(s) => {},
+                Section::Import(s) => {},
+                Section::Memory(s) => {},
+                Section::Start(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.start_function.to_wasm_bytes());
+                    program_bytes.push(SECTION_START);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                },
+                Section::Global(s) => {},
+                Section::Table(s) => {},
+                Section::Data(s) => {},
+                Section::Custom(s) => {},
+                Section::Element(s) => {},
+            }
+        }
+        program_bytes
+    }
 }
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
