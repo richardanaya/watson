@@ -4,15 +4,12 @@ extern crate alloc;
 extern crate serde;
 use alloc::vec::Vec;
 use core::convert::TryFrom;
+use core::convert::TryInto;
 use serde::{Deserialize, Serialize};
 use webassembly::*;
 
 pub trait WasmValueTypes {
     fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str>;
-}
-
-pub trait WasmValueType {
-    fn try_to_value_type(self) -> Result<ValueType, &'static str>;
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -23,25 +20,27 @@ pub enum ValueType {
     F64,
 }
 
-impl WasmValueTypes for Vec<u8> {
-    fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str> {
-        let mut r = vec![];
-        for v in self {
-            r.push(v.try_to_value_type()?);
-        }
-        Ok(r)
-    }
-}
+impl TryFrom<u8> for ValueType {
+    type Error = &'static str;
 
-impl WasmValueType for u8 {
-    fn try_to_value_type(self) -> Result<ValueType, &'static str> {
-        match self {
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
             I32 => Ok(ValueType::I32),
             I64 => Ok(ValueType::I64),
             F32 => Ok(ValueType::F32),
             F64 => Ok(ValueType::F64),
             _ => Err("could not convert data type"),
         }
+    }
+}
+
+impl WasmValueTypes for Vec<u8> {
+    fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str> {
+        let mut r = vec![];
+        for v in self {
+            r.push(v.try_into()?);
+        }
+        Ok(r)
     }
 }
 
@@ -275,22 +274,25 @@ pub struct TableSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DataBlock {
+pub struct DataBlock<'a> {
     pub memory: usize,
     pub offset_expression: Vec<Instruction>,
-    pub data: Vec<u8>,
+    #[serde(borrow)]
+    pub data: &'a [u8],
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DataSection {
-    pub data_blocks: Vec<DataBlock>,
+pub struct DataSection<'a> {
+    #[serde(borrow)]
+    pub data_blocks: Vec<DataBlock<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CustomSection<'a> {
     #[serde(borrow)]
     pub name: &'a str,
-    pub data: Vec<u8>,
+    #[serde(borrow)]
+    pub data: &'a [u8],
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -329,7 +331,8 @@ pub enum Section<'a> {
     #[serde(rename(serialize = "table"))]
     Table(TableSection),
     #[serde(rename(serialize = "data"))]
-    Data(DataSection),
+    #[serde(borrow)]
+    Data(DataSection<'a>),
     #[serde(rename(serialize = "custom"))]
     #[serde(borrow)]
     Custom(CustomSection<'a>),
@@ -582,7 +585,7 @@ fn wasm_global_type(input: &[u8]) -> Result<(&[u8], ValueType, bool), &'static s
     let (input, global_type) = take(1)(input)?;
     Ok((
         input,
-        global_value_type[0].try_to_value_type()?,
+        global_value_type[0].try_into()?,
         global_type[0] == MUTABLE,
     ))
 }
@@ -1184,7 +1187,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 let parse_local_vecs = many_n(num_local_vecs as usize, |input| {
                     let (input, num_locals) = wasm_u32(input)?;
                     let (input, local_type) = take(1 as usize)(input)?;
-                    Ok((input, (num_locals, local_type[0].try_to_value_type()?)))
+                    Ok((input, (num_locals, local_type[0].try_into()?)))
                 });
                 let (input, local_vectors) = parse_local_vecs(input)?;
 
@@ -1192,7 +1195,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                 Ok((
                     input,
                     CodeBlock {
-                        locals: local_vectors.to_vec(),
+                        locals: local_vectors,
                         code_expression,
                     },
                 ))
@@ -1294,13 +1297,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
             };
             let (input, bytes) =
                 take((section_length as usize - name_bytes_length) as usize)(input)?;
-            Ok((
-                input,
-                Section::Custom(CustomSection {
-                    name,
-                    data: bytes.to_vec(),
-                }),
-            ))
+            Ok((input, Section::Custom(CustomSection { name, data: bytes })))
         }
         SECTION_TABLE => {
             let (input, num_items) = wasm_u32(input)?;
@@ -1335,7 +1332,7 @@ fn section(input: &[u8]) -> Result<(&[u8], Section), &'static str> {
                     DataBlock {
                         memory: mem_index as usize,
                         offset_expression,
-                        data: data.to_vec(),
+                        data: data,
                     },
                 ))
             });
