@@ -222,7 +222,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer)?;
 
-    match watson::parse(&buffer) {
+    match watson::parse_web_assembly(&buffer) {
         Ok(p) => print_program(&p),
         Err(e) => {
             println!("{}", e.red());

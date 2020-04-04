@@ -14,6 +14,7 @@ pub trait WasmValueTypes {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub enum ValueType {
     I32,
     I64,
@@ -108,6 +109,7 @@ fn many_n<'a, T>(
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
     pub outputs: Vec<ValueType>,
@@ -115,33 +117,39 @@ pub struct FunctionType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "value_type", content = "content")]
+#[repr(C)]
 pub enum WasmType {
     #[serde(rename(serialize = "function"))]
     Function(FunctionType),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct TypeSection {
     pub types: Vec<WasmType>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct FunctionSection {
     pub function_types: Vec<u32>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct CodeBlock {
     pub locals: Vec<(u32, ValueType)>,
     pub code_expression: Vec<Instruction>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ExportView<'a> {
     #[serde(borrow)]
     pub name: &'a str,
@@ -150,6 +158,7 @@ pub struct ExportView<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "export_type", content = "content")]
+#[repr(C)]
 pub enum WasmExportView<'a> {
     #[serde(rename(serialize = "function"))]
     #[serde(borrow)]
@@ -166,6 +175,7 @@ pub enum WasmExportView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ExportSectionView<'a> {
     #[serde(borrow)]
     pub exports: Vec<WasmExportView<'a>>,
@@ -201,6 +211,7 @@ impl<'a> ExportSectionView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct Export {
     pub name: String,
     pub index: usize,
@@ -208,6 +219,7 @@ pub struct Export {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "export_type", content = "content")]
+#[repr(C)]
 pub enum WasmExport {
     #[serde(rename(serialize = "function"))]
     Function(Export),
@@ -220,11 +232,13 @@ pub enum WasmExport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ExportSection {
     pub exports: Vec<WasmExport>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct FunctionImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
@@ -234,6 +248,7 @@ pub struct FunctionImportView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct GlobalImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
@@ -244,6 +259,7 @@ pub struct GlobalImportView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct MemoryImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
@@ -254,6 +270,7 @@ pub struct MemoryImportView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct TableImportView<'a> {
     #[serde(borrow)]
     pub module_name: &'a str,
@@ -266,6 +283,7 @@ pub struct TableImportView<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
+#[repr(C)]
 pub enum WasmImportView<'a> {
     #[serde(rename(serialize = "function"))]
     #[serde(borrow)]
@@ -282,6 +300,7 @@ pub enum WasmImportView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct FunctionImport {
     pub module_name: String,
     pub name: String,
@@ -289,6 +308,7 @@ pub struct FunctionImport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct GlobalImport {
     pub module_name: String,
     pub name: String,
@@ -297,6 +317,7 @@ pub struct GlobalImport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct MemoryImport {
     pub module_name: String,
     pub name: String,
@@ -305,6 +326,7 @@ pub struct MemoryImport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct TableImport {
     pub module_name: String,
     pub name: String,
@@ -315,6 +337,7 @@ pub struct TableImport {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
+#[repr(C)]
 pub enum WasmImport {
     #[serde(rename(serialize = "function"))]
     Function(FunctionImport),
@@ -325,12 +348,15 @@ pub enum WasmImport {
     #[serde(rename(serialize = "table"))]
     Table(TableImport),
 }
+
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ImportSection {
     pub imports: Vec<WasmImport>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ImportSectionView<'a> {
     #[serde(borrow)]
     pub imports: Vec<WasmImportView<'a>>,
@@ -374,22 +400,26 @@ impl<'a> ImportSectionView<'a> {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct WasmMemory {
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct MemorySection {
     pub memories: Vec<WasmMemory>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct StartSection {
     pub start_function: usize,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct Global {
     pub value_type: ValueType,
     pub is_mutable: bool,
@@ -397,11 +427,13 @@ pub struct Global {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct GlobalSection {
     pub globals: Vec<Global>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct Table {
     pub element_type: u8,
     pub min: usize,
@@ -409,11 +441,13 @@ pub struct Table {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct DataBlockView<'a> {
     pub memory: usize,
     pub offset_expression: Vec<Instruction>,
@@ -422,6 +456,7 @@ pub struct DataBlockView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct DataSectionView<'a> {
     #[serde(borrow)]
     pub data_blocks: Vec<DataBlockView<'a>>,
@@ -444,6 +479,7 @@ impl<'a> DataSectionView<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct DataBlock {
     pub memory: usize,
     pub offset_expression: Vec<Instruction>,
@@ -451,11 +487,13 @@ pub struct DataBlock {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct DataSection {
     pub data_blocks: Vec<DataBlock>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct CustomSectionView<'a> {
     #[serde(borrow)]
     pub name: &'a str,
@@ -473,12 +511,14 @@ impl<'a> CustomSectionView<'a> {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct CustomSection {
     pub name: String,
     pub data: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct WasmElement {
     pub table: usize,
     pub value_expression: Vec<Instruction>,
@@ -486,12 +526,14 @@ pub struct WasmElement {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ElementSection {
     pub elements: Vec<WasmElement>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
+#[repr(C)]
 pub enum SectionView<'a> {
     #[serde(rename(serialize = "type"))]
     Type(TypeSection),
@@ -544,6 +586,7 @@ impl<'a> SectionView<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
+#[repr(C)]
 pub enum Section {
     #[serde(rename(serialize = "type"))]
     Type(TypeSection),
@@ -572,18 +615,21 @@ pub enum Section {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct ProgramView<'a> {
     #[serde(borrow)]
     pub sections: Vec<SectionView<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct Program {
     pub sections: Vec<Section>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", content = "params")]
+#[repr(C)]
 pub enum Instruction {
     Unreachable,
     Nop,
@@ -1798,6 +1844,7 @@ impl Program {
     }
 }
 
+#[no_mangle]
 pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
     wasm_module(input)
 }

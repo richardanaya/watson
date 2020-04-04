@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         f.read_to_end(&mut buffer)?;
     }
 
-    match watson::parse(&buffer) {
+    match watson::parse_web_assembly(&buffer) {
         Ok(p) => {
             let json_string = match serde_json::to_string(&p) {
                 Ok(s) => s,
