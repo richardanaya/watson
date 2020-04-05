@@ -170,16 +170,16 @@ pub struct ExportView<'a> {
 #[serde(tag = "export_type", content = "content")]
 #[repr(C)]
 pub enum WasmExportView<'a> {
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     #[serde(borrow)]
     Function(ExportView<'a>),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     #[serde(borrow)]
     Table(ExportView<'a>),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     #[serde(borrow)]
     Memory(ExportView<'a>),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     #[serde(borrow)]
     Global(ExportView<'a>),
 }
@@ -231,13 +231,13 @@ pub struct Export {
 #[serde(tag = "export_type", content = "content")]
 #[repr(C)]
 pub enum WasmExport {
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     Function(Export),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     Table(Export),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     Memory(Export),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     Global(Export),
 }
 
@@ -295,16 +295,16 @@ pub struct TableImportView<'a> {
 #[serde(tag = "import_type", content = "content")]
 #[repr(C)]
 pub enum WasmImportView<'a> {
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     #[serde(borrow)]
     Function(FunctionImportView<'a>),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     #[serde(borrow)]
     Global(GlobalImportView<'a>),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     #[serde(borrow)]
     Memory(MemoryImportView<'a>),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     #[serde(borrow)]
     Table(TableImportView<'a>),
 }
@@ -349,13 +349,13 @@ pub struct TableImport {
 #[serde(tag = "import_type", content = "content")]
 #[repr(C)]
 pub enum WasmImport {
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     Function(FunctionImport),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     Global(GlobalImport),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     Memory(MemoryImport),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     Table(TableImport),
 }
 
@@ -545,33 +545,33 @@ pub struct ElementSection {
 #[serde(tag = "section_type", content = "content")]
 #[repr(C)]
 pub enum SectionView<'a> {
-    #[serde(rename(serialize = "type"))]
+    #[serde(rename = "type")]
     Type(TypeSection),
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     Function(FunctionSection),
-    #[serde(rename(serialize = "code"))]
+    #[serde(rename = "code")]
     Code(CodeSection),
-    #[serde(rename(serialize = "export"))]
+    #[serde(rename = "export")]
     #[serde(borrow)]
     Export(ExportSectionView<'a>),
-    #[serde(rename(serialize = "import"))]
+    #[serde(rename = "import")]
     #[serde(borrow)]
     Import(ImportSectionView<'a>),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     Memory(MemorySection),
-    #[serde(rename(serialize = "start"))]
+    #[serde(rename = "start")]
     Start(StartSection),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     Global(GlobalSection),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     Table(TableSection),
-    #[serde(rename(serialize = "data"))]
+    #[serde(rename = "data")]
     #[serde(borrow)]
     Data(DataSectionView<'a>),
-    #[serde(rename(serialize = "custom"))]
+    #[serde(rename = "custom")]
     #[serde(borrow)]
     Custom(CustomSectionView<'a>),
-    #[serde(rename(serialize = "element"))]
+    #[serde(rename = "element")]
     Element(ElementSection),
 }
 
@@ -598,29 +598,29 @@ impl<'a> SectionView<'a> {
 #[serde(tag = "section_type", content = "content")]
 #[repr(C)]
 pub enum Section {
-    #[serde(rename(serialize = "type"))]
+    #[serde(rename = "type")]
     Type(TypeSection),
-    #[serde(rename(serialize = "function"))]
+    #[serde(rename = "function")]
     Function(FunctionSection),
-    #[serde(rename(serialize = "code"))]
+    #[serde(rename = "code")]
     Code(CodeSection),
-    #[serde(rename(serialize = "export"))]
+    #[serde(rename = "export")]
     Export(ExportSection),
-    #[serde(rename(serialize = "import"))]
+    #[serde(rename = "import")]
     Import(ImportSection),
-    #[serde(rename(serialize = "memory"))]
+    #[serde(rename = "memory")]
     Memory(MemorySection),
-    #[serde(rename(serialize = "start"))]
+    #[serde(rename = "start")]
     Start(StartSection),
-    #[serde(rename(serialize = "global"))]
+    #[serde(rename = "global")]
     Global(GlobalSection),
-    #[serde(rename(serialize = "table"))]
+    #[serde(rename = "table")]
     Table(TableSection),
-    #[serde(rename(serialize = "data"))]
+    #[serde(rename = "data")]
     Data(DataSection),
-    #[serde(rename(serialize = "custom"))]
+    #[serde(rename = "custom")]
     Custom(CustomSection),
-    #[serde(rename(serialize = "element"))]
+    #[serde(rename = "element")]
     Element(ElementSection),
 }
 
@@ -2505,6 +2505,7 @@ impl Program {
                         for i in c.code_expression.iter() {
                             i.extend_wasm_bytes(&mut code);
                         }
+                        code.push(END);
                         sec_data.extend(code.len().to_wasm_bytes());
                         sec_data.extend(&code);
                     }
