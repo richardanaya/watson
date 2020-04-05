@@ -22,6 +22,17 @@ pub enum ValueType {
     F64,
 }
 
+impl ValueType {
+    pub fn into_wasm_byte(self) -> u8 {
+        match self {
+            ValueType::I32 => I32,
+            ValueType::I64 => I64,
+            ValueType::F32 => F32,
+            ValueType::F64 => F64,
+        }
+    }
+}
+
 impl TryFrom<u8> for ValueType {
     type Error = &'static str;
 
@@ -116,17 +127,9 @@ pub struct FunctionType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "value_type", content = "content")]
-#[repr(C)]
-pub enum WasmType {
-    #[serde(rename(serialize = "function"))]
-    Function(FunctionType),
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct TypeSection {
-    pub types: Vec<WasmType>,
+    pub types: Vec<FunctionType>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -137,8 +140,15 @@ pub struct FunctionSection {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[repr(C)]
+pub struct LocalCount {
+    pub count: u32,
+    pub value_type: ValueType,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[repr(C)]
 pub struct CodeBlock {
-    pub locals: Vec<(u32, ValueType)>,
+    pub locals: Vec<LocalCount>,
     pub code_expression: Vec<Instruction>,
 }
 
@@ -803,6 +813,12 @@ pub enum Instruction {
     F64ReinterpretI64,
 }
 
+impl TypeWasmExt for Instruction {
+    fn to_wasm_bytes(&self) -> Vec<u8> {
+        vec![]
+    }
+}
+
 fn wasm_u32(input: &[u8]) -> Result<(&[u8], u32), &'static str> {
     let (i, byte_count) = match input.try_extract_u32(0) {
         Ok(r) => r,
@@ -1388,10 +1404,10 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
                         let (input, outputs) = take(num_outputs as usize)(input)?;
                         Ok((
                             input,
-                            WasmType::Function(FunctionType {
+                            FunctionType {
                                 inputs: inputs.to_vec().try_to_value_types()?,
                                 outputs: outputs.to_vec().try_to_value_types()?,
-                            }),
+                            },
                         ))
                     }
                     _ => Err("unknown type"),
@@ -1472,7 +1488,13 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
                 let parse_local_vecs = many_n(num_local_vecs as usize, |input| {
                     let (input, num_locals) = wasm_u32(input)?;
                     let (input, local_type) = take(1 as usize)(input)?;
-                    Ok((input, (num_locals, local_type[0].try_into()?)))
+                    Ok((
+                        input,
+                        LocalCount {
+                            count: num_locals,
+                            value_type: local_type[0].try_into()?,
+                        },
+                    ))
                 });
                 let (input, local_vectors) = parse_local_vecs(input)?;
 
@@ -1506,7 +1528,7 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
                             }),
                         ))
                     }
-                    DESC_GLOBAL => {
+                    DESC_MEMORY => {
                         let (input, min_pages, max_pages) = wasm_limit(input)?;
                         Ok((
                             input,
@@ -1532,7 +1554,7 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
                             }),
                         ))
                     }
-                    DESC_MEMORY => {
+                    DESC_GLOBAL => {
                         let (input, value_type, is_mutable) = wasm_global_type(input)?;
                         Ok((
                             input,
@@ -1781,10 +1803,7 @@ impl<'p> ProgramView<'p> {
 }
 
 impl Program {
-    pub fn find_exported_function<'a>(
-        &'a self,
-        name: &str,
-    ) -> Result<&'a Export, &'static str> {
+    pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
                 true
@@ -1843,30 +1862,259 @@ impl Program {
         }
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         let mut program_bytes = vec![];
         program_bytes.extend(MAGIC_NUMBER);
         program_bytes.extend(VERSION_1);
         for s in self.sections.iter() {
             match s {
-                Section::Type(s) => {},
-                Section::Function(s) => {},
-                Section::Code(s) => {},
-                Section::Export(s) => {},
-                Section::Import(s) => {},
-                Section::Memory(s) => {},
+                Section::Type(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.types.len().to_wasm_bytes());
+                    for t in s.types.iter() {
+                        sec_data.push(FUNC);
+                        sec_data.extend(t.inputs.len().to_wasm_bytes());
+                        for i in t.inputs.iter() {
+                            sec_data.push(i.into_wasm_byte());
+                        }
+                        sec_data.extend(t.outputs.len().to_wasm_bytes());
+                        for i in t.outputs.iter() {
+                            sec_data.push(i.into_wasm_byte());
+                        }
+                    }
+                    program_bytes.push(SECTION_TYPE);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Function(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.function_types.len().to_wasm_bytes());
+                    for f in s.function_types.iter() {
+                        sec_data.extend(f.to_wasm_bytes());
+                    }
+                    program_bytes.push(SECTION_FUNCTION);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Code(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.code_blocks.len().to_wasm_bytes());
+                    for c in s.code_blocks.iter() {
+                        let mut code = vec![];
+                        code.extend(c.locals.len().to_wasm_bytes());
+                        for l in c.locals.iter() {
+                            code.extend(l.count.to_wasm_bytes());
+                            code.push(l.value_type.into_wasm_byte());
+                        }
+                        for i in c.code_expression.iter() {
+                            code.extend(i.to_wasm_bytes());
+                        }
+                        sec_data.extend(code.len().to_wasm_bytes());
+                        sec_data.extend(&code);
+                    }
+                    program_bytes.push(SECTION_CODE);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Export(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.exports.len().to_wasm_bytes());
+                    for i in s.exports.iter() {
+                        match i {
+                            WasmExport::Function(f) => {
+                                sec_data.extend(f.name.len().to_wasm_bytes());
+                                sec_data.extend(f.name.as_bytes());
+                                sec_data.push(DESC_FUNCTION);
+                                sec_data.extend(f.index.to_wasm_bytes());
+                            }
+                            WasmExport::Global(g) => {
+                                sec_data.extend(g.name.len().to_wasm_bytes());
+                                sec_data.extend(g.name.as_bytes());
+                                sec_data.push(DESC_GLOBAL);
+                                sec_data.extend(g.index.to_wasm_bytes());
+                            }
+                            WasmExport::Table(t) => {
+                                sec_data.extend(t.name.len().to_wasm_bytes());
+                                sec_data.extend(t.name.as_bytes());
+                                sec_data.push(DESC_TABLE);
+                                sec_data.extend(t.index.to_wasm_bytes());
+                            }
+                            WasmExport::Memory(m) => {
+                                sec_data.extend(m.name.len().to_wasm_bytes());
+                                sec_data.extend(m.name.as_bytes());
+                                sec_data.push(DESC_MEMORY);
+                                sec_data.extend(m.index.to_wasm_bytes());
+                            }
+                        }
+                    }
+                    program_bytes.push(SECTION_EXPORT);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Import(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.imports.len().to_wasm_bytes());
+                    for i in s.imports.iter() {
+                        match i {
+                            WasmImport::Function(f) => {
+                                sec_data.extend(f.module_name.len().to_wasm_bytes());
+                                sec_data.extend(f.module_name.as_bytes());
+                                sec_data.extend(f.name.len().to_wasm_bytes());
+                                sec_data.extend(f.name.as_bytes());
+                                sec_data.push(DESC_FUNCTION);
+                                sec_data.extend(f.type_index.to_wasm_bytes());
+                            }
+                            WasmImport::Global(g) => {
+                                sec_data.extend(g.module_name.len().to_wasm_bytes());
+                                sec_data.extend(g.module_name.as_bytes());
+                                sec_data.extend(g.name.len().to_wasm_bytes());
+                                sec_data.extend(g.name.as_bytes());
+                                sec_data.push(DESC_GLOBAL);
+                                sec_data.push(g.value_type.into_wasm_byte());
+                                if g.is_mutable {
+                                    sec_data.push(MUTABLE);
+                                } else {
+                                    sec_data.push(IMMUTABLE);
+                                }
+                            }
+                            WasmImport::Table(t) => {
+                                sec_data.extend(t.module_name.len().to_wasm_bytes());
+                                sec_data.extend(t.module_name.as_bytes());
+                                sec_data.extend(t.name.len().to_wasm_bytes());
+                                sec_data.extend(t.name.as_bytes());
+                                sec_data.push(DESC_TABLE);
+                                sec_data.push(t.element_type);
+                                if t.max.is_some() {
+                                    sec_data.push(LIMIT_MIN_MAX);
+                                    sec_data.extend(t.min.to_wasm_bytes());
+                                    sec_data.extend(t.max.unwrap().to_wasm_bytes());
+                                } else {
+                                    sec_data.push(LIMIT_MIN);
+                                    sec_data.extend(t.min.to_wasm_bytes());
+                                }
+                            }
+                            WasmImport::Memory(m) => {
+                                sec_data.extend(m.module_name.len().to_wasm_bytes());
+                                sec_data.extend(m.module_name.as_bytes());
+                                sec_data.extend(m.name.len().to_wasm_bytes());
+                                sec_data.extend(m.name.as_bytes());
+                                sec_data.push(DESC_MEMORY);
+                                if m.max_pages.is_some() {
+                                    sec_data.push(LIMIT_MIN_MAX);
+                                    sec_data.extend(m.min_pages.to_wasm_bytes());
+                                    sec_data.extend(m.max_pages.unwrap().to_wasm_bytes());
+                                } else {
+                                    sec_data.push(LIMIT_MIN);
+                                    sec_data.extend(m.min_pages.to_wasm_bytes());
+                                }
+                            }
+                        }
+                    }
+                    program_bytes.push(SECTION_IMPORT);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Memory(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.memories.len().to_wasm_bytes());
+                    for m in s.memories.iter() {
+                        if m.max_pages.is_some() {
+                            sec_data.push(LIMIT_MIN_MAX);
+                            sec_data.extend(m.min_pages.to_wasm_bytes());
+                            sec_data.extend(m.max_pages.unwrap().to_wasm_bytes());
+                        } else {
+                            sec_data.push(LIMIT_MIN);
+                            sec_data.extend(m.min_pages.to_wasm_bytes());
+                        }
+                    }
+                    program_bytes.push(SECTION_MEMORY);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
                 Section::Start(s) => {
                     let mut sec_data = vec![];
-                    sec_data.extend(s.start_function.into_wasm_bytes());
+                    sec_data.extend(s.start_function.to_wasm_bytes());
                     program_bytes.push(SECTION_START);
-                    program_bytes.extend(sec_data.len().into_wasm_bytes());
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
                     program_bytes.extend(sec_data);
-                },
-                Section::Global(s) => {},
-                Section::Table(s) => {},
-                Section::Data(s) => {},
-                Section::Custom(s) => {},
-                Section::Element(s) => {},
+                }
+                Section::Global(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.globals.len().to_wasm_bytes());
+                    for g in s.globals.iter() {
+                        sec_data.push(g.value_type.into_wasm_byte());
+                        if g.is_mutable {
+                            sec_data.push(MUTABLE);
+                        } else {
+                            sec_data.push(IMMUTABLE);
+                        }
+                        for i in g.value_expression.iter() {
+                            sec_data.extend(i.to_wasm_bytes());
+                        }
+                    }
+                    program_bytes.push(SECTION_GLOBAL);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Table(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.tables.len().to_wasm_bytes());
+                    for t in s.tables.iter() {
+                        sec_data.push(ANYFUNC);
+                        if t.max.is_some() {
+                            sec_data.push(LIMIT_MIN_MAX);
+                            sec_data.extend(t.min.to_wasm_bytes());
+                            sec_data.extend(t.max.unwrap().to_wasm_bytes());
+                        } else {
+                            sec_data.push(LIMIT_MIN);
+                            sec_data.extend(t.min.to_wasm_bytes());
+                        }
+                    }
+                    program_bytes.push(SECTION_TABLE);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Data(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.data_blocks.len().to_wasm_bytes());
+                    for d in s.data_blocks.iter() {
+                        sec_data.extend(d.memory.to_wasm_bytes());
+                        for i in d.offset_expression.iter() {
+                            sec_data.extend(i.to_wasm_bytes());
+                        }
+                        sec_data.extend(d.data.len().to_wasm_bytes());
+                        sec_data.extend(&d.data);
+                    }
+                    program_bytes.push(SECTION_DATA);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Custom(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.name.len().to_wasm_bytes());
+                    sec_data.extend(s.name.as_bytes());
+                    sec_data.extend(&s.data);
+                    program_bytes.push(SECTION_CUSTOM);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
+                Section::Element(s) => {
+                    let mut sec_data = vec![];
+                    sec_data.extend(s.elements.len().to_wasm_bytes());
+                    for e in s.elements.iter() {
+                        sec_data.extend(e.table.to_wasm_bytes());
+                        for i in e.value_expression.iter() {
+                            sec_data.extend(i.to_wasm_bytes());
+                        }
+                        sec_data.extend(e.functions.len().to_wasm_bytes());
+                        for f in e.functions.iter() {
+                            sec_data.extend(f.to_wasm_bytes());
+                        }
+                    }
+                    program_bytes.push(SECTION_ELEMENT);
+                    program_bytes.extend(sec_data.len().to_wasm_bytes());
+                    program_bytes.extend(sec_data);
+                }
             }
         }
         program_bytes
@@ -1882,7 +2130,7 @@ pub fn parse<'p>(input: &'p [u8]) -> Result<ProgramView<'p>, &'static str> {
 /// This is an attempt to make this library compatible with c eventually
 #[no_mangle]
 #[cfg(feature = "c_extern")]
-pub unsafe fn c_parse_web_assembly(ptr_wasm_bytes: *mut u8, len:usize) -> Program {
-    let wasm_bytes = Vec::from_raw_parts(ptr_wasm_bytes,len,len);
+pub unsafe fn c_parse_web_assembly(ptr_wasm_bytes: *mut u8, len: usize) -> Program {
+    let wasm_bytes = Vec::from_raw_parts(ptr_wasm_bytes, len, len);
     wasm_module(&wasm_bytes).unwrap().to_owned()
 }
