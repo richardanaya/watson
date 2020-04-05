@@ -8,3 +8,5 @@ wasi:
 test:
 	./target/release/wq simplest.wasm > test.json
 	./target/release/wq test.json test.wasm
+	./target/release/wq wq.wasm > test.json
+	./target/release/wq test.json test.wasm
