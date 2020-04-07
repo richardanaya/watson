@@ -1,4 +1,5 @@
 use super::common::*;
+use super::view::*;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
