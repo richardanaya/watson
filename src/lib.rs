@@ -5,11 +5,16 @@ extern crate serde;
 
 mod compiler;
 mod core;
+mod interpreter;
 mod parser;
 mod util;
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<core::ProgramView<'p>, &'static str> {
     parser::wasm_module(input)
+}
+
+pub fn create_interpreter(p: core::Program) -> interpreter::Interpreter {
+    interpreter::Interpreter::from_program(p)
 }
 
 /// # Safety
