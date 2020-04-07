@@ -20,7 +20,7 @@ watson = "0.8"
 ```rust
 use  watson::*;
 
-let program = parse_web_assembly(&bytes_of_wasm)?;
+let program = watons::parse(&bytes_of_wasm)?;
 for s in program.sections.iter() {
    match s {
       CodeSection(code)=> ...,
