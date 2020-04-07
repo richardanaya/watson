@@ -7,6 +7,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off t
 - [X] single file ~1500 lines of code (mostly enums)
 - [X] supports all section types
 - [X] helper functions for finding things
+- [x] support for compilation to wasm
 
 ```rust
 [dependencies]
