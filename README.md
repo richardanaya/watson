@@ -2,9 +2,8 @@
 
 <a href="https://docs.rs/watson"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 
-a hyper minimalistic `no_std` + `alloc` web assembly parser for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
+a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
-- [X] single file ~1500 lines of code (mostly enums)
 - [X] supports all section types
 - [X] helper functions for finding things
 
