@@ -305,3 +305,7 @@ pub enum Section {
 pub trait WasmCompiler {
     fn compile(&self) -> Vec<u8>;
 }
+
+pub trait WriteWasm {
+    fn extend_wasm_bytes(&self, v: &mut Vec<u8>);
+}
