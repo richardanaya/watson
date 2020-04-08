@@ -6,12 +6,8 @@ use watson::*;
 
 fn print_type_section(s: &TypeSection) {
     println!("[{}]", "Type Section".purple());
-    for i in 0..s.types.len() {
-        match &s.types[i] {
-            WasmType::Function(f) => {
-                println!("{}: fn(inputs{:?}) -> outputs{:?}", i, f.inputs, f.outputs);
-            }
-        }
+    for (i, f) in s.types.iter().enumerate() {
+        println!("{}: fn(inputs{:?}) -> outputs{:?}", i, f.inputs, f.outputs);
     }
 }
 
@@ -152,9 +148,9 @@ fn print_code_section(s: &CodeSection) {
             s.code_blocks[i]
                 .locals
                 .iter()
-                .map(|x| (x.0, x.1))
+                .map(|x| (x.count, x.value_type))
                 .collect::<Vec<(u32, ValueType)>>(),
-            s.code_blocks[i].code_expression
+            s.code_blocks[i].instructions
         );
     }
 }

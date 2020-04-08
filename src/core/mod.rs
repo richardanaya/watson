@@ -7,5 +7,5 @@ pub use instructions::*;
 mod program;
 pub use program::*;
 
-mod view;
+pub mod view;
 pub use view::*;

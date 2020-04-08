@@ -11,8 +11,10 @@ mod parser;
 mod util;
 
 pub use crate::core::common::*;
+pub use crate::core::view::*;
 pub use crate::core::Instruction;
 pub use crate::core::Program;
+pub use crate::core::ProgramView;
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<core::ProgramView<'p>, &'static str> {
     parser::wasm_module(input)
