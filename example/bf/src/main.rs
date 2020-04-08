@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             eprintln!("invalid program, brackets don't match count.");
             exit(1);
         }
-        fs::write(&args[1], &p.compile())?;
+        fs::write(&args[2], &p.compile())?;
     } else {
         println!("bf <input.bf> <output.wasm>")
     }
