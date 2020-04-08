@@ -1,15 +1,15 @@
 [package]
-name = "richard/wq"
+name = "richard/bf"
 version = "0.0.0"
-description = "parses a web assembly module into json"
+description = "brainfuck to wasm compiler"
 readme = "README.md"
-repository = "https://github.com/richardanaya/watson/examples/wq"
+repository = "https://github.com/richardanaya/watson/examples/bf"
 
 [[module]]
-name = "wq"
-source = "wq.wasm"
+name = "bf"
+source = "bf.wasm"
 abi = "wasi"
 
 [[command]]
-name = "wq"
-module = "wq"
+name = "bf"
+module = "bf"
