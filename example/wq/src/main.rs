@@ -4,6 +4,7 @@ use std::fs;
 use std::io;
 use std::io::prelude::*;
 use std::process;
+use watson::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -20,9 +21,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             buffer = fs::read(&args[1])?;
         }
-        match watson::parse(&buffer) {
+        match parse(&buffer) {
             Ok(p) => {
-                fs::write("random.wasm",p.to_owned().to_bytes());
                 let json_string = match serde_json::to_string(&p.to_owned()) {
                     Ok(s) => s,
                     Err(_) => {
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         process::exit(1);
                     }
                 };
-               println!("{}", json_string)
+                println!("{}", json_string)
             }
             Err(e) => {
                 eprintln!("Error: {}", e.red());
@@ -39,14 +39,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
     } else if args.len() == 3 {
         let json = fs::read_to_string(&args[1])?;
-        let p: watson::Program = match serde_json::from_str(&json) {
+        let p: Program = match serde_json::from_str(&json) {
             Ok(s) => s,
             Err(_) => {
                 eprintln!("Error: failed to deserialize");
                 process::exit(1);
             }
         };
-        fs::write(&args[2], p.to_bytes())?;
+        fs::write(&args[2], p.compile())?;
     } else {
         println!("wq <help> for help");
     }

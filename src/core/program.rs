@@ -91,12 +91,20 @@ impl<'p> ProgramView<'p> {
     }
 }
 
-impl Program {
-    pub fn new() -> Program {
+impl Default for Program {
+    fn default() -> Program {
         Program {
             sections: Vec::new(),
         }
     }
+}
+
+impl Program {
+    #[inline]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
@@ -165,7 +173,7 @@ impl Program {
         let type_section = match self
             .sections
             .iter_mut()
-            .find(|x| matches!(Section::Type, x))
+            .find(|x| matches!(x, Section::Type(_)))
         {
             Some(x) => x,
             None => {
@@ -183,7 +191,7 @@ impl Program {
                 .enumerate()
                 .find(|x| x.1.inputs == inputs && x.1.outputs == outputs)
             {
-                Some(x) => 0,
+                Some(x) => x.0,
                 None => {
                     s.types.push(FunctionType {
                         inputs: inputs.to_vec(),
@@ -199,7 +207,7 @@ impl Program {
         let imports_section = match self
             .sections
             .iter_mut()
-            .find(|x| matches!(Section::Import, x))
+            .find(|x| matches!(x, Section::Import(_)))
         {
             Some(x) => x,
             None => {
@@ -232,7 +240,7 @@ impl Program {
         let type_section = match self
             .sections
             .iter_mut()
-            .find(|x| matches!(Section::Type, x))
+            .find(|x| matches!(x, Section::Type(_)))
         {
             Some(x) => x,
             None => {
@@ -266,7 +274,7 @@ impl Program {
         let function_section = match self
             .sections
             .iter_mut()
-            .find(|x| matches!(Section::Function, x))
+            .find(|x| matches!(x, Section::Function(_)))
         {
             Some(x) => x,
             None => {
@@ -288,7 +296,7 @@ impl Program {
         let exports_section = match self
             .sections
             .iter_mut()
-            .find(|x| matches!(Section::Export, x))
+            .find(|x| matches!(x, Section::Export(_)))
         {
             Some(x) => x,
             None => {
@@ -313,7 +321,7 @@ impl Program {
             .sections
             .iter()
             .enumerate()
-            .find(|x| matches!(Section::Code, x))
+            .find(|x| matches!(x, (_, Section::Code(_))))
         {
             Some(x) => x.0,
             None => {
