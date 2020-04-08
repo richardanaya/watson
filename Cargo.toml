@@ -1,6 +1,6 @@
 [package]
 name = "watson"
-version = "0.9"
+version = "0.9.0"
 authors = ["Richard Anaya"]
 edition = "2018"
 description = "a no_std web assembly loader"

@@ -320,8 +320,7 @@ impl Program {
                 self.sections.push(Section::Code(CodeSection {
                     code_blocks: Vec::new(),
                 }));
-                let len = self.sections.len() - 1;
-                len
+                self.sections.len() - 1
             }
         };
 
