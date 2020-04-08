@@ -10,7 +10,7 @@ pub trait WasmValueTypes {
     fn try_to_value_types(self) -> Result<Vec<ValueType>, &'static str>;
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Copy, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub enum ValueType {
     I32,
@@ -68,53 +68,53 @@ impl TryFrom<&u8> for ValueType {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct FunctionType {
     pub inputs: Vec<ValueType>,
     pub outputs: Vec<ValueType>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct TypeSection {
     pub types: Vec<FunctionType>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct FunctionSection {
-    pub function_types: Vec<u32>,
+    pub function_types: Vec<usize>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct LocalCount {
     pub count: u32,
     pub value_type: ValueType,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct CodeBlock {
     pub locals: Vec<LocalCount>,
-    pub code_expression: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct CodeSection {
     pub code_blocks: Vec<CodeBlock>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Export {
     pub name: String,
     pub index: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 //#[serde(tag = "export_type", content = "content")]
 #[repr(C)]
 pub enum WasmExport {
@@ -128,13 +128,13 @@ pub enum WasmExport {
     Global(Export),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ExportSection {
     pub exports: Vec<WasmExport>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct FunctionImport {
     pub module_name: String,
@@ -142,7 +142,7 @@ pub struct FunctionImport {
     pub type_index: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct GlobalImport {
     pub module_name: String,
@@ -151,7 +151,7 @@ pub struct GlobalImport {
     pub is_mutable: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct MemoryImport {
     pub module_name: String,
@@ -160,7 +160,7 @@ pub struct MemoryImport {
     pub max_pages: Option<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct TableImport {
     pub module_name: String,
@@ -170,7 +170,7 @@ pub struct TableImport {
     pub max: Option<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
 #[repr(C)]
 pub enum WasmImport {
@@ -184,32 +184,32 @@ pub enum WasmImport {
     Table(TableImport),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ImportSection {
     pub imports: Vec<WasmImport>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct WasmMemory {
     pub min_pages: usize,
     pub max_pages: Option<usize>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct MemorySection {
     pub memories: Vec<WasmMemory>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct StartSection {
     pub start_function: usize,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Global {
     pub value_type: ValueType,
@@ -217,13 +217,13 @@ pub struct Global {
     pub value_expression: Vec<Instruction>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct GlobalSection {
     pub globals: Vec<Global>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Table {
     pub element_type: u8,
@@ -231,13 +231,13 @@ pub struct Table {
     pub max: Option<usize>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct TableSection {
     pub tables: Vec<Table>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct DataBlock {
     pub memory: usize,
@@ -245,20 +245,20 @@ pub struct DataBlock {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct DataSection {
     pub data_blocks: Vec<DataBlock>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct CustomSection {
     pub name: String,
     pub data: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct WasmElement {
     pub table: usize,
@@ -266,13 +266,13 @@ pub struct WasmElement {
     pub functions: Vec<usize>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ElementSection {
     pub elements: Vec<WasmElement>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
 #[repr(C)]
 pub enum Section {

@@ -1,0 +1,2582 @@
+[{
+	"op": "GlobalGet",
+	"params": 0
+}, {
+	"op": "I32Const",
+	"params": 192
+}, {
+	"op": "I32Sub"
+}, {
+	"op": "LocalTee",
+	"params": 1
+}, {
+	"op": "GlobalSet",
+	"params": 0
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 128
+}, {
+	"op": "I32Add"
+}, {
+	"op": "Call",
+	"params": 291
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 144
+}, {
+	"op": "I32Add"
+}, {
+	"op": "I32Const",
+	"params": 8
+}, {
+	"op": "I32Add"
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 128
+}, {
+	"op": "I32Add"
+}, {
+	"op": "I32Const",
+	"params": 8
+}, {
+	"op": "I32Add"
+}, {
+	"op": "I64Load",
+	"params": [3, 0]
+}, {
+	"op": "I64Store",
+	"params": [3, 0]
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I64Load",
+	"params": [3, 128]
+}, {
+	"op": "I64Store",
+	"params": [3, 144]
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 48
+}, {
+	"op": "I32Add"
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 144
+}, {
+	"op": "I32Add"
+}, {
+	"op": "Call",
+	"params": 17
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 0
+}, {
+	"op": "I32Store",
+	"params": [2, 72]
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I64Const",
+	"params": 1
+}, {
+	"op": "I64Store",
+	"params": [3, 64]
+}, {
+	"op": "Block",
+	"params": [64, [{
+		"op": "Block",
+		"params": [64, [{
+			"op": "Block",
+			"params": [64, [{
+				"op": "Block",
+				"params": [64, [{
+					"op": "Block",
+					"params": [64, [{
+						"op": "Block",
+						"params": [64, [{
+							"op": "Block",
+							"params": [64, [{
+								"op": "Block",
+								"params": [64, [{
+									"op": "Block",
+									"params": [64, [{
+										"op": "Block",
+										"params": [64, [{
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load",
+											"params": [2, 56]
+										}, {
+											"op": "I32Const",
+											"params": 1
+										}, {
+											"op": "I32GtU"
+										}, {
+											"op": "BrIf",
+											"params": 0
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "Call",
+											"params": 328
+										}, {
+											"op": "I32Store",
+											"params": [2, 80]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Const",
+											"params": 24
+										}, {
+											"op": "I32Add"
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Const",
+											"params": 80
+										}, {
+											"op": "I32Add"
+										}, {
+											"op": "Call",
+											"params": 330
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load",
+											"params": [2, 24]
+										}, {
+											"op": "LocalSet",
+											"params": 2
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load8U",
+											"params": [0, 28]
+										}, {
+											"op": "I32Const",
+											"params": 1
+										}, {
+											"op": "I32And"
+										}, {
+											"op": "I32Store8",
+											"params": [0, 132]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "LocalGet",
+											"params": 2
+										}, {
+											"op": "I32Store",
+											"params": [2, 128]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Const",
+											"params": 144
+										}, {
+											"op": "I32Add"
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Const",
+											"params": 128
+										}, {
+											"op": "I32Add"
+										}, {
+											"op": "Call",
+											"params": 36
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load8U",
+											"params": [0, 144]
+										}, {
+											"op": "LocalTee",
+											"params": 2
+										}, {
+											"op": "I32Const",
+											"params": 2
+										}, {
+											"op": "I32Eq"
+										}, {
+											"op": "BrIf",
+											"params": 6
+										}, {
+											"op": "Block",
+											"params": [64, [{
+												"op": "Loop",
+												"params": [64, [{
+													"op": "LocalGet",
+													"params": 2
+												}, {
+													"op": "I32Const",
+													"params": 255
+												}, {
+													"op": "I32And"
+												}, {
+													"op": "I32Const",
+													"params": 1
+												}, {
+													"op": "I32Eq"
+												}, {
+													"op": "BrIf",
+													"params": 1
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Load8U",
+													"params": [0, 145]
+												}, {
+													"op": "LocalSet",
+													"params": 3
+												}, {
+													"op": "Block",
+													"params": [64, [{
+														"op": "LocalGet",
+														"params": 1
+													}, {
+														"op": "I32Load",
+														"params": [2, 72]
+													}, {
+														"op": "LocalTee",
+														"params": 2
+													}, {
+														"op": "LocalGet",
+														"params": 1
+													}, {
+														"op": "I32Load",
+														"params": [2, 68]
+													}, {
+														"op": "I32Ne"
+													}, {
+														"op": "BrIf",
+														"params": 0
+													}, {
+														"op": "LocalGet",
+														"params": 1
+													}, {
+														"op": "I32Const",
+														"params": 64
+													}, {
+														"op": "I32Add"
+													}, {
+														"op": "LocalGet",
+														"params": 2
+													}, {
+														"op": "I32Const",
+														"params": 1
+													}, {
+														"op": "Call",
+														"params": 14
+													}, {
+														"op": "LocalGet",
+														"params": 1
+													}, {
+														"op": "I32Load",
+														"params": [2, 72]
+													}, {
+														"op": "LocalSet",
+														"params": 2
+													}]]
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Load",
+													"params": [2, 64]
+												}, {
+													"op": "LocalGet",
+													"params": 2
+												}, {
+													"op": "I32Add"
+												}, {
+													"op": "LocalGet",
+													"params": 3
+												}, {
+													"op": "I32Store8",
+													"params": [0, 0]
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Load",
+													"params": [2, 72]
+												}, {
+													"op": "I32Const",
+													"params": 1
+												}, {
+													"op": "I32Add"
+												}, {
+													"op": "I32Store",
+													"params": [2, 72]
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Const",
+													"params": 144
+												}, {
+													"op": "I32Add"
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Const",
+													"params": 128
+												}, {
+													"op": "I32Add"
+												}, {
+													"op": "Call",
+													"params": 36
+												}, {
+													"op": "LocalGet",
+													"params": 1
+												}, {
+													"op": "I32Load8U",
+													"params": [0, 144]
+												}, {
+													"op": "LocalTee",
+													"params": 2
+												}, {
+													"op": "I32Const",
+													"params": 2
+												}, {
+													"op": "I32Eq"
+												}, {
+													"op": "BrIf",
+													"params": 8
+												}, {
+													"op": "Br",
+													"params": 0
+												}]]
+											}]]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I64Load32U",
+											"params": [2, 152]
+										}, {
+											"op": "LocalSet",
+											"params": 4
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I64Load32U",
+											"params": [2, 148]
+										}, {
+											"op": "LocalSet",
+											"params": 5
+										}, {
+											"op": "I32Const",
+											"params": 8
+										}, {
+											"op": "I32Const",
+											"params": 4
+										}, {
+											"op": "Call",
+											"params": 42
+										}, {
+											"op": "LocalTee",
+											"params": 6
+										}, {
+											"op": "I32Eqz"
+										}, {
+											"op": "BrIf",
+											"params": 1
+										}, {
+											"op": "LocalGet",
+											"params": 6
+										}, {
+											"op": "LocalGet",
+											"params": 4
+										}, {
+											"op": "I64Const",
+											"params": 32
+										}, {
+											"op": "I64Shl"
+										}, {
+											"op": "LocalGet",
+											"params": 5
+										}, {
+											"op": "I64Or"
+										}, {
+											"op": "I64Store",
+											"params": [2, 0]
+										}, {
+											"op": "Block",
+											"params": [64, [{
+												"op": "LocalGet",
+												"params": 1
+											}, {
+												"op": "I32Load8U",
+												"params": [0, 132]
+											}, {
+												"op": "BrIf",
+												"params": 0
+											}, {
+												"op": "LocalGet",
+												"params": 1
+											}, {
+												"op": "I32Load",
+												"params": [2, 128]
+											}, {
+												"op": "LocalSet",
+												"params": 2
+											}, {
+												"op": "Call",
+												"params": 371
+											}, {
+												"op": "I32Eqz"
+											}, {
+												"op": "BrIf",
+												"params": 0
+											}, {
+												"op": "LocalGet",
+												"params": 2
+											}, {
+												"op": "I32Const",
+												"params": 1
+											}, {
+												"op": "I32Store8",
+												"params": [0, 4]
+											}]]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load",
+											"params": [2, 128]
+										}, {
+											"op": "I32Load",
+											"params": [2, 0]
+										}, {
+											"op": "I32Const",
+											"params": 0
+										}, {
+											"op": "I32Store8",
+											"params": [0, 0]
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load",
+											"params": [2, 80]
+										}, {
+											"op": "LocalTee",
+											"params": 2
+										}, {
+											"op": "LocalGet",
+											"params": 2
+										}, {
+											"op": "I32Load",
+											"params": [2, 0]
+										}, {
+											"op": "LocalTee",
+											"params": 2
+										}, {
+											"op": "I32Const",
+											"params": -1
+										}, {
+											"op": "I32Add"
+										}, {
+											"op": "I32Store",
+											"params": [2, 0]
+										}, {
+											"op": "Block",
+											"params": [64, [{
+												"op": "LocalGet",
+												"params": 2
+											}, {
+												"op": "I32Const",
+												"params": 1
+											}, {
+												"op": "I32Ne"
+											}, {
+												"op": "BrIf",
+												"params": 0
+											}, {
+												"op": "LocalGet",
+												"params": 1
+											}, {
+												"op": "I32Const",
+												"params": 80
+											}, {
+												"op": "I32Add"
+											}, {
+												"op": "Call",
+												"params": 40
+											}]]
+										}, {
+											"op": "I32Const",
+											"params": 1048600
+										}, {
+											"op": "LocalSet",
+											"params": 7
+										}, {
+											"op": "Br",
+											"params": 8
+										}]]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 48]
+									}, {
+										"op": "LocalSet",
+										"params": 2
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 144
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "Call",
+										"params": 306
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 144
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "I32Const",
+										"params": 1
+									}, {
+										"op": "Call",
+										"params": 307
+									}, {
+										"op": "LocalSet",
+										"params": 3
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 40
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "LocalGet",
+										"params": 2
+									}, {
+										"op": "I32Const",
+										"params": 12
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "Call",
+										"params": 298
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 32
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 40]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 44]
+									}, {
+										"op": "Call",
+										"params": 348
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 128
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "LocalGet",
+										"params": 3
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 32]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 36]
+									}, {
+										"op": "Call",
+										"params": 311
+									}, {
+										"op": "Block",
+										"params": [64, [{
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I32Load",
+											"params": [2, 128]
+										}, {
+											"op": "I32Const",
+											"params": 1
+										}, {
+											"op": "I32Ne"
+										}, {
+											"op": "BrIf",
+											"params": 0
+										}, {
+											"op": "LocalGet",
+											"params": 1
+										}, {
+											"op": "I64Load",
+											"params": [2, 132]
+										}, {
+											"op": "LocalSet",
+											"params": 4
+										}, {
+											"op": "I32Const",
+											"params": 8
+										}, {
+											"op": "I32Const",
+											"params": 4
+										}, {
+											"op": "Call",
+											"params": 42
+										}, {
+											"op": "LocalTee",
+											"params": 6
+										}, {
+											"op": "I32Eqz"
+										}, {
+											"op": "BrIf",
+											"params": 2
+										}, {
+											"op": "LocalGet",
+											"params": 6
+										}, {
+											"op": "LocalGet",
+											"params": 4
+										}, {
+											"op": "I64Store",
+											"params": [2, 0]
+										}, {
+											"op": "I32Const",
+											"params": 1048600
+										}, {
+											"op": "LocalSet",
+											"params": 7
+										}, {
+											"op": "Br",
+											"params": 8
+										}]]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 132]
+									}, {
+										"op": "I32Store",
+										"params": [2, 80]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 144
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 80
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 64
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "Call",
+										"params": 35
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 152
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "I32Load",
+										"params": [2, 0]
+									}, {
+										"op": "LocalSet",
+										"params": 2
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 148]
+									}, {
+										"op": "LocalSet",
+										"params": 3
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 144]
+									}, {
+										"op": "LocalTee",
+										"params": 8
+									}, {
+										"op": "I32Const",
+										"params": 1
+									}, {
+										"op": "I32GtU"
+									}, {
+										"op": "BrIf",
+										"params": 3
+									}, {
+										"op": "Block",
+										"params": [64, [{
+											"op": "LocalGet",
+											"params": 8
+										}, {
+											"op": "BrTable",
+											"params": [
+												[5, 0], 5
+											]
+										}]]
+									}, {
+										"op": "I32Const",
+										"params": 8
+									}, {
+										"op": "I32Const",
+										"params": 4
+									}, {
+										"op": "Call",
+										"params": 42
+									}, {
+										"op": "LocalTee",
+										"params": 6
+									}, {
+										"op": "I32Eqz"
+									}, {
+										"op": "BrIf",
+										"params": 2
+									}, {
+										"op": "LocalGet",
+										"params": 6
+									}, {
+										"op": "LocalGet",
+										"params": 2
+									}, {
+										"op": "I64ExtendUI32"
+									}, {
+										"op": "I64Const",
+										"params": 32
+									}, {
+										"op": "I64Shl"
+									}, {
+										"op": "LocalGet",
+										"params": 3
+									}, {
+										"op": "I64ExtendUI32"
+									}, {
+										"op": "I64Or"
+									}, {
+										"op": "I64Store",
+										"params": [2, 0]
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Const",
+										"params": 80
+									}, {
+										"op": "I32Add"
+									}, {
+										"op": "Call",
+										"params": 381
+									}, {
+										"op": "I32Const",
+										"params": 1048600
+									}, {
+										"op": "LocalSet",
+										"params": 7
+									}, {
+										"op": "Br",
+										"params": 7
+									}]]
+								}, {
+									"op": "I32Const",
+									"params": 8
+								}, {
+									"op": "I32Const",
+									"params": 4
+								}, {
+									"op": "Call",
+									"params": 434
+								}, {
+									"op": "Unreachable"
+								}]]
+							}, {
+								"op": "I32Const",
+								"params": 8
+							}, {
+								"op": "I32Const",
+								"params": 4
+							}, {
+								"op": "Call",
+								"params": 434
+							}, {
+								"op": "Unreachable"
+							}]]
+						}, {
+							"op": "I32Const",
+							"params": 8
+						}, {
+							"op": "I32Const",
+							"params": 4
+						}, {
+							"op": "Call",
+							"params": 434
+						}, {
+							"op": "Unreachable"
+						}]]
+					}, {
+						"op": "LocalGet",
+						"params": 3
+					}, {
+						"op": "I32Const",
+						"params": 255
+					}, {
+						"op": "I32And"
+					}, {
+						"op": "I32Const",
+						"params": 2
+					}, {
+						"op": "I32LtU"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Load",
+						"params": [2, 0]
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Load",
+						"params": [2, 4]
+					}, {
+						"op": "I32Load",
+						"params": [2, 0]
+					}, {
+						"op": "Call",
+						"params": 0
+					}, {
+						"op": "Block",
+						"params": [64, [{
+							"op": "LocalGet",
+							"params": 2
+						}, {
+							"op": "I32Load",
+							"params": [2, 4]
+						}, {
+							"op": "LocalTee",
+							"params": 3
+						}, {
+							"op": "I32Load",
+							"params": [2, 4]
+						}, {
+							"op": "LocalTee",
+							"params": 8
+						}, {
+							"op": "I32Eqz"
+						}, {
+							"op": "BrIf",
+							"params": 0
+						}, {
+							"op": "LocalGet",
+							"params": 2
+						}, {
+							"op": "I32Load",
+							"params": [2, 0]
+						}, {
+							"op": "LocalGet",
+							"params": 8
+						}, {
+							"op": "LocalGet",
+							"params": 3
+						}, {
+							"op": "I32Load",
+							"params": [2, 8]
+						}, {
+							"op": "Call",
+							"params": 43
+						}]]
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Const",
+						"params": 12
+					}, {
+						"op": "I32Const",
+						"params": 4
+					}, {
+						"op": "Call",
+						"params": 43
+					}]]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 80
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "Call",
+					"params": 381
+				}, {
+					"op": "Br",
+					"params": 1
+				}]]
+			}, {
+				"op": "Block",
+				"params": [64, [{
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Load8U",
+					"params": [0, 132]
+				}, {
+					"op": "BrIf",
+					"params": 0
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Load",
+					"params": [2, 128]
+				}, {
+					"op": "LocalSet",
+					"params": 2
+				}, {
+					"op": "Call",
+					"params": 371
+				}, {
+					"op": "I32Eqz"
+				}, {
+					"op": "BrIf",
+					"params": 0
+				}, {
+					"op": "LocalGet",
+					"params": 2
+				}, {
+					"op": "I32Const",
+					"params": 1
+				}, {
+					"op": "I32Store8",
+					"params": [0, 4]
+				}]]
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Load",
+				"params": [2, 128]
+			}, {
+				"op": "I32Load",
+				"params": [2, 0]
+			}, {
+				"op": "I32Const",
+				"params": 0
+			}, {
+				"op": "I32Store8",
+				"params": [0, 0]
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Load",
+				"params": [2, 80]
+			}, {
+				"op": "LocalTee",
+				"params": 2
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I32Load",
+				"params": [2, 0]
+			}, {
+				"op": "LocalTee",
+				"params": 2
+			}, {
+				"op": "I32Const",
+				"params": -1
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "I32Store",
+				"params": [2, 0]
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I32Const",
+				"params": 1
+			}, {
+				"op": "I32Ne"
+			}, {
+				"op": "BrIf",
+				"params": 0
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Const",
+				"params": 80
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "Call",
+				"params": 40
+			}]]
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Const",
+			"params": 80
+		}, {
+			"op": "I32Add"
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 64]
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 72]
+		}, {
+			"op": "Call",
+			"params": 52
+		}, {
+			"op": "Block",
+			"params": [64, [{
+				"op": "Block",
+				"params": [64, [{
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 80]
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "I32Eq"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 96
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Const",
+						"params": 8
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 92
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Load",
+						"params": [2, 0]
+					}, {
+						"op": "I32Store",
+						"params": [2, 0]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I64Load",
+						"params": [2, 84]
+					}, {
+						"op": "I64Store",
+						"params": [3, 96]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 144
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 96
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "Call",
+						"params": 53
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 144
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Const",
+						"params": 4
+					}, {
+						"op": "I32Or"
+					}, {
+						"op": "LocalSet",
+						"params": 2
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 144]
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "I32Ne"
+					}, {
+						"op": "BrIf",
+						"params": 1
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 128
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Const",
+						"params": 8
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Const",
+						"params": 8
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Load",
+						"params": [2, 0]
+					}, {
+						"op": "I32Store",
+						"params": [2, 0]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I64Load",
+						"params": [2, 0]
+					}, {
+						"op": "I64Store",
+						"params": [3, 128]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 128
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "Call",
+						"params": 301
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 4]
+					}, {
+						"op": "LocalSet",
+						"params": 7
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 0]
+					}, {
+						"op": "LocalSet",
+						"params": 6
+					}, {
+						"op": "Br",
+						"params": 2
+					}]]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 128
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Load",
+					"params": [2, 84]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 92
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "I32Load",
+					"params": [2, 0]
+				}, {
+					"op": "Call",
+					"params": 41
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 164
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "I32Const",
+					"params": 1
+				}, {
+					"op": "I32Store",
+					"params": [2, 0]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 20
+				}, {
+					"op": "I32Store",
+					"params": [2, 116]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I64Const",
+					"params": 2
+				}, {
+					"op": "I64Store",
+					"params": [2, 148]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 1048688
+				}, {
+					"op": "I32Store",
+					"params": [2, 144]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 128
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "I32Store",
+					"params": [2, 112]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 112
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "I32Store",
+					"params": [2, 160]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 144
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "Call",
+					"params": 340
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 128
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "Call",
+					"params": 30
+				}, {
+					"op": "I32Const",
+					"params": 1
+				}, {
+					"op": "Call",
+					"params": 350
+				}, {
+					"op": "Unreachable"
+				}]]
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Const",
+				"params": 112
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "I32Const",
+				"params": 8
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I32Const",
+				"params": 8
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "I32Load",
+				"params": [2, 0]
+			}, {
+				"op": "I32Store",
+				"params": [2, 0]
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I64Load",
+				"params": [2, 0]
+			}, {
+				"op": "I64Store",
+				"params": [3, 112]
+			}, {
+				"op": "Block",
+				"params": [64, [{
+					"op": "Block",
+					"params": [64, [{
+						"op": "Block",
+						"params": [64, [{
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Load",
+							"params": [2, 56]
+						}, {
+							"op": "LocalTee",
+							"params": 2
+						}, {
+							"op": "I32Const",
+							"params": 3
+						}, {
+							"op": "I32Eq"
+						}, {
+							"op": "BrIf",
+							"params": 0
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 164
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "I32Const",
+							"params": 1
+						}, {
+							"op": "I32Store",
+							"params": [2, 0]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I64Const",
+							"params": 2
+						}, {
+							"op": "I64Store",
+							"params": [2, 148]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 1048704
+						}, {
+							"op": "I32Store",
+							"params": [2, 144]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 21
+						}, {
+							"op": "I32Store",
+							"params": [2, 132]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 128
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "I32Store",
+							"params": [2, 160]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 112
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "I32Store",
+							"params": [2, 128]
+						}, {
+							"op": "LocalGet",
+							"params": 1
+						}, {
+							"op": "I32Const",
+							"params": 144
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "Call",
+							"params": 339
+						}, {
+							"op": "Br",
+							"params": 1
+						}]]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 48]
+					}, {
+						"op": "LocalSet",
+						"params": 3
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 144
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "Call",
+						"params": 306
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 144
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "Call",
+						"params": 308
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "Call",
+						"params": 310
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "Call",
+						"params": 309
+					}, {
+						"op": "LocalSet",
+						"params": 8
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 16
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 3
+					}, {
+						"op": "I32Const",
+						"params": 24
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "Call",
+						"params": 298
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 8
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 16]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 20]
+					}, {
+						"op": "Call",
+						"params": 348
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 128
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "LocalGet",
+						"params": 8
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 8]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 12]
+					}, {
+						"op": "Call",
+						"params": 311
+					}, {
+						"op": "Block",
+						"params": [64, [{
+							"op": "Block",
+							"params": [64, [{
+								"op": "Block",
+								"params": [64, [{
+									"op": "Block",
+									"params": [64, [{
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I32Load",
+										"params": [2, 128]
+									}, {
+										"op": "I32Const",
+										"params": 1
+									}, {
+										"op": "I32Ne"
+									}, {
+										"op": "BrIf",
+										"params": 0
+									}, {
+										"op": "LocalGet",
+										"params": 1
+									}, {
+										"op": "I64Load",
+										"params": [2, 132]
+									}, {
+										"op": "LocalSet",
+										"params": 4
+									}, {
+										"op": "I32Const",
+										"params": 8
+									}, {
+										"op": "I32Const",
+										"params": 4
+									}, {
+										"op": "Call",
+										"params": 42
+									}, {
+										"op": "LocalTee",
+										"params": 6
+									}, {
+										"op": "I32Eqz"
+									}, {
+										"op": "BrIf",
+										"params": 1
+									}, {
+										"op": "LocalGet",
+										"params": 6
+									}, {
+										"op": "LocalGet",
+										"params": 4
+									}, {
+										"op": "I64Store",
+										"params": [2, 0]
+									}, {
+										"op": "Br",
+										"params": 5
+									}]]
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Load",
+									"params": [2, 132]
+								}, {
+									"op": "I32Store",
+									"params": [2, 124]
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Const",
+									"params": 144
+								}, {
+									"op": "I32Add"
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Const",
+									"params": 124
+								}, {
+									"op": "I32Add"
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Load",
+									"params": [2, 112]
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Load",
+									"params": [2, 120]
+								}, {
+									"op": "Call",
+									"params": 38
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Load",
+									"params": [2, 148]
+								}, {
+									"op": "LocalSet",
+									"params": 3
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Load",
+									"params": [2, 144]
+								}, {
+									"op": "LocalTee",
+									"params": 8
+								}, {
+									"op": "I32Const",
+									"params": 255
+								}, {
+									"op": "I32And"
+								}, {
+									"op": "I32Const",
+									"params": 3
+								}, {
+									"op": "I32Eq"
+								}, {
+									"op": "BrIf",
+									"params": 2
+								}, {
+									"op": "I32Const",
+									"params": 8
+								}, {
+									"op": "I32Const",
+									"params": 4
+								}, {
+									"op": "Call",
+									"params": 42
+								}, {
+									"op": "LocalTee",
+									"params": 6
+								}, {
+									"op": "I32Eqz"
+								}, {
+									"op": "BrIf",
+									"params": 1
+								}, {
+									"op": "LocalGet",
+									"params": 6
+								}, {
+									"op": "LocalGet",
+									"params": 3
+								}, {
+									"op": "I64ExtendUI32"
+								}, {
+									"op": "I64Const",
+									"params": 32
+								}, {
+									"op": "I64Shl"
+								}, {
+									"op": "LocalGet",
+									"params": 8
+								}, {
+									"op": "I64ExtendUI32"
+								}, {
+									"op": "I64Or"
+								}, {
+									"op": "I64Store",
+									"params": [2, 0]
+								}, {
+									"op": "LocalGet",
+									"params": 1
+								}, {
+									"op": "I32Const",
+									"params": 124
+								}, {
+									"op": "I32Add"
+								}, {
+									"op": "Call",
+									"params": 381
+								}, {
+									"op": "Br",
+									"params": 4
+								}]]
+							}, {
+								"op": "I32Const",
+								"params": 8
+							}, {
+								"op": "I32Const",
+								"params": 4
+							}, {
+								"op": "Call",
+								"params": 434
+							}, {
+								"op": "Unreachable"
+							}]]
+						}, {
+							"op": "I32Const",
+							"params": 8
+						}, {
+							"op": "I32Const",
+							"params": 4
+						}, {
+							"op": "Call",
+							"params": 434
+						}, {
+							"op": "Unreachable"
+						}]]
+					}, {
+						"op": "Block",
+						"params": [64, [{
+							"op": "Block",
+							"params": [64, [{
+								"op": "I32Const",
+								"params": 0
+							}, {
+								"op": "BrIf",
+								"params": 0
+							}, {
+								"op": "LocalGet",
+								"params": 8
+							}, {
+								"op": "I32Const",
+								"params": 3
+							}, {
+								"op": "I32And"
+							}, {
+								"op": "I32Const",
+								"params": 2
+							}, {
+								"op": "I32Ne"
+							}, {
+								"op": "BrIf",
+								"params": 1
+							}]]
+						}, {
+							"op": "LocalGet",
+							"params": 3
+						}, {
+							"op": "I32Load",
+							"params": [2, 0]
+						}, {
+							"op": "LocalGet",
+							"params": 3
+						}, {
+							"op": "I32Load",
+							"params": [2, 4]
+						}, {
+							"op": "I32Load",
+							"params": [2, 0]
+						}, {
+							"op": "Call",
+							"params": 0
+						}, {
+							"op": "Block",
+							"params": [64, [{
+								"op": "LocalGet",
+								"params": 3
+							}, {
+								"op": "I32Load",
+								"params": [2, 4]
+							}, {
+								"op": "LocalTee",
+								"params": 8
+							}, {
+								"op": "I32Load",
+								"params": [2, 4]
+							}, {
+								"op": "LocalTee",
+								"params": 6
+							}, {
+								"op": "I32Eqz"
+							}, {
+								"op": "BrIf",
+								"params": 0
+							}, {
+								"op": "LocalGet",
+								"params": 3
+							}, {
+								"op": "I32Load",
+								"params": [2, 0]
+							}, {
+								"op": "LocalGet",
+								"params": 6
+							}, {
+								"op": "LocalGet",
+								"params": 8
+							}, {
+								"op": "I32Load",
+								"params": [2, 8]
+							}, {
+								"op": "Call",
+								"params": 43
+							}]]
+						}, {
+							"op": "LocalGet",
+							"params": 3
+						}, {
+							"op": "I32Const",
+							"params": 12
+						}, {
+							"op": "I32Const",
+							"params": 4
+						}, {
+							"op": "Call",
+							"params": 43
+						}]]
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Const",
+						"params": 124
+					}, {
+						"op": "I32Add"
+					}, {
+						"op": "Call",
+						"params": 381
+					}]]
+				}, {
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 116]
+					}, {
+						"op": "LocalTee",
+						"params": 3
+					}, {
+						"op": "I32Eqz"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 112]
+					}, {
+						"op": "LocalGet",
+						"params": 3
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "Call",
+						"params": 43
+					}]]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Const",
+					"params": 96
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "Call",
+					"params": 15
+				}, {
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 100]
+					}, {
+						"op": "LocalTee",
+						"params": 3
+					}, {
+						"op": "I32Eqz"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 96]
+					}, {
+						"op": "LocalGet",
+						"params": 3
+					}, {
+						"op": "I32Const",
+						"params": 28
+					}, {
+						"op": "I32Mul"
+					}, {
+						"op": "I32Const",
+						"params": 4
+					}, {
+						"op": "Call",
+						"params": 43
+					}]]
+				}, {
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 68]
+					}, {
+						"op": "LocalTee",
+						"params": 3
+					}, {
+						"op": "I32Eqz"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 64]
+					}, {
+						"op": "LocalGet",
+						"params": 3
+					}, {
+						"op": "I32Const",
+						"params": 1
+					}, {
+						"op": "Call",
+						"params": 43
+					}]]
+				}, {
+					"op": "LocalGet",
+					"params": 1
+				}, {
+					"op": "I32Load",
+					"params": [2, 48]
+				}, {
+					"op": "LocalSet",
+					"params": 7
+				}, {
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Eqz"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Const",
+						"params": 12
+					}, {
+						"op": "I32Mul"
+					}, {
+						"op": "LocalSet",
+						"params": 3
+					}, {
+						"op": "LocalGet",
+						"params": 7
+					}, {
+						"op": "LocalSet",
+						"params": 2
+					}, {
+						"op": "Loop",
+						"params": [64, [{
+							"op": "Block",
+							"params": [64, [{
+								"op": "LocalGet",
+								"params": 2
+							}, {
+								"op": "I32Const",
+								"params": 4
+							}, {
+								"op": "I32Add"
+							}, {
+								"op": "I32Load",
+								"params": [2, 0]
+							}, {
+								"op": "LocalTee",
+								"params": 8
+							}, {
+								"op": "I32Eqz"
+							}, {
+								"op": "BrIf",
+								"params": 0
+							}, {
+								"op": "LocalGet",
+								"params": 2
+							}, {
+								"op": "I32Load",
+								"params": [2, 0]
+							}, {
+								"op": "LocalGet",
+								"params": 8
+							}, {
+								"op": "I32Const",
+								"params": 1
+							}, {
+								"op": "Call",
+								"params": 43
+							}]]
+						}, {
+							"op": "LocalGet",
+							"params": 2
+						}, {
+							"op": "I32Const",
+							"params": 12
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "LocalSet",
+							"params": 2
+						}, {
+							"op": "LocalGet",
+							"params": 3
+						}, {
+							"op": "I32Const",
+							"params": -12
+						}, {
+							"op": "I32Add"
+						}, {
+							"op": "LocalTee",
+							"params": 3
+						}, {
+							"op": "BrIf",
+							"params": 0
+						}]]
+					}]]
+				}, {
+					"op": "I32Const",
+					"params": 0
+				}, {
+					"op": "LocalSet",
+					"params": 6
+				}, {
+					"op": "Block",
+					"params": [64, [{
+						"op": "LocalGet",
+						"params": 1
+					}, {
+						"op": "I32Load",
+						"params": [2, 52]
+					}, {
+						"op": "LocalTee",
+						"params": 2
+					}, {
+						"op": "I32Eqz"
+					}, {
+						"op": "BrIf",
+						"params": 0
+					}, {
+						"op": "LocalGet",
+						"params": 7
+					}, {
+						"op": "LocalGet",
+						"params": 2
+					}, {
+						"op": "I32Const",
+						"params": 12
+					}, {
+						"op": "I32Mul"
+					}, {
+						"op": "I32Const",
+						"params": 4
+					}, {
+						"op": "Call",
+						"params": 43
+					}]]
+				}, {
+					"op": "Br",
+					"params": 3
+				}]]
+			}, {
+				"op": "I32Const",
+				"params": 1048600
+			}, {
+				"op": "LocalSet",
+				"params": 7
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Load",
+				"params": [2, 116]
+			}, {
+				"op": "LocalTee",
+				"params": 2
+			}, {
+				"op": "I32Eqz"
+			}, {
+				"op": "BrIf",
+				"params": 0
+			}, {
+				"op": "LocalGet",
+				"params": 1
+			}, {
+				"op": "I32Load",
+				"params": [2, 112]
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I32Const",
+				"params": 1
+			}, {
+				"op": "Call",
+				"params": 43
+			}]]
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Const",
+			"params": 96
+		}, {
+			"op": "I32Add"
+		}, {
+			"op": "Call",
+			"params": 15
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 100]
+		}, {
+			"op": "LocalTee",
+			"params": 2
+		}, {
+			"op": "I32Eqz"
+		}, {
+			"op": "BrIf",
+			"params": 0
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 96]
+		}, {
+			"op": "LocalGet",
+			"params": 2
+		}, {
+			"op": "I32Const",
+			"params": 28
+		}, {
+			"op": "I32Mul"
+		}, {
+			"op": "I32Const",
+			"params": 4
+		}, {
+			"op": "Call",
+			"params": 43
+		}]]
+	}, {
+		"op": "Block",
+		"params": [64, [{
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 68]
+		}, {
+			"op": "LocalTee",
+			"params": 2
+		}, {
+			"op": "I32Eqz"
+		}, {
+			"op": "BrIf",
+			"params": 0
+		}, {
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 64]
+		}, {
+			"op": "LocalGet",
+			"params": 2
+		}, {
+			"op": "I32Const",
+			"params": 1
+		}, {
+			"op": "Call",
+			"params": 43
+		}]]
+	}, {
+		"op": "LocalGet",
+		"params": 1
+	}, {
+		"op": "I32Load",
+		"params": [2, 48]
+	}, {
+		"op": "LocalSet",
+		"params": 9
+	}, {
+		"op": "Block",
+		"params": [64, [{
+			"op": "LocalGet",
+			"params": 1
+		}, {
+			"op": "I32Load",
+			"params": [2, 56]
+		}, {
+			"op": "LocalTee",
+			"params": 2
+		}, {
+			"op": "I32Eqz"
+		}, {
+			"op": "BrIf",
+			"params": 0
+		}, {
+			"op": "LocalGet",
+			"params": 2
+		}, {
+			"op": "I32Const",
+			"params": 12
+		}, {
+			"op": "I32Mul"
+		}, {
+			"op": "LocalSet",
+			"params": 3
+		}, {
+			"op": "LocalGet",
+			"params": 9
+		}, {
+			"op": "LocalSet",
+			"params": 2
+		}, {
+			"op": "Loop",
+			"params": [64, [{
+				"op": "Block",
+				"params": [64, [{
+					"op": "LocalGet",
+					"params": 2
+				}, {
+					"op": "I32Const",
+					"params": 4
+				}, {
+					"op": "I32Add"
+				}, {
+					"op": "I32Load",
+					"params": [2, 0]
+				}, {
+					"op": "LocalTee",
+					"params": 8
+				}, {
+					"op": "I32Eqz"
+				}, {
+					"op": "BrIf",
+					"params": 0
+				}, {
+					"op": "LocalGet",
+					"params": 2
+				}, {
+					"op": "I32Load",
+					"params": [2, 0]
+				}, {
+					"op": "LocalGet",
+					"params": 8
+				}, {
+					"op": "I32Const",
+					"params": 1
+				}, {
+					"op": "Call",
+					"params": 43
+				}]]
+			}, {
+				"op": "LocalGet",
+				"params": 2
+			}, {
+				"op": "I32Const",
+				"params": 12
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "LocalSet",
+				"params": 2
+			}, {
+				"op": "LocalGet",
+				"params": 3
+			}, {
+				"op": "I32Const",
+				"params": -12
+			}, {
+				"op": "I32Add"
+			}, {
+				"op": "LocalTee",
+				"params": 3
+			}, {
+				"op": "BrIf",
+				"params": 0
+			}]]
+		}]]
+	}, {
+		"op": "LocalGet",
+		"params": 1
+	}, {
+		"op": "I32Load",
+		"params": [2, 52]
+	}, {
+		"op": "LocalTee",
+		"params": 2
+	}, {
+		"op": "I32Eqz"
+	}, {
+		"op": "BrIf",
+		"params": 0
+	}, {
+		"op": "LocalGet",
+		"params": 9
+	}, {
+		"op": "LocalGet",
+		"params": 2
+	}, {
+		"op": "I32Const",
+		"params": 12
+	}, {
+		"op": "I32Mul"
+	}, {
+		"op": "I32Const",
+		"params": 4
+	}, {
+		"op": "Call",
+		"params": 43
+	}]]
+}, {
+	"op": "LocalGet",
+	"params": 0
+}, {
+	"op": "LocalGet",
+	"params": 7
+}, {
+	"op": "I32Store",
+	"params": [2, 4]
+}, {
+	"op": "LocalGet",
+	"params": 0
+}, {
+	"op": "LocalGet",
+	"params": 6
+}, {
+	"op": "I32Store",
+	"params": [2, 0]
+}, {
+	"op": "LocalGet",
+	"params": 1
+}, {
+	"op": "I32Const",
+	"params": 192
+}, {
+	"op": "I32Add"
+}, {
+	"op": "GlobalSet",
+	"params": 0
+}]

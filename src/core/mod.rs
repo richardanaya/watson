@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 pub use common::*;
 
 mod instructions;

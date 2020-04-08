@@ -1,16 +1,17 @@
 use super::common::*;
 use super::view::*;
+use crate::alloc::string::ToString;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ProgramView<'a> {
     #[serde(borrow)]
     pub sections: Vec<SectionView<'a>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[repr(C)]
 pub struct Program {
     pub sections: Vec<Section>,
@@ -91,6 +92,11 @@ impl<'p> ProgramView<'p> {
 }
 
 impl Program {
+    pub fn new() -> Program {
+        Program {
+            sections: Vec::new(),
+        }
+    }
     pub fn find_exported_function<'a>(&'a self, name: &str) -> Result<&'a Export, &'static str> {
         let result = self.sections.iter().find(|x| {
             if let Section::Export(_) = x {
@@ -147,6 +153,187 @@ impl Program {
             }
         } else {
             Err("could find code section")
+        }
+    }
+
+    pub fn create_import<'a>(
+        &'a mut self,
+        name: &str,
+        inputs: &[ValueType],
+        outputs: &[ValueType],
+    ) -> Result<usize, &'static str> {
+        let type_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(Section::Type, x))
+        {
+            Some(x) => x,
+            None => {
+                self.sections
+                    .push(Section::Type(TypeSection { types: Vec::new() }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        let type_index = if let Section::Type(s) = type_section {
+            match s
+                .types
+                .iter()
+                .enumerate()
+                .find(|x| x.1.inputs == inputs && x.1.outputs == outputs)
+            {
+                Some(x) => 0,
+                None => {
+                    s.types.push(FunctionType {
+                        inputs: inputs.to_vec(),
+                        outputs: outputs.to_vec(),
+                    });
+                    s.types.len() - 1
+                }
+            }
+        } else {
+            unreachable!()
+        };
+
+        let imports_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(Section::Import, x))
+        {
+            Some(x) => x,
+            None => {
+                self.sections.push(Section::Import(ImportSection {
+                    imports: Vec::new(),
+                }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        if let Section::Import(s) = imports_section {
+            s.imports.push(WasmImport::Function(FunctionImport {
+                module_name: "env".to_string(),
+                name: name.to_string(),
+                type_index,
+            }));
+            Ok(s.imports.len() - 1)
+        } else {
+            unreachable!()
+        }
+    }
+
+    pub fn create_export<'a>(
+        &'a mut self,
+        name: &str,
+        inputs: &[ValueType],
+        outputs: &[ValueType],
+    ) -> Result<(&'a mut CodeBlock, usize), &'static str> {
+        let type_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(Section::Type, x))
+        {
+            Some(x) => x,
+            None => {
+                self.sections
+                    .push(Section::Type(TypeSection { types: Vec::new() }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        let type_index = if let Section::Type(s) = type_section {
+            match s
+                .types
+                .iter()
+                .enumerate()
+                .find(|x| x.1.inputs == inputs && x.1.outputs == outputs)
+            {
+                Some(x) => x.0,
+                None => {
+                    s.types.push(FunctionType {
+                        inputs: inputs.to_vec(),
+                        outputs: outputs.to_vec(),
+                    });
+                    s.types.len() - 1
+                }
+            }
+        } else {
+            unreachable!()
+        };
+
+        let function_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(Section::Function, x))
+        {
+            Some(x) => x,
+            None => {
+                self.sections.push(Section::Function(FunctionSection {
+                    function_types: Vec::new(),
+                }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        let func_index = if let Section::Function(s) = function_section {
+            s.function_types.push(type_index);
+            s.function_types.len() - 1
+        } else {
+            unreachable!()
+        };
+
+        let exports_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(Section::Export, x))
+        {
+            Some(x) => x,
+            None => {
+                self.sections.push(Section::Export(ExportSection {
+                    exports: Vec::new(),
+                }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        if let Section::Export(s) = exports_section {
+            s.exports.push(WasmExport::Function(Export {
+                name: name.to_string(),
+                index: func_index,
+            }));
+        } else {
+            unreachable!()
+        }
+
+        let code_section_index = match self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|x| matches!(Section::Code, x))
+        {
+            Some(x) => x.0,
+            None => {
+                self.sections.push(Section::Code(CodeSection {
+                    code_blocks: Vec::new(),
+                }));
+                let len = self.sections.len() - 1;
+                len
+            }
+        };
+
+        if let Section::Code(s) = &mut self.sections[code_section_index] {
+            s.code_blocks.push(CodeBlock {
+                locals: Vec::new(),
+                instructions: Vec::new(),
+            });
+            let idx = s.code_blocks.len() - 1;
+            Ok((&mut s.code_blocks[idx], idx))
+        } else {
+            unreachable!()
         }
     }
 }

@@ -47,7 +47,7 @@ impl WasmCompiler for Program {
                             code.extend(l.count.to_wasm_bytes());
                             code.push(l.value_type.into_wasm_byte());
                         }
-                        for i in c.code_expression.iter() {
+                        for i in c.instructions.iter() {
                             i.extend_wasm_bytes(&mut code);
                         }
                         code.push(END);
@@ -269,6 +269,9 @@ impl WasmCompiler for Program {
 impl WriteWasm for Instruction {
     fn extend_wasm_bytes(&self, v: &mut Vec<u8>) {
         match self {
+            Instruction::Raw(b) => {
+                v.push(*b);
+            }
             Instruction::Unreachable => {
                 v.push(webassembly::UNREACHABLE);
             }

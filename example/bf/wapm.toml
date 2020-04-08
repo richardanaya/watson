@@ -1,0 +1,15 @@
+[package]
+name = "richard/wq"
+version = "0.0.0"
+description = "parses a web assembly module into json"
+readme = "README.md"
+repository = "https://github.com/richardanaya/watson/examples/wq"
+
+[[module]]
+name = "wq"
+source = "wq.wasm"
+abi = "wasi"
+
+[[command]]
+name = "wq"
+module = "wq"

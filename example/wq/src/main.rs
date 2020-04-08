@@ -22,6 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         match watson::parse(&buffer) {
             Ok(p) => {
+                fs::write("random.wasm",p.to_owned().to_bytes());
                 let json_string = match serde_json::to_string(&p.to_owned()) {
                     Ok(s) => s,
                     Err(_) => {
@@ -29,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         process::exit(1);
                     }
                 };
-                println!("{}", json_string)
+               println!("{}", json_string)
             }
             Err(e) => {
                 eprintln!("Error: {}", e.red());

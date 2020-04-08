@@ -4,7 +4,7 @@ use crate::alloc::string::ToString;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 //#[serde(tag = "export_type", content = "content")]
 #[repr(C)]
 pub enum WasmExportView<'a> {
@@ -22,7 +22,7 @@ pub enum WasmExportView<'a> {
     Global(ExportView<'a>),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ExportSectionView<'a> {
     #[serde(borrow)]
@@ -58,7 +58,7 @@ impl<'a> ExportSectionView<'a> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ExportView<'a> {
     #[serde(borrow)]
@@ -66,7 +66,7 @@ pub struct ExportView<'a> {
     pub index: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct FunctionImportView<'a> {
     #[serde(borrow)]
@@ -76,7 +76,7 @@ pub struct FunctionImportView<'a> {
     pub type_index: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct GlobalImportView<'a> {
     #[serde(borrow)]
@@ -87,7 +87,7 @@ pub struct GlobalImportView<'a> {
     pub is_mutable: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct MemoryImportView<'a> {
     #[serde(borrow)]
@@ -98,7 +98,7 @@ pub struct MemoryImportView<'a> {
     pub max_pages: Option<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct TableImportView<'a> {
     #[serde(borrow)]
@@ -110,7 +110,7 @@ pub struct TableImportView<'a> {
     pub max: Option<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "import_type", content = "content")]
 #[repr(C)]
 pub enum WasmImportView<'a> {
@@ -128,7 +128,7 @@ pub enum WasmImportView<'a> {
     Table(TableImportView<'a>),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct ImportSectionView<'a> {
     #[serde(borrow)]
@@ -172,7 +172,7 @@ impl<'a> ImportSectionView<'a> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct DataBlockView<'a> {
     pub memory: usize,
@@ -181,7 +181,7 @@ pub struct DataBlockView<'a> {
     pub data: &'a [u8],
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct DataSectionView<'a> {
     #[serde(borrow)]
@@ -204,7 +204,7 @@ impl<'a> DataSectionView<'a> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "section_type", content = "content")]
 #[repr(C)]
 pub enum SectionView<'a> {
@@ -257,7 +257,7 @@ impl<'a> SectionView<'a> {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[repr(C)]
 pub struct CustomSectionView<'a> {
     #[serde(borrow)]

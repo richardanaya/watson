@@ -142,14 +142,14 @@ fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), &'stat
 
         CALL => {
             let (input, idx) = wasm_u32(input)?;
-            instruction = Instruction::Call(idx);
+            instruction = Instruction::Call(idx as usize);
             ip = input;
         }
 
         CALL_INDIRECT => {
             let (input, idx) = wasm_u32(input)?;
-            let (input, _) = wasm_u32(input)?;
-            instruction = Instruction::Call(idx);
+            let (input, _) = take(1)(input)?;
+            instruction = Instruction::CallIndirect(idx);
             ip = input;
         }
 
@@ -602,7 +602,13 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
         }
         SECTION_FUNCTION => {
             let (input, num_items) = wasm_u32(input)?;
-            let parse_items = many_n(num_items as usize, |input| wasm_u32(input));
+            let parse_items = many_n(num_items as usize, |input| {
+                let r = wasm_u32(input);
+                match r {
+                    Ok(n) => Ok((n.0, n.1 as usize)),
+                    Err(e) => Err(e),
+                }
+            });
             let (input, items) = parse_items(input)?;
             Ok((
                 input,
@@ -682,12 +688,12 @@ fn section(input: &[u8]) -> Result<(&[u8], SectionView), &'static str> {
                 });
                 let (input, local_vectors) = parse_local_vecs(input)?;
 
-                let (input, code_expression) = wasm_expression(input)?;
+                let (input, instructions) = wasm_expression(input)?;
                 Ok((
                     input,
                     CodeBlock {
                         locals: local_vectors,
-                        code_expression,
+                        instructions,
                     },
                 ))
             });

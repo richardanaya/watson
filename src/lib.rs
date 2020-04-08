@@ -2,12 +2,17 @@
 #[macro_use]
 extern crate alloc;
 extern crate serde;
+extern crate webassembly;
 
 mod compiler;
 mod core;
 mod interpreter;
 mod parser;
 mod util;
+
+pub use crate::core::common::*;
+pub use crate::core::Instruction;
+pub use crate::core::Program;
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<core::ProgramView<'p>, &'static str> {
     parser::wasm_module(input)

@@ -6,7 +6,6 @@ wasi:
 	cp target/wasm32-wasi/release/wq.wasm .
 
 test:
-	./target/release/wq simplest.wasm > test.json
+	./target/release/wq main.wasm > test.json
 	./target/release/wq test.json test.wasm
-	./target/release/wq wq.wasm > test.json
-	./target/release/wq test.json test.wasm
+	./target/release/wq test.wasm > test2.json

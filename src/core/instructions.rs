@@ -1,10 +1,11 @@
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", content = "params")]
 #[repr(C)]
 pub enum Instruction {
+    Raw(u8),
     Unreachable,
     Nop,
     Block(u8, Vec<Instruction>),
@@ -14,7 +15,7 @@ pub enum Instruction {
     BrIf(u32),
     BrTable(Vec<u32>, u32),
     Return,
-    Call(u32),
+    Call(usize),
     CallIndirect(u32),
     Drop,
     Select,
