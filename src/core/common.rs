@@ -302,8 +302,27 @@ pub enum Section {
     Element(ElementSection),
 }
 
+impl Section {
+    pub fn id(&self) -> u32 {
+        match self {
+            Section::Custom(_) => 0,
+            Section::Type(_) => 1,
+            Section::Import(_) => 2,
+            Section::Function(_) => 3,
+            Section::Table(_) => 4,
+            Section::Memory(_) => 5,
+            Section::Global(_) => 6,
+            Section::Export(_) => 7,
+            Section::Start(_) => 8,
+            Section::Element(_) => 9,
+            Section::Code(_) => 10,
+            Section::Data(_) => 11,
+        }
+    }
+}
+
 pub trait WasmCompiler {
-    fn compile(&self) -> Vec<u8>;
+    fn compile(&mut self) -> Vec<u8>;
 }
 
 pub trait WriteWasm {

@@ -321,7 +321,7 @@ impl Program {
             .sections
             .iter()
             .enumerate()
-            .find(|x| matches!(x, (_, Section::Code(_))))
+            .find(|x| matches!(x, (_,Section::Code(_))))
         {
             Some(x) => x.0,
             None => {
@@ -341,6 +341,84 @@ impl Program {
             Ok((&mut s.code_blocks[idx], idx))
         } else {
             unreachable!()
+        }
+    }
+
+    fn ensure_memories<'a>(&'a mut self) -> (&'a mut MemorySection,usize) {
+        let idx = match self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|x| matches!(x, (_,Section::Memory(_))))
+        {
+            Some(x) => x.0,
+            None => {
+                self.sections.push(Section::Memory(MemorySection {
+                    memories: vec![],
+                }));
+                self.sections.len()
+            }
+        };
+        if let Section::Memory(s) = &mut self.sections[idx] {
+            return (s,idx);
+        } else {
+            unreachable!();
+        }
+    }
+
+    fn ensure_exports<'a>(&'a mut self) -> (&'a mut ExportSection,usize) {
+        let idx = match self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|x| matches!(x, (_,Section::Export(_))))
+        {
+            Some(x) => x.0,
+            None => {
+                self.sections.push(Section::Export(ExportSection {
+                    exports: vec![],
+                }));
+                self.sections.len()
+            }
+        };
+        if let Section::Export(s) = &mut self.sections[idx] {
+            return (s,idx);
+        } else {
+            unreachable!();
+        }
+    }
+
+
+    pub fn create_memory<'a>(
+        &'a mut self,
+        name: &str,
+        min: usize,
+        max: Option<usize>,
+    ) -> Result<(&'a mut WasmMemory, usize), &'static str> {
+        let mem_idx;
+        let mem_sec_idx;
+        {
+            let (memory_section,idx) = self.ensure_memories();
+            mem_sec_idx = idx;
+            memory_section.memories.push(WasmMemory {
+                min_pages:min,
+                max_pages:max,
+            });
+            mem_idx = memory_section.memories.len()-1;
+        }
+        {
+            let (export_section,_) = self.ensure_exports();
+
+            export_section.exports.push(WasmExport::Memory(Export{
+                name:name.to_string(),
+                index:mem_idx,
+            }));
+        }
+
+        if let Section::Memory(s) = &mut self.sections[mem_sec_idx]{
+            Ok((&mut s.memories[mem_idx],mem_idx))
+        } else {
+            unreachable!();
         }
     }
 }

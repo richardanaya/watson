@@ -3,7 +3,8 @@ use alloc::vec::Vec;
 use webassembly::*;
 
 impl WasmCompiler for Program {
-    fn compile(&self) -> Vec<u8> {
+    fn compile(&mut self) -> Vec<u8> {
+        self.sections.sort_by(|a, b| a.id().cmp(&b.id()));
         let mut program_bytes = vec![];
         program_bytes.extend(MAGIC_NUMBER);
         program_bytes.extend(VERSION_1);
