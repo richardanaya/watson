@@ -1,11 +1,26 @@
+<head>
+    <title>Brainfuck WASM</title>
+</head>
+<style>
+    #content {
+        text-align: center;
+        padding: 50px;
+        font-size: 48px;
+        font-family: sans-serif;
+    }
+</style>
+<div id="content">
+
+</div>
 <script>
+    let content = document.querySelector("#content")
     fetch('helloworld.wasm').then(response =>
     response.arrayBuffer()
     ).then(bytes =>
     WebAssembly.instantiate(bytes, {
         env: {
             output_byte: function(b) {
-                console.log(String.fromCharCode(b));
+                content.innerHTML += String.fromCharCode(b);
             },
             input_byte: function() {
                 return 65;
@@ -13,7 +28,6 @@
         }
     })
     ).then(results => {
-        debugger;
         results.instance.exports.main();
     });
 </script>

@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut p = Program::new();
         let import_output_byte_idx = p.create_import("output_byte", &[ValueType::I32], &[])?;
         let import_input_byte_idx = p.create_import("input_byte", &[], &[ValueType::I32])?;
-        p.create_memory("memory", 2, None)?;
+        p.create_memory("memory", 32, None)?;
         let (main_code, _) = p.create_export("main", &[], &[])?;
         main_code.locals.push(LocalCount {
             count: 1,
@@ -66,15 +66,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 '[' => {
                     //while (*ptr) {
+                    ops.push(Instruction::Raw(BLOCK));
+                    ops.push(Instruction::Raw(EMPTY));
                     ops.push(Instruction::Raw(LOOP));
                     ops.push(Instruction::Raw(EMPTY));
                     ops.push(Instruction::LocalGet(0));
                     ops.push(Instruction::I32Load(2, 0));
-                    ops.push(Instruction::BrIf(0));
+                    ops.push(Instruction::I32Const(0));
+                    ops.push(Instruction::I32Eq);
+                    ops.push(Instruction::BrIf(1));
                     bracket_check += 1;
                 }
                 ']' => {
                     // }
+                    ops.push(Instruction::Br(0));
+                    ops.push(Instruction::Raw(END));
                     ops.push(Instruction::Raw(END));
                     bracket_check -= 1;
                 }
