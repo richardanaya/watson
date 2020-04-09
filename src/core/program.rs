@@ -237,6 +237,10 @@ impl Program {
         inputs: &[ValueType],
         outputs: &[ValueType],
     ) -> Result<(&'a mut CodeBlock, usize), &'static str> {
+        let import_count = {
+            let (import_section,_) = self.ensure_imports();
+            import_section.imports.len()
+        };
         let type_section = match self
             .sections
             .iter_mut()
@@ -311,7 +315,7 @@ impl Program {
         if let Section::Export(s) = exports_section {
             s.exports.push(WasmExport::Function(Export {
                 name: name.to_string(),
-                index: func_index,
+                index: import_count+func_index,
             }));
         } else {
             unreachable!()
@@ -360,6 +364,28 @@ impl Program {
             }
         };
         if let Section::Memory(s) = &mut self.sections[idx] {
+            return (s,idx);
+        } else {
+            unreachable!();
+        }
+    }
+
+    fn ensure_imports<'a>(&'a mut self) -> (&'a mut ImportSection,usize) {
+        let idx = match self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|x| matches!(x, (_,Section::Import(_))))
+        {
+            Some(x) => x.0,
+            None => {
+                self.sections.push(Section::Import(ImportSection {
+                    imports: vec![],
+                }));
+                self.sections.len()-1
+            }
+        };
+        if let Section::Import(s) = &mut self.sections[idx] {
             return (s,idx);
         } else {
             unreachable!();

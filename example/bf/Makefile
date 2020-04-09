@@ -3,5 +3,5 @@ wasi:
 	@cp target/wasm32-wasi/release/bf.wasm .
 test:wasi
 	@wasmer run  bf.wasm --dir . -- helloworld.bf helloworld.wasm
-serve:
+serve:test
 	@python3 -m http.server 8080

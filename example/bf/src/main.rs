@@ -23,53 +23,53 @@ fn main() -> Result<(), Box<dyn Error>> {
                 '>' => {
                     //	++ptr;
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Const(1));
+                    ops.push(Instruction::I32Const(4));
                     ops.push(Instruction::I32Add);
                     ops.push(Instruction::LocalSet(0));
                 }
                 '<' => {
                     //	--ptr;
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Const(1));
+                    ops.push(Instruction::I32Const(4));
                     ops.push(Instruction::I32Sub);
                     ops.push(Instruction::LocalSet(0));
                 }
                 '+' => {
                     // ++*ptr;;
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(0, 0));
+                    ops.push(Instruction::LocalGet(0));
+                    ops.push(Instruction::I32Load(2, 0));
                     ops.push(Instruction::I32Const(1));
                     ops.push(Instruction::I32Add);
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Store(0, 0));
+                    ops.push(Instruction::I32Store(2, 0));
                 }
                 '-' => {
                     //	--*ptr;
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(0, 0));
+                    ops.push(Instruction::LocalGet(0));
+                    ops.push(Instruction::I32Load(2, 0));
                     ops.push(Instruction::I32Const(1));
                     ops.push(Instruction::I32Sub);
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Store(0, 0));
+                    ops.push(Instruction::I32Store(2, 0));
                 }
                 '.' => {
                     //	putchar(*ptr);
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(0, 0));
+                    ops.push(Instruction::I32Load(2, 0));
                     ops.push(Instruction::Call(import_output_byte_idx));
                 }
                 ',' => {
                     //	*ptr=getchar();
-                    ops.push(Instruction::Call(import_input_byte_idx));
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Store(0, 0));
+                    ops.push(Instruction::Call(import_input_byte_idx));
+                    ops.push(Instruction::I32Store(2, 0));
                 }
                 '[' => {
                     //while (*ptr) {
                     ops.push(Instruction::Raw(LOOP));
                     ops.push(Instruction::Raw(EMPTY));
                     ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(0, 0));
+                    ops.push(Instruction::I32Load(2, 0));
                     ops.push(Instruction::BrIf(0));
                     bracket_check += 1;
                 }
