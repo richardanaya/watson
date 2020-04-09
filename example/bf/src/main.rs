@@ -50,7 +50,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     main_code.instructions.push(Instruction::LocalGet(0));
                     main_code.instructions.push(Instruction::I32Store(0, 0));
                 }
-                '.' => { //	putchar(*ptr);
+                '.' => {
+                    //	putchar(*ptr);
+                    main_code.instructions.push(Instruction::LocalGet(0));
+                    main_code.instructions.push(Instruction::I32Load(0, 0));
+                    main_code
+                        .instructions
+                        .push(Instruction::Call(import_output_byte_idx));
                 }
                 ',' => {
                     //	*ptr=getchar();
@@ -62,12 +68,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 '[' => {
                     //while (*ptr) {
-
+                    main_code.instructions.push(Instruction::Raw(LOOP));
+                    main_code.instructions.push(Instruction::Raw(EMPTY));
                     main_code.instructions.push(Instruction::LocalGet(0));
                     main_code.instructions.push(Instruction::I32Load(0, 0));
-                    main_code
-                        .instructions
-                        .push(Instruction::Call(import_output_byte_idx));
+                    main_code.instructions.push(Instruction::BrIf(0));
                     bracket_check += 1;
                 }
                 ']' => {
