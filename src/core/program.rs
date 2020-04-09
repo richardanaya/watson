@@ -356,7 +356,7 @@ impl Program {
                 self.sections.push(Section::Memory(MemorySection {
                     memories: vec![],
                 }));
-                self.sections.len()
+                self.sections.len()-1
             }
         };
         if let Section::Memory(s) = &mut self.sections[idx] {
@@ -378,7 +378,7 @@ impl Program {
                 self.sections.push(Section::Export(ExportSection {
                     exports: vec![],
                 }));
-                self.sections.len()
+                self.sections.len()-1
             }
         };
         if let Section::Export(s) = &mut self.sections[idx] {
