@@ -1,0 +1,18 @@
+<script>
+    fetch('helloworld.wasm').then(response =>
+    response.arrayBuffer()
+    ).then(bytes =>
+    WebAssembly.instantiate(bytes, {
+        env: {
+            output_byte: function(b) {
+                console.log(String.fromCharCode(b));
+            },
+            input_byte: function() {
+                return 0;
+            }
+        }
+    })
+    ).then(results => {
+    // Do something with the results!
+    });
+</script>
