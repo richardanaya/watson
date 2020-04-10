@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
     } else if args.len() == 3 {
         let json = fs::read_to_string(&args[1])?;
-        let p: Program = match serde_json::from_str(&json) {
+        let mut p: Program = match serde_json::from_str(&json) {
             Ok(s) => s,
             Err(_) => {
                 eprintln!("Error: failed to deserialize");
