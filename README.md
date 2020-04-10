@@ -7,7 +7,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust ba
 - [X] supports all section types
 - [X] helper functions for finding things
 - [x] support for compilation to wasm
-- [ ] interpeter
+- [ ] interpreter
 - [ ] lofi wasm mode (i.e. i32 only)
 
 ```rust
