@@ -20,68 +20,64 @@ fn main() -> Result<(), Box<dyn Error>> {
         let ops = &mut main_code.instructions;
         for c in s.chars() {
             match c {
-                '>' => {
-                    //	++ptr;
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Const(4));
-                    ops.push(Instruction::I32Add);
-                    ops.push(Instruction::LocalSet(0));
-                }
-                '<' => {
-                    //	--ptr;
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Const(4));
-                    ops.push(Instruction::I32Sub);
-                    ops.push(Instruction::LocalSet(0));
-                }
-                '+' => {
-                    // ++*ptr;;
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(2, 0));
-                    ops.push(Instruction::I32Const(1));
-                    ops.push(Instruction::I32Add);
-                    ops.push(Instruction::I32Store(2, 0));
-                }
-                '-' => {
-                    //	--*ptr;
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(2, 0));
-                    ops.push(Instruction::I32Const(1));
-                    ops.push(Instruction::I32Sub);
-                    ops.push(Instruction::I32Store(2, 0));
-                }
-                '.' => {
-                    //	putchar(*ptr);
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(2, 0));
-                    ops.push(Instruction::Call(import_output_byte_idx));
-                }
-                ',' => {
-                    //	*ptr=getchar();
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::Call(import_input_byte_idx));
-                    ops.push(Instruction::I32Store(2, 0));
-                }
+                //	++ptr/--ptr
+                x @ '>' | x @ '<' => ops.extend_from_slice(&[
+                    Instruction::LocalGet(0),
+                    Instruction::I32Const(4),
+                    if x == '>' {
+                        Instruction::I32Add
+                    } else {
+                        Instruction::I32Sub
+                    },
+                    Instruction::LocalSet(0),
+                ]),
+                // ++*ptr/--*ptr
+                x @ '+' | x @ '-' => ops.extend_from_slice(&[
+                    Instruction::LocalGet(0),
+                    Instruction::LocalGet(0),
+                    Instruction::I32Load(2, 0),
+                    Instruction::I32Const(1),
+                    if x == '+' {
+                        Instruction::I32Add
+                    } else {
+                        Instruction::I32Sub
+                    },
+                    Instruction::I32Store(2, 0),
+                ]),
+                //	putchar(*ptr)
+                '.' => ops.extend_from_slice(&[
+                    Instruction::LocalGet(0),
+                    Instruction::I32Load(2, 0),
+                    Instruction::Call(import_output_byte_idx),
+                ]),
+                //	*ptr=getchar()
+                ',' => ops.extend_from_slice(&[
+                    Instruction::LocalGet(0),
+                    Instruction::Call(import_input_byte_idx),
+                    Instruction::I32Store(2, 0),
+                ]),
+                //while (*ptr) {
                 '[' => {
-                    //while (*ptr) {
-                    ops.push(Instruction::Raw(BLOCK));
-                    ops.push(Instruction::Raw(EMPTY));
-                    ops.push(Instruction::Raw(LOOP));
-                    ops.push(Instruction::Raw(EMPTY));
-                    ops.push(Instruction::LocalGet(0));
-                    ops.push(Instruction::I32Load(2, 0));
-                    ops.push(Instruction::I32Const(0));
-                    ops.push(Instruction::I32Eq);
-                    ops.push(Instruction::BrIf(1));
+                    ops.extend_from_slice(&[
+                        Instruction::Raw(BLOCK),
+                        Instruction::Raw(EMPTY),
+                        Instruction::Raw(LOOP),
+                        Instruction::Raw(EMPTY),
+                        Instruction::LocalGet(0),
+                        Instruction::I32Load(2, 0),
+                        Instruction::I32Const(0),
+                        Instruction::I32Eq,
+                        Instruction::BrIf(1),
+                    ]);
                     bracket_check += 1;
                 }
                 ']' => {
                     // }
-                    ops.push(Instruction::Br(0));
-                    ops.push(Instruction::Raw(END));
-                    ops.push(Instruction::Raw(END));
+                    ops.extend_from_slice(&[
+                        Instruction::Br(0),
+                        Instruction::Raw(END),
+                        Instruction::Raw(END),
+                    ]);
                     bracket_check -= 1;
                 }
                 _ => (),
