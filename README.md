@@ -12,7 +12,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust ba
 
 ```rust
 [dependencies]
-watson = "0.8"
+watson = "0.9"
 ```
 
 # Usage
