@@ -342,13 +342,105 @@ impl Program {
                 instructions: Vec::new(),
             });
             let idx = s.code_blocks.len() - 1;
-            Ok((&mut s.code_blocks[idx], idx))
+            Ok((&mut s.code_blocks[idx], import_count + func_index))
         } else {
             unreachable!()
         }
     }
 
-    fn ensure_memories<'a>(&'a mut self) -> (&'a mut MemorySection, usize) {
+    pub fn create_function<'a>(
+        &'a mut self,
+        inputs: &[ValueType],
+        outputs: &[ValueType],
+    ) -> Result<(&'a mut CodeBlock, usize), &'static str> {
+        let import_count = {
+            let (import_section, _) = self.ensure_imports();
+            import_section.imports.len()
+        };
+        let type_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(x, Section::Type(_)))
+        {
+            Some(x) => x,
+            None => {
+                self.sections
+                    .push(Section::Type(TypeSection { types: Vec::new() }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        let type_index = if let Section::Type(s) = type_section {
+            match s
+                .types
+                .iter()
+                .enumerate()
+                .find(|x| x.1.inputs == inputs && x.1.outputs == outputs)
+            {
+                Some(x) => x.0,
+                None => {
+                    s.types.push(FunctionType {
+                        inputs: inputs.to_vec(),
+                        outputs: outputs.to_vec(),
+                    });
+                    s.types.len() - 1
+                }
+            }
+        } else {
+            unreachable!()
+        };
+
+        let function_section = match self
+            .sections
+            .iter_mut()
+            .find(|x| matches!(x, Section::Function(_)))
+        {
+            Some(x) => x,
+            None => {
+                self.sections.push(Section::Function(FunctionSection {
+                    function_types: Vec::new(),
+                }));
+                let len = self.sections.len() - 1;
+                &mut self.sections[len]
+            }
+        };
+
+        let func_index = if let Section::Function(s) = function_section {
+            s.function_types.push(type_index);
+            s.function_types.len() - 1
+        } else {
+            unreachable!()
+        };
+
+        let code_section_index = match self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|x| matches!(x, (_, Section::Code(_))))
+        {
+            Some(x) => x.0,
+            None => {
+                self.sections.push(Section::Code(CodeSection {
+                    code_blocks: Vec::new(),
+                }));
+                self.sections.len() - 1
+            }
+        };
+
+        if let Section::Code(s) = &mut self.sections[code_section_index] {
+            s.code_blocks.push(CodeBlock {
+                locals: Vec::new(),
+                instructions: Vec::new(),
+            });
+            let idx = s.code_blocks.len() - 1;
+            Ok((&mut s.code_blocks[idx], import_count + func_index))
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn ensure_memories(&mut self) -> (&mut MemorySection, usize) {
         let idx = match self
             .sections
             .iter()
@@ -363,13 +455,13 @@ impl Program {
             }
         };
         if let Section::Memory(s) = &mut self.sections[idx] {
-            return (s, idx);
+            (s, idx)
         } else {
             unreachable!();
         }
     }
 
-    fn ensure_imports<'a>(&'a mut self) -> (&'a mut ImportSection, usize) {
+    fn ensure_imports(&mut self) -> (&mut ImportSection, usize) {
         let idx = match self
             .sections
             .iter()
@@ -384,13 +476,13 @@ impl Program {
             }
         };
         if let Section::Import(s) = &mut self.sections[idx] {
-            return (s, idx);
+            (s, idx)
         } else {
             unreachable!();
         }
     }
 
-    fn ensure_exports<'a>(&'a mut self) -> (&'a mut ExportSection, usize) {
+    fn ensure_exports(&mut self) -> (&mut ExportSection, usize) {
         let idx = match self
             .sections
             .iter()
@@ -405,7 +497,7 @@ impl Program {
             }
         };
         if let Section::Export(s) = &mut self.sections[idx] {
-            return (s, idx);
+            (s, idx)
         } else {
             unreachable!();
         }
