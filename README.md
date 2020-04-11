@@ -57,12 +57,12 @@ async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
                     }
                     let text = from_utf8(&chars).unwrap();
                     println!("{}", text);
+                    ExecutionResponse::DoNothing
                 } else if x.name == "sleep" {
                     let start = x.params[0].to_i32() as usize;
                     task::sleep(Duration::from_secs(1)).await;
+                    ExecutionResponse::DoNothing
                 }
-                // handle a call to an import
-                ExecutionResponse {}
             }
             // if there's nothing left to do, break out of loop
             ExecutionUnit::Complete => break,
