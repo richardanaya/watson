@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let program = watson::parse(&buffer)?;
         task::block_on(run(program))?;
     } else {
-        eprintln!("bfi <app.wasm>");
+        eprintln!("wasm_interpreter <app.wasm>");
         exit(1);
     }
     Ok(())
