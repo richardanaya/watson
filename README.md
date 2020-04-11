@@ -59,8 +59,8 @@ async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
                     println!("{}", text);
                     ExecutionResponse::DoNothing
                 } else if x.name == "sleep" {
-                    let start = x.params[0].to_i32() as usize;
-                    task::sleep(Duration::from_secs(1)).await;
+                    let milliseconds = x.params[0].to_i32() as usize;
+                    task::sleep(Duration::from_millis(milliseconds)).await;
                     ExecutionResponse::DoNothing
                 } else {
                     panic!("unknown import call");
