@@ -5,8 +5,10 @@ pub struct Interpreter<'a> {
     program: Box<dyn InterperableProgram + 'a>,
 }
 
+pub struct ImportCall;
 pub struct ExecutionResponse;
 pub enum ExecutionUnit {
+    CallImport(ImportCall),
     Complete,
 }
 

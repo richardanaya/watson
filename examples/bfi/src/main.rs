@@ -10,10 +10,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         interpreter.call("main", &[]);
         loop {
             let mut executionUnit = interpreter.next();
-            match executionUnit {
+            let response = match executionUnit {
+                // if an import is called, figure out what to do
+                ExecutionUnit::CallImport(x) => {
+                    // handle a call to an import
+                    ExecutionResponse {}
+                }
+                // if there's nothing left to do, break out of loop
                 ExecutionUnit::Complete => break,
-            }
-            let response = executionUnit.evaluate();
+                // handle default
+                mut x @ _ => x.evaluate(),
+            };
             interpreter.execute(response);
         }
     } else {
