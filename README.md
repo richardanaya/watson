@@ -73,7 +73,6 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
         };
         interpreter.execute(response);
     }
-    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
