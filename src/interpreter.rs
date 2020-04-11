@@ -2,7 +2,7 @@ use crate::core::*;
 use alloc::boxed::Box;
 
 pub struct Interpreter<'a> {
-    program: Box<dyn InterperableProgram + 'a>,
+    program: Box<dyn InterpretableProgram + 'a>,
 }
 
 pub struct ImportCall;
@@ -12,12 +12,12 @@ pub enum ExecutionUnit {
     Complete,
 }
 
-pub trait InterperableProgram {}
+pub trait InterpretableProgram {}
 
-impl InterperableProgram for ProgramView<'_> {}
+impl InterpretableProgram for ProgramView<'_> {}
 
 impl<'a> Interpreter<'a> {
-    pub fn new(p: impl InterperableProgram + 'a) -> Self {
+    pub fn new(p: impl InterpretableProgram + 'a) -> Self {
         Interpreter {
             program: Box::new(p),
         }
