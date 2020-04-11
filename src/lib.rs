@@ -15,13 +15,10 @@ pub use crate::core::view::*;
 pub use crate::core::Instruction;
 pub use crate::core::Program;
 pub use crate::core::ProgramView;
+pub use crate::interpreter::*;
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<core::ProgramView<'p>, &'static str> {
     parser::wasm_module(input)
-}
-
-pub fn create_interpreter(p: core::Program) -> interpreter::Interpreter {
-    interpreter::Interpreter::from_program(p)
 }
 
 /// # Safety
