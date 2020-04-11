@@ -10,6 +10,16 @@ pub struct Interpreter<'a> {
 
 pub struct WasmValue;
 
+pub trait ToWasmValue {
+    fn to_wasm_value(&self) -> WasmValue;
+}
+
+impl ToWasmValue for i32 {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue
+    }
+}
+
 impl WasmValue {
     pub fn to_i32(&self) -> i32 {
         0
@@ -21,7 +31,11 @@ pub struct ImportCall {
     pub params: Vec<WasmValue>,
 }
 
-pub struct ExecutionResponse;
+pub enum ExecutionResponse {
+    DoNothing,
+    Values(Vec<WasmValue>),
+}
+
 pub enum ExecutionUnit {
     CallImport(ImportCall),
     Complete,
@@ -53,6 +67,6 @@ impl<'a> Interpreter<'a> {
 
 impl ExecutionUnit {
     pub fn evaluate(&mut self) -> ExecutionResponse {
-        ExecutionResponse
+        ExecutionResponse::DoNothing
     }
 }
