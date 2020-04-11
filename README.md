@@ -37,15 +37,18 @@ for s in program.sections.iter() {
 ```rust
 async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
     let mut interpreter = Interpreter::new(program);
-    interpreter.call("main", &[]);
+    interpreter.call("main", &[])?;
     loop {
-        let execution_unit = interpreter.next();
+        let execution_unit = interpreter.next()?;
         let response = match execution_unit {
             // if an import is called, figure out what to do
             ExecutionUnit::CallImport(x) => {
                 if x.name == "print" {
                     let start = x.params[0].to_i32() as usize;
-                    let mem = interpreter.memory();
+                    let mem = match interpreter.memory() {
+                        Ok(m) => m
+                        None => return Err("there should be memory")
+                    };
                     let mut chars = vec![];
                     let mut i = 0;
                     loop {
@@ -71,7 +74,7 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
             // handle default
             mut x @ _ => x.evaluate(),
         };
-        interpreter.execute(response);
+        interpreter.execute(response)?;
     }
 }
 
