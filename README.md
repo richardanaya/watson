@@ -35,7 +35,7 @@ for s in program.sections.iter() {
 **this is in progress**
 
 ```rust
-async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
+async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
     let mut interpreter = Interpreter::new(program);
     interpreter.call("main", &[]);
     loop {
@@ -67,7 +67,7 @@ async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
                 }
             }
             // if there's nothing left to do, break out of loop
-            ExecutionUnit::Complete => break,
+            ExecutionUnit::Complete(v) => break Ok(v),
             // handle default
             mut x @ _ => x.evaluate(),
         };
