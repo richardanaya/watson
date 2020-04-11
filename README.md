@@ -15,7 +15,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust ba
 watson = "0.9"
 ```
 
-# Usage
+# Parse a web assembly module
 
 ```rust
 use  watson::*;
@@ -28,6 +28,45 @@ for s in program.sections.iter() {
    }
 }
 ...
+```
+
+# Write an interpreter
+
+```rust
+let buffer = fs::read(my_file_path)?;
+let program = watson::parse(&buffer)?;
+let mut interpreter = Interpreter::new(program);
+interpreter.call("main", &[]);
+loop {
+   let mut execution_unit = interpreter.next();
+   let response = match execution_unit {
+      // if an import is called, figure out what to do
+      ExecutionUnit::CallImport(x) => {
+            if x.name == "print" {
+               let start = x.params[0].to_i32() as usize;
+               let mem = interpreter.memory();
+               let mut chars = vec![];
+               let mut i = 0;
+               loop {
+                  if mem[i] == 0 {
+                        break;
+                  }
+                  chars.push(mem[start+i]);
+                  i += 1;
+               }
+               let text = from_utf8(&chars).unwrap();
+               println!("{}", text);
+            }
+            // handle a call to an import
+            ExecutionResponse {}
+      }
+      // if there's nothing left to do, break out of loop
+      ExecutionUnit::Complete => break,
+      // handle default
+      mut x @ _ => x.evaluate(),
+   };
+   interpreter.execute(response);
+}
 ```
 
 # License
