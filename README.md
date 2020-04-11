@@ -62,6 +62,8 @@ async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
                     let start = x.params[0].to_i32() as usize;
                     task::sleep(Duration::from_secs(1)).await;
                     ExecutionResponse::DoNothing
+                } else {
+                    panic!("unknown import call");
                 }
             }
             // if there's nothing left to do, break out of loop
