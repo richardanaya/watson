@@ -38,7 +38,7 @@ pub enum ExecutionResponse {
 
 pub enum ExecutionUnit {
     CallImport(ImportCall),
-    Complete,
+    Complete(Vec<WasmValue>),
 }
 
 pub trait InterpretableProgram {}
@@ -52,21 +52,25 @@ impl<'a> Interpreter<'a> {
             program: Box::new(p),
         }
     }
-    pub fn call(&mut self, name: &str, params: &[ValueType]) {}
-
-    pub fn next(&self) -> ExecutionUnit {
-        ExecutionUnit::Complete
+    pub fn call(&mut self, name: &str, params: &[ValueType]) -> Result<(), &'static str> {
+        Ok(())
     }
 
-    pub fn execute(&mut self, _: ExecutionResponse) {}
+    pub fn next(&self) -> Result<ExecutionUnit, &'static str> {
+        Ok(ExecutionUnit::Complete(vec![]))
+    }
 
-    pub fn memory(&mut self) -> &mut [u8] {
-        &mut self.memory
+    pub fn execute(&mut self, _: ExecutionResponse) -> Result<(), &'static str> {
+        Ok(())
+    }
+
+    pub fn memory(&mut self) -> Option<&mut [u8]> {
+        Some(&mut self.memory)
     }
 }
 
 impl ExecutionUnit {
-    pub fn evaluate(&mut self) -> ExecutionResponse {
-        ExecutionResponse::DoNothing
+    pub fn evaluate(&mut self) -> Result<ExecutionResponse,&'static str> {
+        Ok(ExecutionResponse::DoNothing)
     }
 }

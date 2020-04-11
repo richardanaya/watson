@@ -4,17 +4,20 @@ use std::time::Duration;
 use std::{env, error::Error, fs, process::exit};
 use watson::*;
 
-async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
+async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
     let mut interpreter = Interpreter::new(program);
-    interpreter.call("main", &[]);
+    interpreter.call("main", &[])?;
     loop {
-        let execution_unit = interpreter.next();
+        let execution_unit = interpreter.next()?;
         let response = match execution_unit {
             // if an import is called, figure out what to do
             ExecutionUnit::CallImport(x) => {
                 if x.name == "print" {
                     let start = x.params[0].to_i32() as usize;
-                    let mem = interpreter.memory();
+                    let mem = match interpreter.memory() {
+                        Some(m) => m,
+                        None => return Err("there should be memory"),
+                    };
                     let mut chars = vec![];
                     let mut i = 0;
                     loop {
@@ -36,13 +39,12 @@ async fn run(program: impl InterpretableProgram) -> Result<(), &'static str> {
                 }
             }
             // if there's nothing left to do, break out of loop
-            ExecutionUnit::Complete => break,
+            ExecutionUnit::Complete(v) => break Ok(v),
             // handle default
-            mut x @ _ => x.evaluate(),
+            mut x @ _ => x.evaluate()?,
         };
-        interpreter.execute(response);
+        interpreter.execute(response)?;
     }
-    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
