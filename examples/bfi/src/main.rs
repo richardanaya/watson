@@ -4,9 +4,9 @@ use watson::*;
 
 fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
     let mut interpreter = Interpreter::new(program);
-    interpreter.call("main", &[])?;
+    let mut executor = interpreter.call("main", &[])?;
     loop {
-        let execution_unit = interpreter.next()?;
+        let execution_unit = executor.next()?;
         let response: ExecutionResponse = match execution_unit {
             // if an import is called, figure out what to do
             ExecutionUnit::CallImport(x) => {
@@ -26,7 +26,7 @@ fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static st
             // handle default
             mut x @ _ => x.evaluate()?,
         };
-        interpreter.execute(response)?;
+        executor.execute(response)?;
     }
 }
 
