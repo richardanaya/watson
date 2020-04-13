@@ -72,7 +72,7 @@ impl InterpretableProgram for ProgramView<'_> {
                 let l: Vec<_> = import_section
                     .imports
                     .iter()
-                    .filter(|x| matches!(x, WasmImportView::Function(x)))
+                    .filter(|x| matches!(x, WasmImportView::Function(_)))
                     .collect();
                 if index < l.len() {
                     if let WasmImportView::Function(x) = l[index] {
@@ -108,7 +108,7 @@ impl InterpretableProgram for ProgramView<'_> {
     fn initial_memory_size(&self) -> usize {
         for s in self.sections.iter() {
             if let SectionView::Memory(m) = s {
-                if m.memories.len() > 0 {
+                if !m.memories.is_empty() {
                     return m.memories[0].min_pages * 1024;
                 }
             }
@@ -122,7 +122,7 @@ impl InterpretableProgram for ProgramView<'_> {
                 let l: Vec<_> = import_section
                     .imports
                     .iter()
-                    .filter(|x| matches!(x, WasmImportView::Function(x)))
+                    .filter(|x| matches!(x, WasmImportView::Function(_)))
                     .collect();
                 return l.len();
             }
@@ -136,12 +136,12 @@ impl InterpretableProgram for ProgramView<'_> {
             .sections
             .iter()
             .enumerate()
-            .find(|(i, x)| matches!(x, SectionView::Code(x)));
+            .find(|(_, x)| matches!(x, SectionView::Code(_)));
         let code_section_idx = match result {
             Some((i, _)) => i,
             None => return Err("Code section did not exist"),
         };
-        for (i, s) in self.sections.iter().enumerate() {
+        for s in self.sections.iter() {
             if let SectionView::Export(export_section) = s {
                 for e in export_section.exports.iter() {
                     if let WasmExportView::Function(f) = e {
@@ -175,7 +175,7 @@ impl InterpretableProgram for ProgramView<'_> {
                 Ok(None)
             }
         } else {
-            return Err("cannot find code section");
+            Err("cannot find code section")
         }
     }
 }
@@ -268,13 +268,11 @@ impl<'a> WasmExecutor for WasmExecution<'a> {
     fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
             ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack),
-            ExecutionResponse::AddValues(mut v) => loop {
-                if let Some(wv) = v.pop() {
+            ExecutionResponse::AddValues(mut v) => {
+                while let Some(wv) = v.pop() {
                     self.value_stack.push(wv);
-                } else {
-                    break;
                 }
-            },
+            }
             ExecutionResponse::DoNothing => {}
         }
         Ok(())
