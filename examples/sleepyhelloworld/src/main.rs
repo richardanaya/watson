@@ -5,7 +5,7 @@ use std::{env, error::Error, fs, process::exit};
 use watson::*;
 
 async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
-    let mut interpreter = Interpreter::new(program);
+    let mut interpreter = Interpreter::new(program)?;
     let mut executor = interpreter.call("main", &[])?;
     loop {
         let execution_unit = executor.next()?;
@@ -22,7 +22,7 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
                     let mut chars = vec![];
                     let mut i = 0;
                     loop {
-                        if mem[i] == 0 {
+                        if mem[start + i] == 0 {
                             break;
                         }
                         chars.push(mem[start + i]);
