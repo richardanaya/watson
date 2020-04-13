@@ -36,23 +36,24 @@ for s in program.sections.iter() {
 
 ```rust
 async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
-    let mut interpreter = Interpreter::new(program);
-    interpreter.call("main", &[])?;
+    let mut interpreter = Interpreter::new(program)?;
+    let mut executor = interpreter.call("main", &[])?;
     loop {
-        let execution_unit = interpreter.next()?;
+        let execution_unit = executor.next()?;
         let response = match execution_unit {
             // if an import is called, figure out what to do
             ExecutionUnit::CallImport(x) => {
                 if x.name == "print" {
                     let start = x.params[0].to_i32() as usize;
-                    let mem = match interpreter.memory() {
-                        Ok(m) => m
-                        None => return Err("there should be memory")
+                    let mem = match executor.memory() {
+                        Some(m) => m,
+                        None => return Err("there should be memory"),
                     };
+                    let mem = mem.borrow();
                     let mut chars = vec![];
                     let mut i = 0;
                     loop {
-                        if mem[i] == 0 {
+                        if mem[start + i] == 0 {
                             break;
                         }
                         chars.push(mem[start + i]);
@@ -62,19 +63,19 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
                     println!("{}", text);
                     ExecutionResponse::DoNothing
                 } else if x.name == "sleep" {
-                    let milliseconds = x.params[0].to_i32() as usize;
-                    task::sleep(Duration::from_millis(milliseconds)).await;
+                    let start = x.params[0].to_i32() as usize;
+                    task::sleep(Duration::from_secs(1)).await;
                     ExecutionResponse::DoNothing
                 } else {
-                    panic!("unknown import call");
+                    panic!("unknown import call")
                 }
             }
             // if there's nothing left to do, break out of loop
             ExecutionUnit::Complete(v) => break Ok(v),
-            // handle default
-            mut x @ _ => x.evaluate(),
+            // handle other execution with default behavior
+            mut x @ _ => x.evaluate()?,
         };
-        interpreter.execute(response)?;
+        executor.execute(response)?;
     }
 }
 
@@ -85,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let program = watson::parse(&buffer)?;
         task::block_on(run(program))?;
     } else {
-        eprintln!("wasm_interpreter <app.wasm>");
+        eprintln!("sleepyprint <app.wasm>");
         exit(1);
     }
     Ok(())

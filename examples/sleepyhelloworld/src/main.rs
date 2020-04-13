@@ -41,7 +41,7 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
             }
             // if there's nothing left to do, break out of loop
             ExecutionUnit::Complete(v) => break Ok(v),
-            // handle default
+            // handle other execution units with defaul behavior
             mut x @ _ => x.evaluate()?,
         };
         executor.execute(response)?;
