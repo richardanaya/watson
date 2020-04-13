@@ -72,7 +72,7 @@ sync fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'stat
             }
             // if there's nothing left to do, break out of loop
             ExecutionUnit::Complete(v) => break Ok(v),
-            // handle default
+            // handle other execution with default behavior
             mut x @ _ => x.evaluate()?,
         };
         executor.execute(response)?;
