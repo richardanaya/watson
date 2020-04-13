@@ -35,7 +35,7 @@ for s in program.sections.iter() {
 **this is in progress**
 
 ```rust
-sync fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
+async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'static str> {
     let mut interpreter = Interpreter::new(program)?;
     let mut executor = interpreter.call("main", &[])?;
     loop {
