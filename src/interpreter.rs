@@ -13,6 +13,9 @@ pub struct Interpreter<'a> {
 #[derive(Clone, Debug)]
 pub enum WasmValue {
     I32(i32),
+    I64(i64),
+    F32(f32),
+    F64(f64),
 }
 
 pub trait ToWasmValue {
@@ -25,10 +28,58 @@ impl ToWasmValue for i32 {
     }
 }
 
+impl ToWasmValue for i64 {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue::I64(*self)
+    }
+}
+
+impl ToWasmValue for f32 {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue::F32(*self)
+    }
+}
+
+impl ToWasmValue for f64 {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue::F64(*self)
+    }
+}
+
 impl WasmValue {
     pub fn to_i32(&self) -> i32 {
         match self {
             WasmValue::I32(i) => *i,
+            WasmValue::I64(i) => *i as i32,
+            WasmValue::F32(i) => *i as i32,
+            WasmValue::F64(i) => *i as i32,
+        }
+    }
+
+    pub fn to_i64(&self) -> i64 {
+        match self {
+            WasmValue::I32(i) => *i as i64,
+            WasmValue::I64(i) => *i,
+            WasmValue::F32(i) => *i as i64,
+            WasmValue::F64(i) => *i as i64,
+        }
+    }
+
+    pub fn to_f32(&self) -> f32 {
+        match self {
+            WasmValue::I32(i) => *i as f32,
+            WasmValue::I64(i) => *i as f32,
+            WasmValue::F32(i) => *i,
+            WasmValue::F64(i) => *i as f32,
+        }
+    }
+
+    pub fn to_f64(&self) -> f64 {
+        match self {
+            WasmValue::I32(i) => *i as f64,
+            WasmValue::I64(i) => *i as f64,
+            WasmValue::F32(i) => *i as f64,
+            WasmValue::F64(i) => *i,
         }
     }
 }

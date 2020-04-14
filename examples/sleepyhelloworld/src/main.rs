@@ -32,8 +32,8 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
                     println!("{}", text);
                     ExecutionResponse::DoNothing
                 } else if x.name == "sleep" {
-                    let start = x.params[0].to_i32() as usize;
-                    task::sleep(Duration::from_secs(1)).await;
+                    let millis = x.params[0].to_i32();
+                    task::sleep(Duration::from_millis(millis as u64)).await;
                     ExecutionResponse::DoNothing
                 } else {
                     panic!("unknown import call")
@@ -41,7 +41,7 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
             }
             // if there's nothing left to do, break out of loop
             ExecutionUnit::Complete(v) => break Ok(v),
-            // handle other execution units with defaul behavior
+            // handle other execution units with default behavior
             mut x @ _ => x.evaluate()?,
         };
         executor.execute(response)?;
