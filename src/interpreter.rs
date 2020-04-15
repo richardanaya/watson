@@ -6,7 +6,7 @@ use core::cell::RefCell;
 
 pub struct Interpreter<T>
 where
-    T: InterpretableProgram + Sized,
+    T: InterpretableProgram,
 {
     pub memory: Rc<RefCell<Vec<u8>>>,
     pub program: Rc<RefCell<T>>,
@@ -241,7 +241,7 @@ pub trait WasmExecutor {
 
 impl<T> Interpreter<T>
 where
-    T: InterpretableProgram + Sized,
+    T: InterpretableProgram,
 {
     pub fn new(p: T) -> Result<Self, &'static str> {
         let mem_size = p.initial_memory_size();
@@ -271,7 +271,7 @@ where
 
 pub struct WasmExecution<T>
 where
-    T: InterpretableProgram + Sized,
+    T: InterpretableProgram,
 {
     import_fn_count: usize,
     pub value_stack: Vec<WasmValue>,
@@ -282,7 +282,7 @@ where
 
 impl<T> WasmExecutor for WasmExecution<T>
 where
-    T: InterpretableProgram + Sized,
+    T: InterpretableProgram,
 {
     fn next(&mut self) -> Result<ExecutionUnit, &'static str> {
         let p = self.program.borrow();
