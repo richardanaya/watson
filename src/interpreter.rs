@@ -1,13 +1,15 @@
 use crate::core::*;
-use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::cell::RefCell;
 
-pub struct Interpreter<'a> {
+pub struct Interpreter<T>
+where
+    T: InterpretableProgram + Sized,
+{
     pub memory: Rc<RefCell<Vec<u8>>>,
-    pub program: Rc<RefCell<dyn InterpretableProgram + 'a>>,
+    pub program: Rc<RefCell<T>>,
 }
 
 #[derive(Clone, Debug)]
@@ -237,8 +239,11 @@ pub trait WasmExecutor {
     fn memory(&mut self) -> Option<Rc<RefCell<Vec<u8>>>>;
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(p: impl InterpretableProgram + 'a) -> Result<Self, &'static str> {
+impl<T> Interpreter<T>
+where
+    T: InterpretableProgram + Sized,
+{
+    pub fn new(p: T) -> Result<Self, &'static str> {
         let mem_size = p.initial_memory_size();
         let mut mem = vec![0; mem_size];
         p.load_data_into_memory(&mut mem)?;
@@ -251,28 +256,34 @@ impl<'a> Interpreter<'a> {
         &mut self,
         name: &str,
         params: &[WasmValue],
-    ) -> Result<Box<(dyn WasmExecutor + 'a)>, &'static str> {
+    ) -> Result<WasmExecution<T>, &'static str> {
         let (section_index, function_index) = self.program.borrow().fetch_export_fn_index(name)?;
         let import_fn_count = self.program.borrow().import_fn_count();
-        Ok(Box::new(WasmExecution {
+        Ok(WasmExecution {
             import_fn_count,
             value_stack: params.to_vec(),
             current_position: vec![section_index, function_index],
             memory: self.memory.clone(),
             program: self.program.clone(),
-        }))
+        })
     }
 }
 
-struct WasmExecution<'a> {
+pub struct WasmExecution<T>
+where
+    T: InterpretableProgram + Sized,
+{
     import_fn_count: usize,
     pub value_stack: Vec<WasmValue>,
     pub current_position: Vec<usize>,
     pub memory: Rc<RefCell<Vec<u8>>>,
-    pub program: Rc<RefCell<dyn InterpretableProgram + 'a>>,
+    pub program: Rc<RefCell<T>>,
 }
 
-impl<'a> WasmExecutor for WasmExecution<'a> {
+impl<T> WasmExecutor for WasmExecution<T>
+where
+    T: InterpretableProgram + Sized,
+{
     fn next(&mut self) -> Result<ExecutionUnit, &'static str> {
         let p = self.program.borrow();
         if self.current_position.len() == 2 {
