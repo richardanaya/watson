@@ -251,15 +251,7 @@ where
         name: &str,
         params: &[WasmValue],
     ) -> Result<WasmExecution<T>, &'static str> {
-        let (section_index, function_index) = self.program.borrow().fetch_export_fn_index(name)?;
-        let import_fn_count = self.program.borrow().import_fn_count();
-        Ok(WasmExecution {
-            import_fn_count,
-            value_stack: params.to_vec(),
-            current_position: vec![section_index, function_index],
-            memory: self.memory.clone(),
-            program: self.program.clone(),
-        })
+        WasmExecution::new(name, params, self.program.clone(), self.memory.clone())
     }
 }
 
@@ -278,6 +270,24 @@ impl<T> WasmExecution<T>
 where
     T: InterpretableProgram,
 {
+    pub fn new(
+        name: &str,
+        params: &[WasmValue],
+        program: Rc<RefCell<T>>,
+        memory: Rc<RefCell<Vec<u8>>>,
+    ) -> Result<Self, &'static str> {
+        let p = program.borrow();
+        let (section_index, function_index) = p.fetch_export_fn_index(name)?;
+        let import_fn_count = p.import_fn_count();
+        Ok(WasmExecution {
+            import_fn_count,
+            value_stack: params.to_vec(),
+            current_position: vec![section_index, function_index],
+            memory,
+            program: program.clone(),
+        })
+    }
+
     pub fn next_unit(&mut self) -> Result<ExecutionUnit, &'static str> {
         let p = self.program.borrow();
         if self.current_position.len() == 2 {
