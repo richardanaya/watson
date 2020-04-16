@@ -8,7 +8,7 @@ async fn run(program: impl InterpretableProgram) -> Result<Vec<WasmValue>, &'sta
     let mut interpreter = Interpreter::new(program)?;
     let mut executor = interpreter.call("main", &[])?;
     loop {
-        let execution_unit = executor.next()?;
+        let execution_unit = executor.next_unit()?;
         let response = match execution_unit {
             // if an import is called, figure out what to do
             ExecutionUnit::CallImport(x) => {
