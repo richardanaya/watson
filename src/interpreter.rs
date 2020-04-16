@@ -233,12 +233,6 @@ impl InterpretableProgram for ProgramView<'_> {
     }
 }
 
-pub trait WasmExecutor {
-    fn next(&mut self) -> Result<ExecutionUnit, &'static str>;
-    fn execute(&mut self, _: ExecutionResponse) -> Result<(), &'static str>;
-    fn memory(&mut self) -> Option<Rc<RefCell<Vec<u8>>>>;
-}
-
 impl<T> Interpreter<T>
 where
     T: InterpretableProgram,
@@ -280,11 +274,11 @@ where
     pub program: Rc<RefCell<T>>,
 }
 
-impl<T> WasmExecutor for WasmExecution<T>
+impl<T> WasmExecution<T>
 where
     T: InterpretableProgram,
 {
-    fn next(&mut self) -> Result<ExecutionUnit, &'static str> {
+    pub fn next_unit(&mut self) -> Result<ExecutionUnit, &'static str> {
         let p = self.program.borrow();
         if self.current_position.len() == 2 {
             self.current_position.push(0);
@@ -327,7 +321,7 @@ where
         }
     }
 
-    fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
+    pub fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
             ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack),
             ExecutionResponse::AddValues(mut v) => {
@@ -340,7 +334,7 @@ where
         Ok(())
     }
 
-    fn memory(&mut self) -> Option<Rc<RefCell<Vec<u8>>>> {
+    pub fn memory(&mut self) -> Option<Rc<RefCell<Vec<u8>>>> {
         Some(self.memory.clone())
     }
 }
