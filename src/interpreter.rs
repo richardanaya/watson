@@ -116,6 +116,7 @@ pub trait InterpretableProgram {
         &'a self,
         position: &[usize],
     ) -> Result<Option<&'a Instruction>, &'static str>;
+    fn create_locals(&self, position: &[usize]) -> Result<Vec<WasmValue>, &'static str>;
 }
 
 impl InterpretableProgram for ProgramView<'_> {
@@ -231,6 +232,27 @@ impl InterpretableProgram for ProgramView<'_> {
             Err("cannot find code section")
         }
     }
+
+    fn create_locals(&self, position: &[usize]) -> Result<Vec<WasmValue>, &'static str> {
+        let mut locals = vec![];
+        if let SectionView::Code(code_section) = &self.sections[position[0]] {
+            let b = &code_section.code_blocks[position[1]];
+            for l in b.locals.iter() {
+                for _ in 0..l.count {
+                    let v = match l.value_type {
+                        ValueType::I32 => 0i32.to_wasm_value(),
+                        ValueType::I64 => 0i64.to_wasm_value(),
+                        ValueType::F32 => 0f32.to_wasm_value(),
+                        ValueType::F64 => 0f64.to_wasm_value(),
+                    };
+                    locals.push(v);
+                }
+            }
+        } else {
+            return Err("cannot find code section");
+        }
+        Ok(locals)
+    }
 }
 
 impl<T> Interpreter<T>
@@ -260,6 +282,7 @@ where
     T: InterpretableProgram,
 {
     import_fn_count: usize,
+    pub call_stack: (usize, Vec<WasmValue>),
     pub value_stack: Vec<WasmValue>,
     pub current_position: Vec<usize>,
     pub memory: Rc<RefCell<Vec<u8>>>,
@@ -278,11 +301,14 @@ where
     ) -> Result<Self, &'static str> {
         let p = program.borrow();
         let (section_index, function_index) = p.fetch_export_fn_index(name)?;
+        let position = vec![section_index, function_index];
+        let locals = p.create_locals(&position)?;
         let import_fn_count = p.import_fn_count();
         Ok(WasmExecution {
+            call_stack: (function_index, locals),
             import_fn_count,
             value_stack: params.to_vec(),
-            current_position: vec![section_index, function_index],
+            current_position: position,
             memory,
             program: program.clone(),
         })
