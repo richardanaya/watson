@@ -3,7 +3,7 @@
         <title>Web Assembly Interpreter</title>
         <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
         <style>
-            html,body {
+            html,body, input {
                 font-family: 'VT323', monospace;
                 font-size: 32px;
             }
@@ -33,6 +33,8 @@
 
             .loader {
                 text-align: left;
+                width: 450px;
+                margin-top: 100px;
             }
 
             .loader input {
@@ -60,18 +62,24 @@
                 cursor: pointer;
                 margin-top: 5px;
             }
+
+            .hidden {
+                display: none;
+            }
         </style>
     </head>
     <body>
         <center>
-        <div class="loader">URL: <input type="text"/><div class="btn">Run</div></div>
-        <div class="interpreter">
+        <div class="loader">
+            Welcome to <b>Wasm Interpreter</b><br/>
+            .wasm URL: <input type="text" value="test.wasm"> <div class="btn" id="run">Run</div></div>
+        <div class="interpreter hidden">
             <div><b>Call Stack:</b> main -> 12</div>
             <div><b>Locals:</b> <span class="index">L0</span> 1 <span class="index">L1</span> 3</div>
             <div><b>Value Stack:</b> <span class="index">L2</span> 1 <span class="index">L3</span> 0 <span class="index">L5</span> 1.2</div>
             <div class="btn">Next</div>
         </div>
-        <div class="section_code">
+        <div class="section_code hidden">
             <div class="function">
                 <b>foo:</b>
                 <div class="instructions">
@@ -143,4 +151,11 @@
         </div>
         </center>
     </body>
+    <script>
+        document.querySelector("#run").addEventListener("click", function(){
+            document.querySelector(".loader").classList.add("hidden");
+            document.querySelector(".interpreter").classList.remove("hidden");
+            document.querySelector(".section_code").classList.remove("hidden");
+        })
+    </script>
 </html>
