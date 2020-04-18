@@ -3,6 +3,7 @@ use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::convert::TryInto;
 
 pub struct Interpreter<T>
 where
@@ -22,6 +23,18 @@ pub enum WasmValue {
 
 pub trait ToWasmValue {
     fn to_wasm_value(&self) -> WasmValue;
+}
+
+impl ToWasmValue for usize {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue::I32(*self as i32)
+    }
+}
+
+impl ToWasmValue for u32 {
+    fn to_wasm_value(&self) -> WasmValue {
+        WasmValue::I32((*self as u32).try_into().unwrap())
+    }
 }
 
 impl ToWasmValue for i32 {
@@ -99,12 +112,15 @@ pub enum ExecutionResponse {
     ValueStackModification(fn(&mut Vec<WasmValue>) -> Result<(), &'static str>),
     GetRegister(u32),
     SetRegister(u32),
+    ThrowError(&'static str),
+    GetMemorySize,
 }
 
 #[derive(Debug)]
 pub enum ExecutionUnit {
     CallImport(ImportCall),
     BasicInstruction(Instruction),
+    Unreachable,
     Complete(Vec<WasmValue>),
 }
 
@@ -348,6 +364,7 @@ where
                         return Err("cannot call non-imports yet");
                     }
                 }
+                Instruction::Unreachable => ExecutionUnit::Unreachable,
                 x => ExecutionUnit::BasicInstruction(x.clone()),
             };
             Ok(unit)
@@ -359,6 +376,9 @@ where
 
     pub fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
+            ExecutionResponse::GetMemorySize => self
+                .value_stack
+                .push(self.memory.borrow().len().to_wasm_value()),
             ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack)?,
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
@@ -375,6 +395,7 @@ where
                     return Err("can't set register because value stack is empty");
                 }
             }
+            ExecutionResponse::ThrowError(msg) => return Err(msg),
             ExecutionResponse::DoNothing => {}
         }
         Ok(())
@@ -388,16 +409,15 @@ where
 impl ExecutionUnit {
     pub fn evaluate(&mut self) -> Result<ExecutionResponse, &'static str> {
         let response = match self {
+            ExecutionUnit::Unreachable => ExecutionResponse::ThrowError("Reached unreachable"),
             ExecutionUnit::BasicInstruction(i) => match i {
                 Instruction::Raw(b) => {
-                    return Err("no default evaluation for basic instruction yet");
+                    return Err("Cannot handle raw instruction.");
                 }
                 Instruction::Unreachable => {
-                    return Err("no default evaluation for basic instruction yet");
+                    return Err("Cannot handle unreachable.");
                 }
-                Instruction::Nop => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::Nop => ExecutionResponse::DoNothing,
                 Instruction::Block(block_type, instructions) => {
                     return Err("no default evaluation for basic instruction yet");
                 }
@@ -420,7 +440,7 @@ impl ExecutionUnit {
                     return Err("no default evaluation for basic instruction yet");
                 }
                 Instruction::Call(i) => {
-                    return Err("no default evaluation for basic instruction yet");
+                    return Err("Cannot handle call.");
                 }
                 Instruction::CallIndirect(i) => {
                     return Err("no default evaluation for basic instruction yet");
@@ -512,22 +532,14 @@ impl ExecutionUnit {
                 Instruction::I64Store32(align, offset) => {
                     return Err("no default evaluation for basic instruction yet");
                 }
-                Instruction::MemorySize => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::MemorySize => ExecutionResponse::GetMemorySize,
                 Instruction::MemoryGrow => {
                     return Err("no default evaluation for basic instruction yet");
                 }
                 Instruction::I32Const(i) => ExecutionResponse::AddValues(vec![i.to_wasm_value()]),
-                Instruction::I64Const(i) => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
-                Instruction::F32Const(f) => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
-                Instruction::F64Const(f) => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::I64Const(i) => ExecutionResponse::AddValues(vec![i.to_wasm_value()]),
+                Instruction::F32Const(f) => ExecutionResponse::AddValues(vec![f.to_wasm_value()]),
+                Instruction::F64Const(f) => ExecutionResponse::AddValues(vec![f.to_wasm_value()]),
                 Instruction::I32Eqz => {
                     return Err("no default evaluation for basic instruction yet");
                 }
