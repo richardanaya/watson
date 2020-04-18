@@ -66,6 +66,11 @@
             .hidden {
                 display: none;
             }
+
+            .valuetype {
+                color: lightgrey;
+                font-size: 20px;
+            }
         </style>
     </head>
     <body>
@@ -75,8 +80,9 @@
             .wasm URL: <input type="text" value="test.wasm"> <div class="btn" id="run">Run</div></div>
         <div class="interpreter hidden">
             <div><b>Call Stack:</b> main -> 12</div>
-            <div><b>Locals:</b> <span class="index">L0</span> 1 <span class="index">L1</span> 3</div>
-            <div><b>Value Stack:</b> <span class="index">L2</span> 1 <span class="index">L3</span> 0 <span class="index">L5</span> 1.2</div>
+            <div><b>Arguments:</b> <span class="index">L0</span> 1<span class="valuetype">i32</span> <span class="index">L1</span> 3<span class="valuetype">i32</span></div>
+            <div><b>Locals:</b> <span class="index">L2</span> 1<span class="valuetype">i32</span> <span class="index">L3</span> 0<span class="valuetype">i32</span> <span class="index">L4</span> 1.2<span class="valuetype">f32</span></div>
+            <div><b>Value Stack:</b> 1<span class="valuetype">i32</span> 2<span class="valuetype">i32</span> 4.4<span class="valuetype">f32</span> 1<span class="valuetype">i32</span></div>
             <div class="btn">Next</div>
         </div>
         <div class="section_code hidden">
