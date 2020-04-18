@@ -1,0 +1,145 @@
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+        <style>
+            html,body {
+                font-family: 'VT323', monospace;
+                font-size: 32px;
+            }
+
+            .section_code {
+                margin: 50px;
+                width: 350px;
+                margin-top: 200px;
+            }
+            
+            
+            .loader, .section_code, .interpreter {
+                text-align: left;
+                border: solid 3px black;
+                border-radius: 10px;
+                padding: 20px;
+            }
+
+            .interpreter {
+                position: fixed;
+                top: 0;
+                left: 0;
+                margin: 10px;
+                background: white;
+                width: auto;
+            }
+
+            .loader {
+                text-align: left;
+            }
+
+            .loader input {
+                width: 350px;
+            }
+
+            .instructions {
+                padding-left: 40px;
+                padding-bottom: 40px;
+            }
+
+            .instruction.selected {
+                background: green;
+                color: white;
+            }
+
+            .index {
+                color: blue;
+            }
+
+            .btn {
+                display: inline-block;
+                border: solid 3px black;
+                padding: 5px;
+                cursor: pointer;
+                margin-top: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <center>
+        <div class="loader">URL: <input type="text"/><div class="btn">Run</div></div>
+        <div class="interpreter">
+            <div><b>Call Stack:</b> main -> 12</div>
+            <div><b>Locals:</b> <span class="index">L0</span> 1 <span class="index">L1</span> 3</div>
+            <div><b>Value Stack:</b> <span class="index">L2</span> 1 <span class="index">L3</span> 0 <span class="index">L5</span> 1.2</div>
+            <div class="btn">Next</div>
+        </div>
+        <div class="section_code">
+            <div class="function">
+                <b>foo:</b>
+                <div class="instructions">
+                    <div class="instruction selected">I32Const</div>
+                </div>
+            </div>
+            <div class="function">
+                <b>main:</b>
+                <div class="instructions">
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                    <div class="instruction">I32Const</div>
+                </div>
+            </div>
+        </div>
+        </center>
+    </body>
+</html>
