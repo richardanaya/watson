@@ -96,7 +96,7 @@ pub struct ImportCall {
 pub enum ExecutionResponse {
     DoNothing,
     AddValues(Vec<WasmValue>),
-    ValueStackModification(fn(&mut Vec<WasmValue>) -> Result<(),&'static str>),
+    ValueStackModification(fn(&mut Vec<WasmValue>) -> Result<(), &'static str>),
     GetRegister(u32),
     SetRegister(u32),
 }
@@ -389,14 +389,514 @@ impl ExecutionUnit {
     pub fn evaluate(&mut self) -> Result<ExecutionResponse, &'static str> {
         let response = match self {
             ExecutionUnit::BasicInstruction(i) => match i {
+                Instruction::Raw(b) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Unreachable => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Nop => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Block(block_type, instructions) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Loop(block_type, instructions) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::If(block_type, if_instructions, else_instructions) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Br(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::BrIf(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::BrTable(labels, label_index) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Return => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::Call(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::CallIndirect(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
                 Instruction::Drop => ExecutionResponse::ValueStackModification(|stack| {
                     stack.pop();
                     Ok(())
                 }),
-                Instruction::I32Const(v) => ExecutionResponse::AddValues(vec![v.to_wasm_value()]),
-                Instruction::LocalGet(r) => ExecutionResponse::GetRegister(*r),
-                Instruction::LocalSet(r) => ExecutionResponse::SetRegister(*r),
-                _ => return Err("no default evaluation for basic instruction yet"),
+                Instruction::Select => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::LocalGet(i) => ExecutionResponse::GetRegister(*i),
+                Instruction::LocalSet(i) => ExecutionResponse::SetRegister(*i),
+                Instruction::LocalTee(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::GlobalGet(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::GlobalSet(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Load(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Load(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Load(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Load8S(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Load8U(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Load16S(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Load16U(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load8S(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load8U(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load16S(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load16U(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load32S(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Load32U(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Store(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Store(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Store(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Store(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Store8(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Store16(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Store8(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Store16(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Store32(align, offset) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::MemorySize => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::MemoryGrow => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Const(i) => ExecutionResponse::AddValues(vec![i.to_wasm_value()]),
+                Instruction::I64Const(i) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Const(f) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Const(f) => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Eqz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Eq => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Ne => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32LtS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32LtU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32GtS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32GtU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32LeS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32LeU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32GeS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32GeU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Eqz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Eq => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Ne => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64LtS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64LtU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64GtS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64GtU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64LeS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64LeU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64GeS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64GeU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Eq => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Ne => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Lt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Gt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Le => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Ge => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Eq => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Ne => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Lt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Gt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Le => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Ge => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Clz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Ctz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Popcnt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Add => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Sub => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Mul => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32DivS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32DivU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32RemS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32RemU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32And => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Or => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Xor => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Shl => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32ShrS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32ShrU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Rotl => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32Rotr => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Clz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Ctz => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Popcnt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Add => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Sub => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Mul => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64DivS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64DivU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64RemS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64RemU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64And => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Or => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Xor => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Shl => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64ShrS => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64ShrU => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Rotl => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64Rotr => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Abs => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Neg => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Ceil => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Floor => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Trunc => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Nearest => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Sqrt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Add => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Sub => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Mul => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Div => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Min => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Max => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32Copysign => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Abs => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Neg => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Ceil => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Floor => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Trunc => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Nearest => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Sqrt => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Add => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Sub => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Mul => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Div => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Min => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Max => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64Copysign => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32wrapF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32TruncSF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32TruncUF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32TruncSF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32TruncUF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64ExtendSI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64ExtendUI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64TruncSF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64TruncUF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64TruncSF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64TruncUF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32ConvertSI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32ConvertUI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32ConvertSI64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32ConvertUI64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32DemoteF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64ConvertSI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64ConvertUI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64ConvertSI64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64ConvertUI64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64PromoteF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I32ReinterpretF32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::I64ReinterpretF64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F32ReinterpretI32 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
+                Instruction::F64ReinterpretI64 => {
+                    return Err("no default evaluation for basic instruction yet");
+                }
             },
             _ => return Err("no default evaluation"),
         };
