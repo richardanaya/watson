@@ -96,7 +96,7 @@ pub struct ImportCall {
 pub enum ExecutionResponse {
     DoNothing,
     AddValues(Vec<WasmValue>),
-    ValueStackModification(fn(&mut Vec<WasmValue>)),
+    ValueStackModification(fn(&mut Vec<WasmValue>) -> Result<(),&'static str>),
     GetRegister(u32),
     SetRegister(u32),
 }
@@ -359,7 +359,7 @@ where
 
     pub fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
-            ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack),
+            ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack)?,
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
                     self.value_stack.push(wv);
@@ -391,6 +391,7 @@ impl ExecutionUnit {
             ExecutionUnit::BasicInstruction(i) => match i {
                 Instruction::Drop => ExecutionResponse::ValueStackModification(|stack| {
                     stack.pop();
+                    Ok(())
                 }),
                 Instruction::I32Const(v) => ExecutionResponse::AddValues(vec![v.to_wasm_value()]),
                 Instruction::LocalGet(r) => ExecutionResponse::GetRegister(*r),
