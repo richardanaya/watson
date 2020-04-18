@@ -15,7 +15,7 @@ pub enum Instruction {
     BrIf(u32),
     BrTable(Vec<u32>, u32),
     Return,
-    Call(usize),
+    Call(u32),
     CallIndirect(u32),
     Drop,
     Select,

@@ -12,7 +12,7 @@ where
     pub program: Rc<RefCell<T>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum WasmValue {
     I32(i32),
     I64(i64),
@@ -97,6 +97,8 @@ pub enum ExecutionResponse {
     DoNothing,
     AddValues(Vec<WasmValue>),
     ValueStackModification(fn(&mut Vec<WasmValue>)),
+    GetRegister(u32),
+    SetRegister(u32),
 }
 
 #[derive(Debug)]
@@ -326,8 +328,9 @@ where
         if let Some(instruction) = first_function_instruction {
             let unit = match instruction {
                 Instruction::Call(fn_index) => {
-                    if *fn_index < self.import_fn_count {
-                        let (module_name, name, param_ct) = p.import_fn_details(*fn_index)?;
+                    if ((*fn_index) as usize) < self.import_fn_count {
+                        let (module_name, name, param_ct) =
+                            p.import_fn_details((*fn_index) as usize)?;
                         let mut params = vec![];
                         for _ in 0..param_ct {
                             let p = match self.value_stack.pop() {
@@ -345,10 +348,7 @@ where
                         return Err("cannot call non-imports yet");
                     }
                 }
-                x @ Instruction::Drop | x @ Instruction::I32Const(_) => {
-                    ExecutionUnit::BasicInstruction(x.clone())
-                }
-                _ => return Err("cannot interpret this instruction yet"),
+                x => ExecutionUnit::BasicInstruction(x.clone()),
             };
             Ok(unit)
         } else {
@@ -363,6 +363,16 @@ where
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
                     self.value_stack.push(wv);
+                }
+            }
+            ExecutionResponse::GetRegister(v) => {
+                self.value_stack.push(self.call_stack.1[v as usize]);
+            }
+            ExecutionResponse::SetRegister(v) => {
+                if let Some(p) = self.value_stack.pop() {
+                    self.call_stack.1[v as usize] = p;
+                } else {
+                    return Err("can't set register because value stack is empty");
                 }
             }
             ExecutionResponse::DoNothing => {}
@@ -383,7 +393,9 @@ impl ExecutionUnit {
                     stack.pop();
                 }),
                 Instruction::I32Const(v) => ExecutionResponse::AddValues(vec![v.to_wasm_value()]),
-                _ => return Err("no default evaluation for basic instruction"),
+                Instruction::LocalGet(r) => ExecutionResponse::GetRegister(*r),
+                Instruction::LocalSet(r) => ExecutionResponse::SetRegister(*r),
+                _ => return Err("no default evaluation for basic instruction yet"),
             },
             _ => return Err("no default evaluation"),
         };

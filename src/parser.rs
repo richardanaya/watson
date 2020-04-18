@@ -142,7 +142,7 @@ fn wasm_instruction(op: u8, input: &[u8]) -> Result<(&[u8], Instruction), &'stat
 
         CALL => {
             let (input, idx) = wasm_u32(input)?;
-            instruction = Instruction::Call(idx as usize);
+            instruction = Instruction::Call(idx);
             ip = input;
         }
 
