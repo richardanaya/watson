@@ -35,10 +35,11 @@ fn load(ptr: *mut u8, len: usize) {
             let mut interpreter = Interpreter::new(prog).unwrap();
             match interpreter.call("main", &[]) {
                 Ok(executor) => {
+                    log("called main function");
                     s.execution = Some(executor);
                 },
                 Err(e) => {
-                    log(e);
+                    log("could not call main function");
                 }
             }
             
@@ -86,7 +87,7 @@ fn next_instruction() {
         Ok(r)=>r,
         Err(e)=>{
             log(e);
-            panic!("");
+            return;
         }
    };
     let response = match execution_unit {
@@ -97,8 +98,8 @@ fn next_instruction() {
         }
         // if there's nothing left to do, break out of loop
         ExecutionUnit::Complete(v) => {
-            log("PROGRAM COMPLETE");
-            panic!("");
+            log("PROGRAM COMPLETE!");
+            return;
         },
         // handle other execution units with default behavior
         mut x @ _ => match x.evaluate() {
@@ -113,7 +114,7 @@ fn next_instruction() {
         Ok(r)=>r,
         Err(e)=>{
             log(e);
-            panic!("");
+            return;
         }
    }
 }
