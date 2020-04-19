@@ -4,6 +4,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::convert::TryInto;
+use serde::{Deserialize, Serialize};
 
 pub struct Interpreter<T>
 where
@@ -13,7 +14,7 @@ where
     pub program: Rc<RefCell<T>>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum WasmValue {
     I32(i32),
     I64(i64),
@@ -295,15 +296,19 @@ where
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct WasmExecution<T>
 where
     T: InterpretableProgram,
 {
+    #[serde(skip)]
     import_fn_count: usize,
     pub call_stack: (usize, Vec<WasmValue>),
     pub value_stack: Vec<WasmValue>,
     pub current_position: Vec<usize>,
+    #[serde(skip)]
     pub memory: Rc<RefCell<Vec<u8>>>,
+    #[serde(skip)]
     pub program: Rc<RefCell<T>>,
 }
 
