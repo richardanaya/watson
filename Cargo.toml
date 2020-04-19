@@ -13,3 +13,4 @@ readme = "README.md"
 [dependencies]
 webassembly = {path="../webassembly", version="0.8.2" }
 serde = { version = "1.0.106", default-features = false, features = ["alloc","derive"] }
+spin = "0.5"

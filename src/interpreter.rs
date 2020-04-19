@@ -1,17 +1,18 @@
 use crate::core::*;
-use alloc::rc::Rc;
+use alloc::sync::Arc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::convert::TryInto;
 use serde::{Deserialize, Serialize};
+use spin::Mutex;
 
 pub struct Interpreter<T>
 where
     T: InterpretableProgram,
 {
-    pub memory: Rc<RefCell<Vec<u8>>>,
-    pub program: Rc<RefCell<T>>,
+    pub memory: Arc<Mutex<Vec<u8>>>,
+    pub program: Arc<Mutex<T>>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -136,6 +137,142 @@ pub trait InterpretableProgram {
         position: &[usize],
     ) -> Result<Option<&'a Instruction>, &'static str>;
     fn create_locals(&self, position: &[usize]) -> Result<Vec<WasmValue>, &'static str>;
+}
+
+impl InterpretableProgram for Program {
+    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize), &'static str> {
+        for s in self.sections.iter() {
+            if let Section::Import(import_section) = s {
+                let l: Vec<_> = import_section
+                    .imports
+                    .iter()
+                    .filter(|x| matches!(x, WasmImport::Function(_)))
+                    .collect();
+                if index < l.len() {
+                    if let WasmImport::Function(x) = l[index] {
+                        return Ok((&x.module_name, &x.name, 1));
+                    }
+                } else {
+                    return Err("import does not exist with that index");
+                }
+            }
+        }
+        Err("import section does not exist")
+    }
+
+    fn load_data_into_memory(&self, mem: &mut Vec<u8>) -> Result<(), &'static str> {
+        for s in self.sections.iter() {
+            if let Section::Data(d) = s {
+                for db in d.data_blocks.iter() {
+                    match db.offset_expression[0] {
+                        Instruction::I32Const(x) => {
+                            let offset = x as usize;
+                            for (i, b) in db.data.iter().enumerate() {
+                                mem[offset + i] = *b;
+                            }
+                        }
+                        _ => return Err("I don't know how to build this memory yet"),
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn initial_memory_size(&self) -> usize {
+        for s in self.sections.iter() {
+            if let Section::Memory(m) = s {
+                if !m.memories.is_empty() {
+                    return m.memories[0].min_pages * 1024;
+                }
+            }
+        }
+        0
+    }
+
+    fn import_fn_count(&self) -> usize {
+        for s in self.sections.iter() {
+            if let Section::Import(import_section) = s {
+                let l: Vec<_> = import_section
+                    .imports
+                    .iter()
+                    .filter(|x| matches!(x, WasmImport::Function(_)))
+                    .collect();
+                return l.len();
+            }
+        }
+        0
+    }
+
+    fn fetch_export_fn_index(&self, name: &str) -> Result<(usize, usize), &'static str> {
+        let ct = self.import_fn_count();
+        let result = self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|(_, x)| matches!(x, Section::Code(_)));
+        let code_section_idx = match result {
+            Some((i, _)) => i,
+            None => return Err("Code section did not exist"),
+        };
+        for s in self.sections.iter() {
+            if let Section::Export(export_section) = s {
+                for e in export_section.exports.iter() {
+                    if let WasmExport::Function(f) = e {
+                        if f.name == name {
+                            return Ok((code_section_idx, f.index - ct));
+                        }
+                    }
+                }
+            }
+        }
+        Err("could not find export section")
+    }
+
+    fn fetch_instruction<'a>(
+        &'a self,
+        position: &[usize],
+    ) -> Result<Option<&'a Instruction>, &'static str> {
+        if let Section::Code(code_section) = &self.sections[position[0]] {
+            let b = &code_section.code_blocks[position[1]];
+            // TODO: handle nesting
+            if position.len() > 2 {
+                let i = 2;
+                let instruction_index = position[i];
+                let len = &b.instructions.len();
+                if instruction_index < *len {
+                    Ok(Some(&b.instructions[instruction_index]))
+                } else {
+                    Ok(None)
+                }
+            } else {
+                Ok(None)
+            }
+        } else {
+            Err("cannot find code section")
+        }
+    }
+
+    fn create_locals(&self, position: &[usize]) -> Result<Vec<WasmValue>, &'static str> {
+        let mut locals = vec![];
+        if let Section::Code(code_section) = &self.sections[position[0]] {
+            let b = &code_section.code_blocks[position[1]];
+            for l in b.locals.iter() {
+                for _ in 0..l.count {
+                    let v = match l.value_type {
+                        ValueType::I32 => 0i32.to_wasm_value(),
+                        ValueType::I64 => 0i64.to_wasm_value(),
+                        ValueType::F32 => 0f32.to_wasm_value(),
+                        ValueType::F64 => 0f64.to_wasm_value(),
+                    };
+                    locals.push(v);
+                }
+            }
+        } else {
+            return Err("cannot find code section");
+        }
+        Ok(locals)
+    }
 }
 
 impl InterpretableProgram for ProgramView<'_> {
@@ -283,8 +420,8 @@ where
         let mut mem = vec![0; mem_size];
         p.load_data_into_memory(&mut mem)?;
         Ok(Interpreter {
-            memory: Rc::new(RefCell::new(mem)),
-            program: Rc::new(RefCell::new(p)),
+            memory: Arc::new(Mutex::new(mem)),
+            program: Arc::new(Mutex::new(p)),
         })
     }
     pub fn call(
@@ -307,9 +444,9 @@ where
     pub value_stack: Vec<WasmValue>,
     pub current_position: Vec<usize>,
     #[serde(skip)]
-    pub memory: Rc<RefCell<Vec<u8>>>,
+    pub memory: Arc<Mutex<Vec<u8>>>,
     #[serde(skip)]
-    pub program: Rc<RefCell<T>>,
+    pub program: Arc<Mutex<T>>,
 }
 
 impl<T> WasmExecution<T>
@@ -319,10 +456,10 @@ where
     pub fn new(
         name: &str,
         params: &[WasmValue],
-        program: Rc<RefCell<T>>,
-        memory: Rc<RefCell<Vec<u8>>>,
+        program: Arc<Mutex<T>>,
+        memory: Arc<Mutex<Vec<u8>>>,
     ) -> Result<Self, &'static str> {
-        let p = program.borrow();
+        let p = program.lock();
         let (section_index, function_index) = p.fetch_export_fn_index(name)?;
         let position = vec![section_index, function_index];
         let locals = p.create_locals(&position)?;
@@ -338,7 +475,7 @@ where
     }
 
     pub fn next_unit(&mut self) -> Result<ExecutionUnit, &'static str> {
-        let p = self.program.borrow();
+        let p = self.program.lock();
         if self.current_position.len() == 2 {
             self.current_position.push(0);
         } else {
@@ -383,7 +520,7 @@ where
         match r {
             ExecutionResponse::GetMemorySize => self
                 .value_stack
-                .push(self.memory.borrow().len().to_wasm_value()),
+                .push(self.memory.lock().len().to_wasm_value()),
             ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack)?,
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
@@ -406,7 +543,7 @@ where
         Ok(())
     }
 
-    pub fn memory(&mut self) -> Option<Rc<RefCell<Vec<u8>>>> {
+    pub fn memory(&mut self) -> Option<Arc<Mutex<Vec<u8>>>> {
         Some(self.memory.clone())
     }
 }
