@@ -6,6 +6,7 @@ var interpreter;
 var memory;
 var code;
 var interpreter_state; 
+var imports;
 
 async function loadBytes(url) {
 var response = await fetch(url);
@@ -72,30 +73,48 @@ function showCode() {
         let str = get_string(interpreter.memory.buffer,msgPtr,msgPtr);
         let data = JSON.parse(str);
 
-        let imports = data.sections.find(x=>x.section_type == "Import");
-        debugger;
-        let import_count = imports.content.imports.length;
+        imports = data.sections.find(x=>x.section_type == "Import").content.imports.filter(x=>x.import_type == "Function");
         let exports = data.sections.find(x=>x.section_type == "Export");
         code = data.sections.find(x=>x.section_type == "Code").content.code_blocks.map((x,i)=>{
             return {
                 instructions:x.instructions,
                 locals:x.locals,
-                name: exports?exports.content.exports.filter(x=>x.Function).filter(x=>x.Function.index==i+import_count).map(x=>x.Function.name)[0]:undefined,
+                name: exports?exports.content.exports.filter(x=>x.Function).filter(x=>x.Function.index==i+imports.length).map(x=>x.Function.name)[0]:undefined,
                 }
         });
     }
     let section = document.querySelector(".section_code");
     render(
-        code.map((f,i)=>html`
+        [imports.map((imp,i)=>{
+            return html`
+                <div class="function">
+                      <b>${"function "+i+" \""+imp.content.module_name+"."+imp.content.name+"\""}</b>
+                      <div class="instructions">
+                      </div>
+                  </div>
+              `;
+        }),
+        code.map((f,i)=>{
+            if(f.instructions.length == 0){
+                return html`
+                <div class="function">
+                      <b>${f.name?f.name:"function "+(i+imports.length)}:</b>
+                      <div class="instructions">
+                         This function has no instructions
+                      </div>
+                  </div>
+              `;
+            }
+            return html`
           <div class="function">
-                <b>${f.name?f.name:"function "+i}:</b>
+                <b>${f.name?"function "+(i+imports.length)+" \""+f.name+"\"":"function "+(i+imports.length)}:</b>
                 <div class="instructions">
                    ${f.instructions.map((x,j)=>{
                        return html`<div class="instruction ${(interpreter_state.current_position[1] == i && interpreter_state.current_position[2] == j)?"selected":null}">${x.op} ${x.params != undefined?x.params.toString():""}</div>`
                    })}
                 </div>
             </div>
-        `),
+        `;})],
         section
       );
 }
