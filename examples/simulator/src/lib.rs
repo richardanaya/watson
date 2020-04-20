@@ -93,7 +93,7 @@ fn next_instruction() {
     let response = match execution_unit {
         // if an import is called, figure out what to do
         ExecutionUnit::CallImport(x) => {
-            let s = format!("import was called: {}",&x.name);
+            let s = format!("import was ca1led: {}",&x.name);
             log(&s);
             ExecutionResponse::DoNothing
         }
