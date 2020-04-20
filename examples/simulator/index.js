@@ -87,7 +87,7 @@ function showCode() {
                 <b>${f.name?f.name:"function "+i}:</b>
                 <div class="instructions">
                    ${f.instructions.map((x,j)=>{
-                       return html`<div class="instruction ${(interpreter_state.current_position[1] == i && interpreter_state.current_position[2] == j)?"selected":null}">${x.op} ${x.params.toString()}</div>`
+                       return html`<div class="instruction ${(interpreter_state.current_position[1] == i && interpreter_state.current_position[2] == j)?"selected":null}">${x.op} ${x.params != undefined?x.params.toString():""}</div>`
                    })}
                 </div>
             </div>

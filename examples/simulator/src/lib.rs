@@ -93,7 +93,9 @@ fn next_instruction() {
     let response = match execution_unit {
         // if an import is called, figure out what to do
         ExecutionUnit::CallImport(x) => {
-            log(&x.name);
+            let mut s = "import was called: ".to_owned();
+            s.push_str(&x.name);
+            log(&s);
             ExecutionResponse::DoNothing
         }
         // if there's nothing left to do, break out of loop
