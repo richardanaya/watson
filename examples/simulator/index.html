@@ -79,10 +79,12 @@
             Welcome to <b>Wasm Interpreter</b><br/>
             .wasm URL: <input id="wasmpath" type="text" value="simple.wasm"> <div class="btn" id="run">Run</div></div>
         <div class="interpreter hidden">
+            <span class="interpreter_details">
             <div><b>Call Stack:&nbsp;</b> main -> 12</div>
             <div><b>Arguments:&nbsp;&nbsp;</b> <span class="index">L0</span> 1<span class="valuetype">i32</span> <span class="index">L1</span> 3<span class="valuetype">i32</span></div>
             <div><b>Locals:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b> <span class="index">L2</span> 1<span class="valuetype">i32</span> <span class="index">L3</span> 0<span class="valuetype">i32</span> <span class="index">L4</span> 1.2<span class="valuetype">f32</span></div>
             <div><b>Value Stack:</b> 1<span class="valuetype">i32</span> 2<span class="valuetype">i32</span> 4.4<span class="valuetype">f32</span> 1<span class="valuetype">i32</span></div>
+        </span>
             <br/>
             <div class="btn" id="next">Next Instruction</div> <span id="log"></span>
         </div>

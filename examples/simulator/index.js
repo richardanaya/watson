@@ -96,10 +96,32 @@ function showCode() {
       );
 }
 
+function valueType(x){
+    if(x.I32){
+        return html`${x.I32.toString()}<span class="valuetype">i32</span> `
+    } else if(x.I64){
+        return html`${x.I64.toString()}<span class="valuetype">i64</span> `
+    } else if(x.F32){
+        return html`${x.F32.toString()}<span class="valuetype">f32</span> `
+    } else if(x.F64){
+        return html`${x.F64.toString()}<span class="valuetype">f64</span> `
+    }
+}
+
 function showCurrentState() {
     let msgPtr = interpreter.get_interpreter();
     let str = get_string(interpreter.memory.buffer,msgPtr,msgPtr);
     interpreter_state = JSON.parse(str);
+    let section = document.querySelector(".interpreter_details");
+    render(
+        html`
+            <div><b>Call Stack:&nbsp;</b> ${interpreter_state.current_position.join(" -> ")} </div>
+            <div><b>Arguments:&nbsp;&nbsp;</b> None </div>
+            <div><b>Value Stack:</b> ${interpreter_state.value_stack.map(x=>valueType(x))} </div>
+        `,
+        section
+      );
+    console.log(interpreter_state);
 }
 
 document.querySelector("#run").addEventListener("click", function(){
