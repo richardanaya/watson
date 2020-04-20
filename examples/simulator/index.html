@@ -11,7 +11,7 @@
             .section_code {
                 margin: 50px;
                 width: 350px;
-                margin-top: 200px;
+                margin-top: 300px;
             }
             
             
@@ -84,7 +84,7 @@
             <div><b>Locals:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b> <span class="index">L2</span> 1<span class="valuetype">i32</span> <span class="index">L3</span> 0<span class="valuetype">i32</span> <span class="index">L4</span> 1.2<span class="valuetype">f32</span></div>
             <div><b>Value Stack:</b> 1<span class="valuetype">i32</span> 2<span class="valuetype">i32</span> 4.4<span class="valuetype">f32</span> 1<span class="valuetype">i32</span></div>
             <br/>
-            <div class="btn">Next Instruction</div>
+            <div class="btn" id="next">Next Instruction</div> <span id="log"></span>
         </div>
         <div class="section_code hidden">
             <div class="function">
@@ -158,77 +158,5 @@
         </div>
         </center>
     </body>
-    <script>
-        const utf8dec = new TextDecoder("utf-8");
-        var interpreter;
-        var memory;
-
-        async function loadBytes(url) {
-        var response = await fetch(url);
-        var data = await response.arrayBuffer();
-        return data;
-        }
-
-        function get_string(mem,msgPtr){
-            let memory = new Uint8Array(mem);
-            const str = [];
-            let i = msgPtr;
-            while (memory[i] !== 0) {
-                str.push(memory[i]);
-                i++;
-            }
-            return utf8dec.decode(new Uint8Array(str));
-        }
-
-        async function loadWebAssembly(url) {
-        let bytes = await loadBytes(url);
-        let program = await WebAssembly.instantiate(bytes, {"env":{
-            _log:function(msgPtr){
-                let s = get_string(program.instance.exports.memory.buffer,msgPtr);
-                console.log(s);
-            }
-        }})
-        return program.instance.exports;
-        }
-
-        async function loadAndRun(path) {
-            // lets get things loaded
-            interpreter = await loadWebAssembly("simulator.wasm");
-            let simpleProgramBytes = await loadBytes(path);
-            // create views of our data as bytes
-            memory = new Uint8Array(interpreter.memory.buffer);
-            // allocate space in our interpreter for the program
-            let bytesToCopy = new Uint8Array(simpleProgramBytes);
-            let ptr = interpreter.malloc(bytesToCopy.length); 
-            // copy the bytes of our program into interpreter memory
-            memory = new Uint8Array(interpreter.memory.buffer);
-            memory.set(bytesToCopy, ptr);
-            // signal our interpreter to run given the location 
-            // and length of our web assembly program we copied over
-            let result = interpreter.load(ptr,bytesToCopy.length);  
-            
-            document.querySelector(".loader").classList.add("hidden");
-            document.querySelector(".interpreter").classList.remove("hidden");
-            document.querySelector(".section_code").classList.remove("hidden");
-
-            showCode();
-            showCurrentState();
-        }
-
-        function showCode() {
-            let msgPtr = interpreter.get_program();
-            let str = get_string(interpreter.memory.buffer,msgPtr,msgPtr);
-            console.log(str);
-        }
-
-        function showCurrentState() {
-            let msgPtr = interpreter.get_interpreter();
-            let str = get_string(interpreter.memory.buffer,msgPtr,msgPtr);
-            console.log(str);
-        }
-
-        document.querySelector("#run").addEventListener("click", function(){
-            loadAndRun(document.querySelector("#wasmpath").value).then();
-        })
-    </script>
+    <script type="module" src="index.js"></script>
 </html>
