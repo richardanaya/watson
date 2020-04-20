@@ -71,12 +71,16 @@ function showCode() {
         let msgPtr = interpreter.get_program();
         let str = get_string(interpreter.memory.buffer,msgPtr,msgPtr);
         let data = JSON.parse(str);
+
+        let imports = data.sections.find(x=>x.section_type == "Import");
+        debugger;
+        let import_count = imports.content.imports.length;
         let exports = data.sections.find(x=>x.section_type == "Export");
         code = data.sections.find(x=>x.section_type == "Code").content.code_blocks.map((x,i)=>{
             return {
                 instructions:x.instructions,
                 locals:x.locals,
-                name: exports?exports.content.exports.filter(x=>x.Function).filter(x=>x.Function.index==i).map(x=>x.Function.name)[0]:undefined,
+                name: exports?exports.content.exports.filter(x=>x.Function).filter(x=>x.Function.index==i+import_count).map(x=>x.Function.name)[0]:undefined,
                 }
         });
     }
