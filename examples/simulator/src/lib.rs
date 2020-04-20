@@ -1,5 +1,5 @@
 extern crate alloc;
-use alloc::string::{String,ToString};
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use watson::*;
 
@@ -21,7 +21,6 @@ fn malloc(size: usize) -> *mut u8 {
     ptr
 }
 
-
 #[no_mangle]
 fn load(ptr: *mut u8, len: usize) {
     log("starting interpreter");
@@ -37,13 +36,12 @@ fn load(ptr: *mut u8, len: usize) {
                 Ok(executor) => {
                     log("called main function");
                     s.execution = Some(executor);
-                },
+                }
                 Err(_) => {
                     log("could not call main function");
                 }
             }
-            
-        },
+        }
         Err(e) => {
             log(e);
         }
@@ -51,15 +49,15 @@ fn load(ptr: *mut u8, len: usize) {
 }
 
 struct Simulator {
-    execution:Option<WasmExecution<Program>>,
-    program_string:String,
-    interpreter_string:String,
-  }
-  
+    execution: Option<WasmExecution<Program>>,
+    program_string: String,
+    interpreter_string: String,
+}
+
 impl Default for Simulator {
     fn default() -> Self {
         Simulator {
-            execution:None,
+            execution: None,
             program_string: "".to_string(),
             interpreter_string: "".to_string(),
         }
@@ -67,13 +65,13 @@ impl Default for Simulator {
 }
 
 #[no_mangle]
-fn get_program() ->  *const u8 {
+fn get_program() -> *const u8 {
     let s = globals::get::<Simulator>();
     return s.program_string.as_ptr();
 }
 
 #[no_mangle]
-fn get_interpreter() ->  *const u8 {
+fn get_interpreter() -> *const u8 {
     let mut s = globals::get::<Simulator>();
     s.interpreter_string = serde_json::to_string(&s.execution).unwrap();
     s.interpreter_string.push_str("\0");
@@ -84,16 +82,16 @@ fn get_interpreter() ->  *const u8 {
 fn next_instruction() {
     let mut s = globals::get::<Simulator>();
     let execution_unit = match s.execution.as_mut().unwrap().next_unit() {
-        Ok(r)=>r,
-        Err(e)=>{
+        Ok(r) => r,
+        Err(e) => {
             log(e);
             return;
         }
-   };
+    };
     let response = match execution_unit {
         // if an import is called, figure out what to do
         ExecutionUnit::CallImport(x) => {
-            let s = format!("import was called: {}",&x.name);
+            let s = format!("import was called: {}", &x.name);
             log(&s);
             ExecutionResponse::DoNothing
         }
@@ -101,21 +99,21 @@ fn next_instruction() {
         ExecutionUnit::Complete(_) => {
             log("PROGRAM COMPLETE!");
             return;
-        },
+        }
         // handle other execution units with default behavior
         mut x @ _ => match x.evaluate() {
-             Ok(r)=>r,
-             Err(e)=>{
-                 log(e);
-                 panic!("");
-             }
+            Ok(r) => r,
+            Err(e) => {
+                log(e);
+                panic!("");
+            }
         },
     };
     match s.execution.as_mut().unwrap().execute(response) {
-        Ok(r)=>r,
-        Err(e)=>{
+        Ok(r) => r,
+        Err(e) => {
             log(e);
             return;
         }
-   }
+    }
 }
