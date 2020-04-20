@@ -38,7 +38,7 @@ fn load(ptr: *mut u8, len: usize) {
                     log("called main function");
                     s.execution = Some(executor);
                 },
-                Err(e) => {
+                Err(_) => {
                     log("could not call main function");
                 }
             }
@@ -93,13 +93,12 @@ fn next_instruction() {
     let response = match execution_unit {
         // if an import is called, figure out what to do
         ExecutionUnit::CallImport(x) => {
-            let mut s = "import was called: ".to_owned();
-            s.push_str(&x.name);
+            let s = format!("import was called: {}",&x.name);
             log(&s);
             ExecutionResponse::DoNothing
         }
         // if there's nothing left to do, break out of loop
-        ExecutionUnit::Complete(v) => {
+        ExecutionUnit::Complete(_) => {
             log("PROGRAM COMPLETE!");
             return;
         },
