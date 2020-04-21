@@ -9,6 +9,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust ba
 - [x] support for compilation to wasm
 - [ ] .wast parsing and assertion
 - [ ] interpreter
+- [ ] WASI simulator
 - [ ] lofi wasm mode (i.e. i32 only)
 
 ```rust
