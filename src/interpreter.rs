@@ -2,7 +2,6 @@ use crate::core::*;
 use alloc::string::{String, ToString};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use core::cell::RefCell;
 use core::convert::TryInto;
 use serde::{Deserialize, Serialize};
 use spin::Mutex;

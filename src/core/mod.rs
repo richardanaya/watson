@@ -9,3 +9,5 @@ pub use program::*;
 
 pub mod view;
 pub use view::*;
+
+pub mod wast;

@@ -12,13 +12,18 @@ mod util;
 
 pub use crate::core::common::*;
 pub use crate::core::view::*;
+use crate::core::wast::Wast;
 pub use crate::core::Instruction;
 pub use crate::core::Program;
 pub use crate::core::ProgramView;
 pub use crate::interpreter::*;
 
 pub fn parse<'p>(input: &'p [u8]) -> Result<core::ProgramView<'p>, &'static str> {
-    parser::wasm_module(input)
+    parser::wasm::wasm_module(input)
+}
+
+pub fn parse_wast<'p>(input: &'p [u8]) -> Result<Wast, &'static str> {
+    parser::wast::wast_file(input)
 }
 
 /// # Safety
