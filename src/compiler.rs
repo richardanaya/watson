@@ -479,9 +479,11 @@ impl WriteWasm for Instruction {
             }
             Instruction::MemorySize => {
                 v.push(webassembly::MEMORY_SIZE);
+                v.push(0);
             }
             Instruction::MemoryGrow => {
                 v.push(webassembly::MEMORY_GROW);
+                v.push(0);
             }
             Instruction::I32Const(i) => {
                 v.push(webassembly::I32_CONST);

@@ -113,8 +113,10 @@ pub enum ExecutionResponse {
     ValueStackModification(fn(&mut Vec<WasmValue>) -> Result<(), &'static str>),
     GetRegister(u32),
     SetRegister(u32),
+    TeeRegister(u32),
     ThrowError(&'static str),
     GetMemorySize,
+    GetMemoryGrow,
 }
 
 #[derive(Debug)]
@@ -517,9 +519,13 @@ where
 
     pub fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
-            ExecutionResponse::GetMemorySize => self
-                .value_stack
-                .push(self.memory.lock().len().to_wasm_value()),
+            ExecutionResponse::GetMemorySize => self.value_stack.push(
+                (self.memory.lock().len().to_wasm_value().to_i32() / 1024i32).to_wasm_value(),
+            ),
+            ExecutionResponse::GetMemoryGrow => {
+                let _page_delta = self.value_stack.pop().unwrap().to_i32();
+                return Err("do not know how to extend memory");
+            }
             ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack)?,
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
@@ -534,6 +540,14 @@ where
                     self.call_stack.1[v as usize] = p;
                 } else {
                     return Err("can't set register because value stack is empty");
+                }
+            }
+            ExecutionResponse::TeeRegister(v) => {
+                if let Some(p) = self.value_stack.pop() {
+                    self.call_stack.1[v as usize] = p;
+                    self.value_stack.push(p);
+                } else {
+                    return Err("can't tee register because value stack is empty");
                 }
             }
             ExecutionResponse::ThrowError(msg) => return Err(msg),
@@ -590,14 +604,20 @@ impl ExecutionUnit {
                     stack.pop();
                     Ok(())
                 }),
-                Instruction::Select => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::Select => ExecutionResponse::ValueStackModification(|stack| {
+                    let cond = stack.pop().unwrap().to_i32();
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if cond != 0 {
+                        stack.push(a);
+                    } else {
+                        stack.push(b);
+                    }
+                    Ok(())
+                }),
                 Instruction::LocalGet(i) => ExecutionResponse::GetRegister(*i),
                 Instruction::LocalSet(i) => ExecutionResponse::SetRegister(*i),
-                Instruction::LocalTee(i) => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::LocalTee(i) => ExecutionResponse::TeeRegister(*i),
                 Instruction::GlobalGet(i) => {
                     return Err("no default evaluation for basic instruction yet");
                 }
@@ -674,9 +694,7 @@ impl ExecutionUnit {
                     return Err("no default evaluation for basic instruction yet");
                 }
                 Instruction::MemorySize => ExecutionResponse::GetMemorySize,
-                Instruction::MemoryGrow => {
-                    return Err("no default evaluation for basic instruction yet");
-                }
+                Instruction::MemoryGrow => ExecutionResponse::GetMemoryGrow,
                 Instruction::I32Const(i) => ExecutionResponse::AddValues(vec![i.to_wasm_value()]),
                 Instruction::I64Const(i) => ExecutionResponse::AddValues(vec![i.to_wasm_value()]),
                 Instruction::F32Const(f) => ExecutionResponse::AddValues(vec![f.to_wasm_value()]),
