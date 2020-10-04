@@ -2,13 +2,13 @@
 
 <a href="https://docs.rs/watson"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 
-a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
+a hyper minimalistic `no_std` + `alloc` WebAssembly parser/compiler for Rust based off the [official specification](https://webassembly.github.io/spec/core/index.html)
 
 - [X] supports all section types
 - [X] helper functions for finding things
 - [x] support for compilation to wasm
 - [ ] .wast parsing and assertion
-- [ ] pass core web assembly spec tests
+- [ ] pass core WebAssembly spec tests
 - [ ] interpreter
 - [ ] [WASI simulator](https://richardanaya.github.io/watson/examples/simulator/index.html)
 - [ ] lofi wasm mode (i.e. i32 only)
@@ -18,7 +18,7 @@ a hyper minimalistic `no_std` + `alloc` web assembly parser/compiler for Rust ba
 watson = "0.9"
 ```
 
-# Parse a web assembly module
+# Parse a WebAssembly module
 
 ```rust
 use  watson::*;
