@@ -1,6 +1,6 @@
 [package]
 name = "watson"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Richard Anaya"]
 edition = "2018"
 description = "a no_std web assembly loader"
@@ -12,5 +12,5 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 webassembly = {path="../webassembly", version="0.8.2" }
-serde = { version = "1.0.106", default-features = false, features = ["alloc","derive"] }
-spin = "0.5"
+serde = { version = "1.0.116", default-features = false, features = ["alloc","derive"] }
+spin = "0.5.2"
