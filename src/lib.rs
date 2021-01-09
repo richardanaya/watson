@@ -9,6 +9,8 @@ mod core;
 mod interpreter;
 mod parser;
 mod util;
+#[cfg(test)]
+mod spec_tests;
 
 pub use crate::core::common::*;
 pub use crate::core::view::*;
