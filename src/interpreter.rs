@@ -107,6 +107,12 @@ pub struct ImportCall {
     pub params: Vec<WasmValue>,
 }
 
+#[derive(Debug)]
+pub struct Call {
+    pub fn_index: u32,
+    pub params: Vec<WasmValue>,
+}
+
 pub enum ExecutionResponse {
     DoNothing,
     AddValues(Vec<WasmValue>),
@@ -122,6 +128,7 @@ pub enum ExecutionResponse {
 #[derive(Debug)]
 pub enum ExecutionUnit {
     CallImport(ImportCall),
+    Call(Call),
     BasicInstruction(Instruction),
     Unreachable,
     Complete(Vec<WasmValue>),
@@ -130,7 +137,8 @@ pub enum ExecutionUnit {
 pub trait InterpretableProgram {
     fn load_data_into_memory(&self, mem: &mut Vec<u8>) -> Result<(), &'static str>;
     fn initial_memory_size(&self) -> usize;
-    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize), &'static str>;
+    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str>;
+    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize, usize), &'static str>;
     fn import_fn_count(&self) -> usize;
     fn fetch_export_fn_index(&self, name: &str) -> Result<(usize, usize), &'static str>;
     fn fetch_instruction<'a>(
@@ -141,7 +149,32 @@ pub trait InterpretableProgram {
 }
 
 impl InterpretableProgram for Program {
-    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize), &'static str> {
+    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str> {
+        let mut fn_type_index = 0;
+        let mut found_fn_section = false;
+        {
+            for s in self.sections.iter() {
+                if let Section::Function(function_section) = s {
+                    found_fn_section = true;
+                    fn_type_index = function_section.function_types[index]
+                }
+            }
+        }
+        if !found_fn_section {
+            return Err("function section does not exist")
+        }
+        {
+            for s in self.sections.iter() {
+                if let Section::Type(type_section) = s {
+                    let fn_type = &type_section.types[fn_type_index];
+                    return Ok((fn_type.inputs.len(),fn_type.outputs.len()))
+                }
+            }
+        }
+        Err("function type section does not exist")  
+    }
+
+    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize, usize), &'static str> {
         for s in self.sections.iter() {
             if let Section::Import(import_section) = s {
                 let l: Vec<_> = import_section
@@ -151,7 +184,8 @@ impl InterpretableProgram for Program {
                     .collect();
                 if index < l.len() {
                     if let WasmImport::Function(x) = l[index] {
-                        return Ok((&x.module_name, &x.name, 1));
+                        let (param_ct, return_ct) = self.fn_details(index)?;
+                        return Ok((&x.module_name, &x.name, param_ct, return_ct));
                     }
                 } else {
                     return Err("import does not exist with that index");
@@ -277,7 +311,32 @@ impl InterpretableProgram for Program {
 }
 
 impl InterpretableProgram for ProgramView<'_> {
-    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize), &'static str> {
+    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str> {
+        let mut fn_type_index = 0;
+        let mut found_fn_section = false;
+        {
+            for s in self.sections.iter() {
+                if let SectionView::Function(function_section) = s {
+                    found_fn_section = true;
+                    fn_type_index = function_section.function_types[index]
+                }
+            }
+        }
+        if !found_fn_section {
+            return Err("function section does not exist")
+        }
+        {
+            for s in self.sections.iter() {
+                if let SectionView::Type(type_section) = s {
+                    let fn_type = &type_section.types[fn_type_index];
+                    return Ok((fn_type.inputs.len(),fn_type.outputs.len()))
+                }
+            }
+        }
+        Err("function type section does not exist")
+    }
+
+    fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize, usize), &'static str> {
         for s in self.sections.iter() {
             if let SectionView::Import(import_section) = s {
                 let l: Vec<_> = import_section
@@ -286,8 +345,9 @@ impl InterpretableProgram for ProgramView<'_> {
                     .filter(|x| matches!(x, WasmImportView::Function(_)))
                     .collect();
                 if index < l.len() {
+                    let (param_ct, return_ct) = self.fn_details(index)?;
                     if let WasmImportView::Function(x) = l[index] {
-                        return Ok((x.module_name, x.name, 1));
+                        return Ok((x.module_name, x.name, param_ct, return_ct));
                     }
                 } else {
                     return Err("import does not exist with that index");
@@ -488,7 +548,7 @@ where
             let unit = match instruction {
                 Instruction::Call(fn_index) => {
                     if ((*fn_index) as usize) < self.import_fn_count {
-                        let (module_name, name, param_ct) =
+                        let (module_name, name, param_ct, _) =
                             p.import_fn_details((*fn_index) as usize)?;
                         let mut params = vec![];
                         for _ in 0..param_ct {
@@ -504,7 +564,20 @@ where
                             params,
                         })
                     } else {
-                        return Err("cannot call non-imports yet");
+                        let (param_ct, _) =
+                            p.fn_details((*fn_index) as usize)?;
+                        let mut params = vec![];
+                        for _ in 0..param_ct {
+                            let p = match self.value_stack.pop() {
+                                Some(p) => p,
+                                None => return Err("ran out of values on value stack"),
+                            };
+                            params.push(p);
+                        }
+                        ExecutionUnit::Call(Call {
+                            fn_index: *fn_index,
+                            params,
+                        })
                     }
                 }
                 Instruction::Unreachable => ExecutionUnit::Unreachable,
@@ -513,7 +586,7 @@ where
             Ok(unit)
         } else {
             // TODO: handle nested function call
-            Ok(ExecutionUnit::Complete(vec![]))
+            Ok(ExecutionUnit::Complete(self.value_stack.clone()))
         }
     }
 
@@ -1069,7 +1142,15 @@ impl ExecutionUnit {
                     return Err("no default evaluation for basic instruction yet");
                 }
             },
-            _ => return Err("no default evaluation"),
+            ExecutionUnit::CallImport(_)  => {
+                return Err("no default evaluation for import call instruction yet");
+            },
+            ExecutionUnit::Call(_)  => {
+                return Err("no default evaluation for call instruction yet");
+            },
+            ExecutionUnit::Complete(_)  => {
+                return Err("complete should never be executed");
+            } 
         };
         Ok(response)
     }
