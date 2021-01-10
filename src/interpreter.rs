@@ -14,7 +14,7 @@ where
     pub program: Arc<Mutex<T>>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum WasmValue {
     I32(i32),
     I64(i64),
