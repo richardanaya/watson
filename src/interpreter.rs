@@ -123,6 +123,8 @@ pub enum ExecutionResponse {
     ThrowError(&'static str),
     GetMemorySize,
     GetMemoryGrow,
+    EnterFunction(u32, Vec<WasmValue>),
+    ExitFunction(Vec<WasmValue>),
 }
 
 #[derive(Debug)]
@@ -137,10 +139,11 @@ pub enum ExecutionUnit {
 pub trait InterpretableProgram {
     fn load_data_into_memory(&self, mem: &mut Vec<u8>) -> Result<(), &'static str>;
     fn initial_memory_size(&self) -> usize;
-    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str>;
+    fn fn_details(&self, index: usize) -> Result<(usize, usize), &'static str>;
     fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize, usize), &'static str>;
     fn import_fn_count(&self) -> usize;
     fn fetch_export_fn_index(&self, name: &str) -> Result<(usize, usize), &'static str>;
+    fn fetch_code_section_index(&self) -> Result<usize, &'static str>;
     fn fetch_instruction<'a>(
         &'a self,
         position: &[usize],
@@ -149,7 +152,7 @@ pub trait InterpretableProgram {
 }
 
 impl InterpretableProgram for Program {
-    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str> {
+    fn fn_details(&self, index: usize) -> Result<(usize, usize), &'static str> {
         let mut fn_type_index = 0;
         let mut found_fn_section = false;
         {
@@ -161,17 +164,17 @@ impl InterpretableProgram for Program {
             }
         }
         if !found_fn_section {
-            return Err("function section does not exist")
+            return Err("function section does not exist");
         }
         {
             for s in self.sections.iter() {
                 if let Section::Type(type_section) = s {
                     let fn_type = &type_section.types[fn_type_index];
-                    return Ok((fn_type.inputs.len(),fn_type.outputs.len()))
+                    return Ok((fn_type.inputs.len(), fn_type.outputs.len()));
                 }
             }
         }
-        Err("function type section does not exist")  
+        Err("function type section does not exist")
     }
 
     fn import_fn_details(&self, index: usize) -> Result<(&str, &str, usize, usize), &'static str> {
@@ -241,15 +244,7 @@ impl InterpretableProgram for Program {
 
     fn fetch_export_fn_index(&self, name: &str) -> Result<(usize, usize), &'static str> {
         let ct = self.import_fn_count();
-        let result = self
-            .sections
-            .iter()
-            .enumerate()
-            .find(|(_, x)| matches!(x, Section::Code(_)));
-        let code_section_idx = match result {
-            Some((i, _)) => i,
-            None => return Err("Code section did not exist"),
-        };
+        let code_section_idx = self.fetch_code_section_index()?;
         for s in self.sections.iter() {
             if let Section::Export(export_section) = s {
                 for e in export_section.exports.iter() {
@@ -262,6 +257,20 @@ impl InterpretableProgram for Program {
             }
         }
         Err("could not find export section")
+    }
+
+    fn fetch_code_section_index(&self) -> Result<usize, &'static str> {
+        let ct = self.import_fn_count();
+        let result = self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|(_, x)| matches!(x, Section::Code(_)));
+        let code_section_idx = match result {
+            Some((i, _)) => i,
+            None => return Err("Code section did not exist"),
+        };
+        return Ok(code_section_idx);
     }
 
     fn fetch_instruction<'a>(
@@ -311,7 +320,7 @@ impl InterpretableProgram for Program {
 }
 
 impl InterpretableProgram for ProgramView<'_> {
-    fn fn_details(&self, index: usize) -> Result<(usize,usize), &'static str> {
+    fn fn_details(&self, index: usize) -> Result<(usize, usize), &'static str> {
         let mut fn_type_index = 0;
         let mut found_fn_section = false;
         {
@@ -323,13 +332,13 @@ impl InterpretableProgram for ProgramView<'_> {
             }
         }
         if !found_fn_section {
-            return Err("function section does not exist")
+            return Err("function section does not exist");
         }
         {
             for s in self.sections.iter() {
                 if let SectionView::Type(type_section) = s {
                     let fn_type = &type_section.types[fn_type_index];
-                    return Ok((fn_type.inputs.len(),fn_type.outputs.len()))
+                    return Ok((fn_type.inputs.len(), fn_type.outputs.len()));
                 }
             }
         }
@@ -403,15 +412,7 @@ impl InterpretableProgram for ProgramView<'_> {
 
     fn fetch_export_fn_index(&self, name: &str) -> Result<(usize, usize), &'static str> {
         let ct = self.import_fn_count();
-        let result = self
-            .sections
-            .iter()
-            .enumerate()
-            .find(|(_, x)| matches!(x, SectionView::Code(_)));
-        let code_section_idx = match result {
-            Some((i, _)) => i,
-            None => return Err("Code section did not exist"),
-        };
+        let code_section_idx = self.fetch_code_section_index()?;
         for s in self.sections.iter() {
             if let SectionView::Export(export_section) = s {
                 for e in export_section.exports.iter() {
@@ -424,6 +425,19 @@ impl InterpretableProgram for ProgramView<'_> {
             }
         }
         Err("could not find export section")
+    }
+
+    fn fetch_code_section_index(&self) -> Result<usize, &'static str> {
+        let result = self
+            .sections
+            .iter()
+            .enumerate()
+            .find(|(_, x)| matches!(x, SectionView::Code(_)));
+        let code_section_idx = match result {
+            Some((i, _)) => i,
+            None => return Err("Code section did not exist"),
+        };
+        return Ok(code_section_idx);
     }
 
     fn fetch_instruction<'a>(
@@ -501,13 +515,14 @@ where
 {
     #[serde(skip)]
     import_fn_count: usize,
-    pub call_stack: (usize, Vec<WasmValue>),
-    pub value_stack: Vec<WasmValue>,
-    pub current_position: Vec<usize>,
+    pub call_stack: Vec<(usize, Vec<WasmValue>)>,
+    pub value_stack: Vec<Vec<WasmValue>>,
+    pub current_position: Vec<Vec<usize>>,
     #[serde(skip)]
     pub memory: Arc<Mutex<Vec<u8>>>,
     #[serde(skip)]
     pub program: Arc<Mutex<T>>,
+    code_section_idx: usize,
 }
 
 impl<T> WasmExecution<T>
@@ -521,29 +536,63 @@ where
         memory: Arc<Mutex<Vec<u8>>>,
     ) -> Result<Self, &'static str> {
         let p = program.lock();
-        let (section_index, function_index) = p.fetch_export_fn_index(name)?;
-        let position = vec![section_index, function_index];
-        let locals = p.create_locals(&position)?;
         let import_fn_count = p.import_fn_count();
+        let (code_section_idx, function_idx) = p.fetch_export_fn_index(name)?;
+        let position = vec![code_section_idx, function_idx];
+        let locals = p.create_locals(&position)?;
+        let mut registers = params.to_vec();
+        registers.extend(locals);
+        println!("calling export {}", name);
+        println!("{:#?}", params);
         Ok(WasmExecution {
-            call_stack: (function_index, locals),
+            call_stack: vec![(function_idx, registers)],
             import_fn_count,
-            value_stack: params.to_vec(),
-            current_position: position,
+            value_stack: vec![vec![]],
+            current_position: vec![position],
             memory,
             program: program.clone(),
+            code_section_idx,
         })
+    }
+
+    fn enter_function_context(
+        &mut self,
+        function_idx: usize,
+        params: &[WasmValue],
+    ) -> Result<(), &'static str> {
+        println!("entering function context");
+        let p = self.program.lock();
+        let position = vec![self.code_section_idx, function_idx];
+        let locals = p.create_locals(&position)?;
+        let mut registers = params.to_vec();
+        registers.extend(locals);
+        println!("{:#?}", registers);
+        self.call_stack.push((function_idx, registers));
+        self.value_stack.push(vec![]);
+        self.current_position.push(position);
+        Ok(())
+    }
+
+    fn exit_function_context(&mut self, params: &[WasmValue]) -> Result<(), &'static str> {
+        println!("exiting function context");
+        self.call_stack.drain(0..1);
+        self.value_stack.drain(0..1);
+        self.current_position.drain(0..1);
+        for v in params.iter() {
+            self.value_stack[0].push(v.clone())
+        }
+        Ok(())
     }
 
     pub fn next_unit(&mut self) -> Result<ExecutionUnit, &'static str> {
         let p = self.program.lock();
-        if self.current_position.len() == 2 {
-            self.current_position.push(0);
+        if self.current_position[0].len() == 2 {
+            self.current_position[0].push(0);
         } else {
-            let len = self.current_position.len() - 1;
-            self.current_position[len] += 1;
+            let len = self.current_position[0].len() - 1;
+            self.current_position[0][len] += 1;
         }
-        let first_function_instruction = p.fetch_instruction(&self.current_position)?;
+        let first_function_instruction = p.fetch_instruction(&self.current_position[0])?;
         if let Some(instruction) = first_function_instruction {
             let unit = match instruction {
                 Instruction::Call(fn_index) => {
@@ -552,7 +601,7 @@ where
                             p.import_fn_details((*fn_index) as usize)?;
                         let mut params = vec![];
                         for _ in 0..param_ct {
-                            let p = match self.value_stack.pop() {
+                            let p = match self.value_stack[0].pop() {
                                 Some(p) => p,
                                 None => return Err("ran out of values on value stack"),
                             };
@@ -564,11 +613,10 @@ where
                             params,
                         })
                     } else {
-                        let (param_ct, _) =
-                            p.fn_details((*fn_index) as usize)?;
+                        let (param_ct, _) = p.fn_details((*fn_index) as usize)?;
                         let mut params = vec![];
                         for _ in 0..param_ct {
-                            let p = match self.value_stack.pop() {
+                            let p = match self.value_stack[0].pop() {
                                 Some(p) => p,
                                 None => return Err("ran out of values on value stack"),
                             };
@@ -586,43 +634,47 @@ where
             Ok(unit)
         } else {
             // TODO: handle nested function call
-            Ok(ExecutionUnit::Complete(self.value_stack.clone()))
+            Ok(ExecutionUnit::Complete(self.value_stack[0].clone()))
         }
     }
 
     pub fn execute(&mut self, r: ExecutionResponse) -> Result<(), &'static str> {
         match r {
-            ExecutionResponse::GetMemorySize => self.value_stack.push(
+            ExecutionResponse::GetMemorySize => self.value_stack[0].push(
                 (self.memory.lock().len().to_wasm_value().to_i32() / 1024i32).to_wasm_value(),
             ),
             ExecutionResponse::GetMemoryGrow => {
-                let _page_delta = self.value_stack.pop().unwrap().to_i32();
+                let _page_delta = self.value_stack[0].pop().unwrap().to_i32();
                 return Err("do not know how to extend memory");
             }
-            ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack)?,
+            ExecutionResponse::ValueStackModification(f) => f(&mut self.value_stack[0])?,
             ExecutionResponse::AddValues(mut v) => {
                 while let Some(wv) = v.pop() {
-                    self.value_stack.push(wv);
+                    self.value_stack[0].push(wv);
                 }
             }
             ExecutionResponse::GetRegister(v) => {
-                self.value_stack.push(self.call_stack.1[v as usize]);
+                self.value_stack[0].push(self.call_stack[0].1[v as usize]);
             }
             ExecutionResponse::SetRegister(v) => {
-                if let Some(p) = self.value_stack.pop() {
-                    self.call_stack.1[v as usize] = p;
+                if let Some(p) = self.value_stack[0].pop() {
+                    self.call_stack[0].1[v as usize] = p;
                 } else {
                     return Err("can't set register because value stack is empty");
                 }
             }
             ExecutionResponse::TeeRegister(v) => {
-                if let Some(p) = self.value_stack.pop() {
-                    self.call_stack.1[v as usize] = p;
-                    self.value_stack.push(p);
+                if let Some(p) = self.value_stack[0].pop() {
+                    self.call_stack[0].1[v as usize] = p;
+                    self.value_stack[0].push(p);
                 } else {
                     return Err("can't tee register because value stack is empty");
                 }
             }
+            ExecutionResponse::EnterFunction(fn_idx, params) => {
+                self.enter_function_context(fn_idx as usize, &params)?
+            }
+            ExecutionResponse::ExitFunction(params) => self.exit_function_context(&params)?,
             ExecutionResponse::ThrowError(msg) => return Err(msg),
             ExecutionResponse::DoNothing => {}
         }
@@ -1142,15 +1194,20 @@ impl ExecutionUnit {
                     return Err("no default evaluation for basic instruction yet");
                 }
             },
-            ExecutionUnit::CallImport(_)  => {
-                return Err("no default evaluation for import call instruction yet");
-            },
-            ExecutionUnit::Call(_)  => {
-                return Err("no default evaluation for call instruction yet");
-            },
-            ExecutionUnit::Complete(_)  => {
-                return Err("complete should never be executed");
-            } 
+            ExecutionUnit::Call(x) => {
+                return Ok(ExecutionResponse::EnterFunction(
+                    x.fn_index,
+                    x.params.clone(),
+                ))
+            }
+            ExecutionUnit::CallImport(_) => {
+                return Err("call import cannot be automatically handled");
+            }
+            ExecutionUnit::Complete(function_result_values) => {
+                return Ok(ExecutionResponse::ExitFunction(
+                    function_result_values.clone(),
+                ))
+            }
         };
         Ok(response)
     }
