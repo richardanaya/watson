@@ -7,11 +7,8 @@ a hyper minimalistic `no_std` + `alloc` WebAssembly parser/compiler for Rust bas
 - [X] supports all section types
 - [X] helper functions for finding things
 - [x] support for compilation to wasm
-- [ ] .wast parsing and assertion
 - [ ] pass core WebAssembly spec tests
 - [ ] interpreter
-- [ ] [WASI simulator](https://richardanaya.github.io/watson/examples/simulator/index.html)
-- [ ] lofi wasm mode (i.e. i32 only)
 
 ```rust
 [dependencies]
